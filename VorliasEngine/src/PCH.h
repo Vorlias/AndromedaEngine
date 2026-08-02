@@ -99,12 +99,24 @@
 #	define COLOR_RESET ""
 #endif
 
+#if ANDROMEDA_WIN
+#	define ANDROMEDA_BREAK __debugbreak()
+#elif ANDROMEDA_LINUX
+#	define ANDROMEDA_BREAK __builtin_trap()
+#elif ANDROMEDA_MAC
+#	define ANDROMEDA_BREAK __builtin_debugtrap()
+#else
+#	define ANDROMEDA_BREAK
+#endif
+
 #ifdef ANDROMEDA_DEBUG
-#define ANDROMEDA_ASSERT(expr) \
-	if (!expr) { \
-		fprintf(stderr, COLOR_RED "[%s] ASSERTION FAILED: %s\n" COLOR_YELLOW "\tFile: %s:%d\n\n" COLOR_RESET, __TIME__, #expr, __FILE__, __LINE__); \
-		abort(); \
-	}
+#	define ANDROMEDA_ASSERT(expr) \
+		if (!expr) { \
+			fprintf( \
+				stderr, COLOR_RED "[%s] ASSERTION FAILED: %s\n" COLOR_YELLOW "\tFile: %s:%d\n\n" COLOR_RESET, __TIME__, #expr, __FILE__, __LINE__ \
+			); \
+			abort(); \
+		}
 #else
 #	define ANDROMEDA_ASSERT(expr) ((void)0)
 #endif

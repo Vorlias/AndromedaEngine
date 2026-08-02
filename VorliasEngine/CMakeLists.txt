@@ -39,6 +39,8 @@ target_sources(
     include/Engine/Application.h
     include/Engine/Luau/LuauScript.h
     include/Engine/Log.h
+    include/Engine/Graphics/GraphicsContext.h
+    include/Engine/Common.h
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

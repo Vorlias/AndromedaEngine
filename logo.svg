@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="400"
+   height="60"
+   viewBox="0 0 105.83333 15.875"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="product.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:export-filename="icon.png"
+   inkscape:export-xdpi="144"
+   inkscape:export-ydpi="144"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#111111"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.359385"
+     inkscape:cx="215.17083"
+     inkscape:cy="-89.746466"
+     inkscape:window-width="3440"
+     inkscape:window-height="1369"
+     inkscape:window-x="2552"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="rect4062"
+       style="fill:#1a1a1a;fill-opacity:1;stroke:none;stroke-width:0.898406;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+       d="M 10.088477,3.3031576 V 13.487549 H 104.1401 L 98.848431,3.3031576 Z"
+       sodipodi:nodetypes="ccccc" />
+    <g
+       id="g6217"
+       transform="matrix(0,0.21789518,-0.21789518,0,17.215169,0.8196374)"
+       style="fill:#bc5fd3;stroke:none;stroke-opacity:1">
+      <path
+         style="fill:#1a1a1a;stroke-width:3.16978"
+         d="M 64.864565,71.235796 0.15444482,33.875394 64.864564,-3.4850097 Z"
+         id="path246" />
+      <path
+         sodipodi:type="star"
+         style="fill:#7b00c3;fill-opacity:1;stroke-width:2.91878"
+         id="path1287"
+         inkscape:flatsided="true"
+         sodipodi:sides="3"
+         sodipodi:cx="-480.634"
+         sodipodi:cy="-224.71201"
+         sodipodi:r1="93.653114"
+         sodipodi:r2="46.826557"
+         sodipodi:arg1="1.5707963"
+         sodipodi:arg2="2.6179939"
+         inkscape:rounded="0"
+         inkscape:randomized="0"
+         d="m -480.634,-131.05889 -81.10598,-140.47967 162.21195,0 z"
+         transform="matrix(0,0.24140789,-0.24140789,0,-10.117448,149.30831)"
+         inkscape:transform-center-x="9.637319e-06"
+         inkscape:transform-center-y="-10.24719" />
+      <path
+         id="path419"
+         style="fill:#b380ff;fill-opacity:1;stroke:none;stroke-width:3.41941"
+         inkscape:transform-center-y="5.2520722"
+         d="M 61.365559,2.9145134 21.67953,25.827252 l 17.481745,9.446834 0.03273,-9.071348 22.171558,-13.91691 z"
+         sodipodi:nodetypes="cccccc"
+         inkscape:transform-center-x="5.8953358" />
+      <path
+         id="path419-1"
+         style="fill:#b380ff;fill-opacity:1;stroke:none;stroke-width:3.41941"
+         inkscape:transform-center-y="-5.109369"
+         d="M 7.7397407,33.875393 45.529368,55.700542 45.529369,35.43485 37.83045,41.636917 15.947888,29.136418 Z"
+         inkscape:transform-center-x="-15.059295"
+         sodipodi:nodetypes="cccccc" />
+      <path
+         id="path419-7"
+         style="fill:#b380ff;fill-opacity:1;stroke:none;stroke-width:3.41941"
+         inkscape:transform-center-y="-11.376228"
+         d="M 61.365559,64.836273 V 19.782384 l -18.754972,11.047688 10.032406,2.70529 0.249138,26.408776 z"
+         inkscape:transform-center-x="0.46884437"
+         sodipodi:nodetypes="cccccc" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-weight:bold;font-size:8.50974px;font-family:'AniMe Matrix - MB_EN';-inkscape-font-specification:'AniMe Matrix - MB_EN Bold';text-align:end;text-anchor:end;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.671145;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+       x="96.552521"
+       y="11.46642"
+       id="text3720"><tspan
+         sodipodi:role="line"
+         id="tspan3718"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:Xirod;-inkscape-font-specification:'Xirod Bold';fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.671145;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+         x="96.552521"
+         y="11.46642">ANDROMEDA</tspan></text>
+  </g>
+</svg>
