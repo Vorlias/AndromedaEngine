@@ -35,12 +35,20 @@ target_sources(
     src/Engine/Platform.cpp
     include/Engine/Window.h
     src/Engine/Window.cpp
+    src/Engine/Graphics/Vulkan/VulkanRendererAPI.cpp
+    src/Engine/Graphics/Vulkan/VulkanWindowContext.cpp
+    src/Engine/Graphics/Vulkan/VulkanInstance.cpp
+    include/Engine/Graphics/Vulkan/VulkanInstance.h
     PUBLIC # exposed
     include/Engine/Application.h
     include/Engine/Luau/LuauScript.h
     include/Engine/Log.h
     include/Engine/Graphics/GraphicsContext.h
     include/Engine/Common.h
+    include/Engine/Graphics/RendererAPI.h
+    include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
+    include/Engine/Data/Color.h
+    include/Engine/Graphics/Vulkan/VulkanWindowContext.h
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

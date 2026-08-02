@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
-set(VERSION_REVIS 2)
+set(VERSION_REVIS 5)
 
 # Add Luau as a dependency here
 add_subdirectory(Luau)

@@ -1,6 +1,7 @@
 #ifndef ANDROMEDA_PCH
 #define ANDROMEDA_PCH
 
+#define VK_NO_PROTOTYPES 1
 #define ENGINE_NS andromeda
 #define USING_ENGINE using namespace ENGINE_NS;
 
@@ -15,6 +16,8 @@
 #include <vector>
 #include <queue>
 #include <stack>
+
+using byte = unsigned char;
 
 #define ANDROMEDA_VERSION_INT (ANDROMEDA_VERSION_MAJOR * 10000) + ANDROMEDA_VERSION_MINOR * 100 + ANDROMEDA_VERSION_PATCH
 

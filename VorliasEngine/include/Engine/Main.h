@@ -1,3 +1,4 @@
+#pragma once
 #include "Application.h"
 #include "Engine/Engine.h"
 #include <exception>
@@ -19,6 +20,7 @@ int main() {
 
 		if (app != nullptr) {
 			auto& engine = Engine::GetInstance();
+			engine.SetGraphicsAPI(graphics::Renderer::API::Vulkan);
 			engine.Run(app);
 		}
 

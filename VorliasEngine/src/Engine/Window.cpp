@@ -3,16 +3,36 @@
 #include <optional>
 #include "Engine/Log.h"
 
+#include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
+
 andromeda::WindowOptions::WindowOptions() {}
 
-andromeda::Window::Window() {}
+andromeda::Window::Window(const WindowOptions& options): m_window_options(options) {}
 andromeda::Window::~Window() {}
 
 SDL_WindowID andromeda::Window::s_primary_window_id{};
 std::map<SDL_WindowID, andromeda::Window&> andromeda::Window::s_windows{};
 
-bool andromeda::Window::Initialize(const WindowOptions& options) {
-	m_window = SDL_CreateWindow(options.title, options.width, options.height, options.window_flags);
+bool andromeda::Window::Initialize(graphics::Renderer::API api) {	
+	using namespace graphics;
+	int window_flags = m_window_options.window_flags;
+
+	if (api != graphics::Renderer::API::None) {
+		if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
+			return false;
+		}
+	}
+
+	switch (api) {
+		case Renderer::API::Vulkan:
+			window_flags |= SDL_WINDOW_VULKAN;
+			break;
+		case Renderer::API::OpenGL:
+			window_flags |= SDL_WINDOW_OPENGL;
+			break;
+	}
+
+	m_window = SDL_CreateWindow(m_window_options.title, m_window_options.width, m_window_options.height, window_flags);
 
 	if (!m_window) {
 		andromeda::error("Failed to initialize window!");
@@ -26,6 +46,13 @@ bool andromeda::Window::Initialize(const WindowOptions& options) {
 	}
 
 	s_windows.insert({m_window_id, *this});
+
+	// switch (api) {
+	// case Renderer::API::Vulkan:
+	// 	m_graphics_context = new VulkanGraphicsContext(m_window);
+	// 	break;
+	// }
+
 	return true;
 }
 
@@ -108,6 +135,10 @@ void andromeda::Window::Shutdown() {
 			}
 
 			s_primary_window_id = 0;
+
+			// delete m_renderer;
+			// delete m_graphics_context;
+			m_graphics_context->Shutdown();
 		}
 	}
 }

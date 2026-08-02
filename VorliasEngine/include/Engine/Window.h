@@ -3,6 +3,8 @@
 #include <optional>
 #include <variant>
 #include <SDL3/SDL.h>
+#include "Engine/Graphics/RendererAPI.h"
+#include "Engine/Graphics/GraphicsContext.h"
 
 namespace andromeda {
 	struct WindowOptions {
@@ -73,10 +75,10 @@ namespace andromeda {
 
 	class Window {
 	public:
-		Window();
+		Window(const WindowOptions& options);
 		~Window();
 
-		bool Initialize(const WindowOptions& options);
+		bool Initialize(graphics::Renderer::API api);
 
 #if ANDROMEDA_EXPERIMENTAL
 		const std::optional<WindowEvent> PollEvent();
@@ -98,6 +100,10 @@ namespace andromeda {
 		}
 
 	private:
+		friend class Engine;
+		graphics::GraphicsContext* m_graphics_context;
+
+		WindowOptions m_window_options;
 		SDL_WindowID m_window_id;
 		SDL_Window* m_window = nullptr;
 		bool m_requestedExit = false;
