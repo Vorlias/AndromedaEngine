@@ -16,6 +16,8 @@
 #include <queue>
 #include <stack>
 
+#define ANDROMEDA_VERSION_INT (ANDROMEDA_VERSION_MAJOR * 10000) + ANDROMEDA_VERSION_MINOR * 100 + ANDROMEDA_VERSION_PATCH
+
 #ifdef _WIN32
 #	define ANDROMEDA_WIN 1
 
@@ -30,6 +32,7 @@
 #	error "Android not supported"
 #elif defined(__linux__)
 #	define ANDROMEDA_LINUX 1
+#	define USE_COLORS 1
 #elif defined(__APPLE__) || defined(__MACH__)
 #	include <TargetConditionals.h>
 
@@ -79,6 +82,31 @@
 #else
 #	define DEPRECATED [[deprecated]]
 #	define DEPRECATED_S(R) [[deprecated(R)]]
+#endif
+
+// Color codes for terminal
+#ifdef USE_COLORS
+#	define COLOR_RED "\033[31m"
+#	define COLOR_YELLOW "\033[33m"
+#	define COLOR_GREEN "\033[32m"
+#	define COLOR_CYAN "\033[36m"
+#	define COLOR_RESET "\033[0m"
+#else
+#	define COLOR_RED ""
+#	define COLOR_YELLOW ""
+#	define COLOR_GREEN ""
+#	define COLOR_CYAN ""
+#	define COLOR_RESET ""
+#endif
+
+#ifdef ANDROMEDA_DEBUG
+#define ANDROMEDA_ASSERT(expr) \
+	if (!expr) { \
+		fprintf(stderr, COLOR_RED "[%s] ASSERTION FAILED: %s\n" COLOR_YELLOW "\tFile: %s:%d\n\n" COLOR_RESET, __TIME__, #expr, __FILE__, __LINE__); \
+		abort(); \
+	}
+#else
+#	define ANDROMEDA_ASSERT(expr) ((void)0)
 #endif
 
 #endif // PCH_H

@@ -12,7 +12,7 @@ void Engine::Run(Application* app) {
 
     
     if (Initialize()) {
-        print("Initialized " ENGINE_VERSION_STRING);
+        print("Initialized " ANDROMEDA_VERSION_STRING);
         
         while (m_isRunning) {
             Update();

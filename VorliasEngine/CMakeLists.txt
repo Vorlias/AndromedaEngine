@@ -15,19 +15,7 @@ FetchContent_Declare(
         GIT_TAG        v1.4.356 #suggest using a tag so the library doesn't update whenever new commits are pushed to a branch
 )
 FetchContent_MakeAvailable(fetch_vk_bootstrap)
-
-add_compile_definitions(ENGINE_VERSION_MAJOR=0)
-add_compile_definitions(ENGINE_VERSION_MINOR=0)
-add_compile_definitions(ENGINE_VERSION_REVIS=1)
-add_compile_definitions(LUAU_VERSION=730)
-add_compile_definitions(ENGINE_VERSION_STRING="Andromeda Engine v0.0.1 [No Renderer]")
-
-add_compile_definitions(ANDROMEDA_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
-if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-    add_compile_definitions(ANDROMEDA_DEBUG=1)
-else()
-    add_compile_definitions(ANDROMEDA_RELEASE=1)
-endif()
+add_compile_definitions(ANDROMEDA_INTERNAL)
 
 add_library(AndromedaEngine SHARED)
 
@@ -41,6 +29,8 @@ target_sources(
     src/Engine/Engine.h
     src/Engine/Engine.cpp
     src/Engine/Log.cpp
+    include/Engine/Platform.h
+    src/Engine/Platform.cpp
     PUBLIC # exposed
     include/Engine/Application.h
     include/Engine/Luau/LuauScript.h

@@ -6,9 +6,6 @@
 class GameApplication : public andromeda::Application {
 	bool Initialize() override {
 		using namespace andromeda;
-
-		print("Hello, World!");
-
 		LuauScript script;
 
 		return true;
