@@ -1,7 +1,9 @@
 include(FetchContent)
 
-add_executable(VorliasGame)
 
+add_compile_definitions(ANDROMEDA_INTERNAL=1)
+#add_compile_definitions(ANDROMEDA_EDITOR=0)
+add_executable(VorliasGame)
 target_sources(
     VorliasGame
     PRIVATE
@@ -10,3 +12,4 @@ target_sources(
 
 # Include Luau pls
 target_link_libraries(VorliasGame PRIVATE AndromedaEngine) 
+

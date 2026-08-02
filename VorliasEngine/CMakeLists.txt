@@ -15,7 +15,9 @@ FetchContent_Declare(
         GIT_TAG        v1.4.356 #suggest using a tag so the library doesn't update whenever new commits are pushed to a branch
 )
 FetchContent_MakeAvailable(fetch_vk_bootstrap)
-add_compile_definitions(ANDROMEDA_INTERNAL)
+add_compile_definitions(ANDROMEDA_INTERNAL=1)
+add_compile_definitions(ANDROMEDA_EXPERIMENTAL=0)
+add_compile_definitions(ANDROMEDA_EDITOR=1)
 
 add_library(AndromedaEngine SHARED)
 

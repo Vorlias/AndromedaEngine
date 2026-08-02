@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Engine/Log.h"
+// #define ANDROMEDA_EXPERIMENTAL 1
 #include "Engine/Window.h"
 
 // class GameApplication : public andromeda::Application {
@@ -23,9 +24,26 @@ int main() {
 
 	if (window.Initialize(andromeda::WindowOptions())) {
 		while (!window.HasRequestedExit()) {
-			window.PushEvents();
+			SDL_Event e;
+			while (window.PollSDLEvent(&e)) {
+				switch (e.type) {
+					case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+						window.Close();
+						break;
+				}
+			}
+
+			// while (const std::optional event = window.PollEvent()) {
+			// 	if (event->is<andromeda::WindowEvent::Closed>()) {
+			// 		window.Close();
+			// 	} else if (event->is<andromeda::WindowEvent::WindowStateChange>()) {
+			// 		auto stateChange = event->get<andromeda::WindowEvent::WindowStateChange>();
+			// 		std::cout << "test" << std::endl;
+			// 	}
+			// }
 		}
 
+		andromeda::print("Shutting down?!");
 		window.Shutdown();
 	}
 
