@@ -20,39 +20,41 @@ namespace andromeda::graphics {
 		}
 
 		volkFinalize();
+		print("Vulkan Shutdown");
 	}
 
 	bool VulkanContext::CreateVulkanInstance() {
-		// if (volkInitialize() != VK_SUCCESS) {
-		// 	return false;
-		// }
+		if (volkInitialize() != VK_SUCCESS) {
+			return false;
+		}
 
-		// VkApplicationInfo appInfo{.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO, .pApplicationName = "Test", .apiVersion = VulkanVersion};
-		// uint32_t instExtCount = 0;
-		// const char* const* extensions = SDL_Vulkan_GetInstanceExtensions(&instExtCount);
-		// std::vector<const char*> requestedExtensions = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
+		VkApplicationInfo appInfo{.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO, .pApplicationName = "Test", .apiVersion = VulkanVersion};
+		uint32_t instExtCount = 0;
+		const char* const* extensions = SDL_Vulkan_GetInstanceExtensions(&instExtCount);
+		std::vector<const char*> requestedExtensions = {VK_EXT_DEBUG_UTILS_EXTENSION_NAME};
 
-		// for (int i = 0; i < instExtCount; i++) {
-		// 	requestedExtensions.push_back(extensions[i]);
-		// }
+		for (int i = 0; i < instExtCount; i++) {
+			requestedExtensions.push_back(extensions[i]);
+		}
 
-		// std::vector<const char*> requestedLayers = {"VK_LAYER_KHRONOS_validation"};
+		std::vector<const char*> requestedLayers = {"VK_LAYER_KHRONOS_validation"};
 
-		// VkInstanceCreateInfo instCreateInfo{
-		// 	.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-		// 	.pNext = nullptr, // &debugInfo,
-		// 	.pApplicationInfo = &appInfo,
-		// 	.enabledLayerCount = static_cast<uint32_t>(requestedLayers.size()),
-		// 	.ppEnabledLayerNames = requestedLayers.data(),
-		// 	.enabledExtensionCount = static_cast<uint32_t>(requestedExtensions.size()),
-		// 	.ppEnabledExtensionNames = requestedExtensions.data(),
-		// };
+		VkInstanceCreateInfo instCreateInfo{
+			.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+			.pNext = nullptr, // &debugInfo,
+			.pApplicationInfo = &appInfo,
+			.enabledLayerCount = static_cast<uint32_t>(requestedLayers.size()),
+			.ppEnabledLayerNames = requestedLayers.data(),
+			.enabledExtensionCount = static_cast<uint32_t>(requestedExtensions.size()),
+			.ppEnabledExtensionNames = requestedExtensions.data(),
+		};
 
-		// if (vkCreateInstance(&instCreateInfo, nullptr, &instance) != VK_SUCCESS) {
-		// 	return false;
-		// }
+		if (vkCreateInstance(&instCreateInfo, nullptr, &instance) != VK_SUCCESS) {
+			return false;
+		}
 
-		// volkLoadInstance(instance);
+		volkLoadInstance(instance);
+		print("Loaded Vulkan");
 		return true;
 	}
 } // namespace andromeda::graphics

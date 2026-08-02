@@ -4,18 +4,21 @@
 #include "Engine/Log.h"
 
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
+#include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 
 andromeda::WindowOptions::WindowOptions() {}
 
-andromeda::Window::Window(const WindowOptions& options): m_window_options(options) {}
+andromeda::Window::Window(const WindowOptions& options) : m_window_options(options) {}
 andromeda::Window::~Window() {}
 
 SDL_WindowID andromeda::Window::s_primary_window_id{};
 std::map<SDL_WindowID, andromeda::Window&> andromeda::Window::s_windows{};
 
-bool andromeda::Window::Initialize(graphics::Renderer::API api) {	
+bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	using namespace graphics;
+
 	int window_flags = m_window_options.window_flags;
+	Renderer::API api = renderer != nullptr ? renderer->GetAPI() : graphics::Renderer::API::None;
 
 	if (api != graphics::Renderer::API::None) {
 		if (!SDL_InitSubSystem(SDL_INIT_VIDEO)) {
@@ -28,7 +31,8 @@ bool andromeda::Window::Initialize(graphics::Renderer::API api) {
 			window_flags |= SDL_WINDOW_VULKAN;
 			break;
 		case Renderer::API::OpenGL:
-			window_flags |= SDL_WINDOW_OPENGL;
+			break;
+		default:
 			break;
 	}
 
@@ -47,11 +51,10 @@ bool andromeda::Window::Initialize(graphics::Renderer::API api) {
 
 	s_windows.insert({m_window_id, *this});
 
-	// switch (api) {
-	// case Renderer::API::Vulkan:
-	// 	m_graphics_context = new VulkanGraphicsContext(m_window);
-	// 	break;
-	// }
+	if (renderer != nullptr) {
+		renderer->Initialize();
+		m_graphics_context = renderer->CreateWindowGraphicsContext(main_window);
+	}
 
 	return true;
 }
@@ -68,9 +71,9 @@ const std::optional<andromeda::WindowEvent> andromeda::Window::PollEvent() {
 				break;
 			case SDL_EVENT_WINDOW_FOCUS_GAINED:
 			case SDL_EVENT_WINDOW_FOCUS_LOST: {
-                WindowEvent::FocusStateChange focusStateChange;
-                focusStateChange.focused = e.type == SDL_EVENT_WINDOW_FOCUS_GAINED;
-                windowEvent.m_event = focusStateChange;
+				WindowEvent::FocusStateChange focusStateChange;
+				focusStateChange.focused = e.type == SDL_EVENT_WINDOW_FOCUS_GAINED;
+				windowEvent.m_event = focusStateChange;
 				break;
 			}
 			case SDL_EVENT_WINDOW_MOUSE_LEAVE:
@@ -80,15 +83,15 @@ const std::optional<andromeda::WindowEvent> andromeda::Window::PollEvent() {
 				windowEvent.m_event = mouseState;
 				break;
 			}
-            case SDL_EVENT_WINDOW_MOVED:
+			case SDL_EVENT_WINDOW_MOVED:
 			case SDL_EVENT_WINDOW_RESIZED:
 			case SDL_EVENT_WINDOW_RESTORED:
 			case SDL_EVENT_WINDOW_MINIMIZED:
 			case SDL_EVENT_WINDOW_MAXIMIZED: {
 				int flags = SDL_GetWindowFlags(m_window);
 
-                int x, y;
-                SDL_GetWindowPosition(m_window, &x, &y);
+				int x, y;
+				SDL_GetWindowPosition(m_window, &x, &y);
 
 				int width, height;
 				SDL_GetWindowSize(m_window, &width, &height);
@@ -100,8 +103,8 @@ const std::optional<andromeda::WindowEvent> andromeda::Window::PollEvent() {
 				event.fullscreen = flags & SDL_WINDOW_FULLSCREEN;
 				event.width = width;
 				event.height = height;
-                event.x = x;
-                event.y = y;
+				event.x = x;
+				event.y = y;
 				windowEvent.m_event = event;
 				break;
 			}
@@ -135,9 +138,6 @@ void andromeda::Window::Shutdown() {
 			}
 
 			s_primary_window_id = 0;
-
-			// delete m_renderer;
-			// delete m_graphics_context;
 			m_graphics_context->Shutdown();
 		}
 	}

@@ -13,6 +13,8 @@ namespace ENGINE_NS {
         virtual void Render() {}
         virtual void Shutdown() {}
 
+        virtual graphics::Renderer::API GetGraphicsAPI() const { return graphics::Renderer::API::None; }
+
         virtual void ApplicationQuit() {}
     };
 }

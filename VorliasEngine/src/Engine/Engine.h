@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Window.h"
+#include "Engine/Common.h"
 
 namespace ENGINE_NS {
 	namespace graphics {
@@ -30,8 +31,9 @@ namespace ENGINE_NS {
 		bool m_isRunning = false;
 		bool m_isInitialized = false;
 
-		Window* m_main_window = nullptr;
-		graphics::Renderer* m_renderer = nullptr;
+		ScopeRef<Window> m_main_window = nullptr;
+		ScopeRef<graphics::Renderer> m_renderer = nullptr;
+
 		graphics::Renderer::API m_currentAPI = graphics::Renderer::API::None;
 	};
 } // namespace ENGINE_NS

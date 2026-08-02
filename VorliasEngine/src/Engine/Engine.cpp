@@ -2,6 +2,8 @@
 #include "Engine/Application.h"
 #include "spdlog/spdlog.h"
 #include "Engine/Log.h"
+
+
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 
 USING_ENGINE;
@@ -11,22 +13,9 @@ Engine* Engine::s_instance = nullptr;
 void andromeda::Engine::SetGraphicsAPI(graphics::Renderer::API api) {
 	using namespace graphics;
 
-	if (m_isRunning && m_renderer != nullptr && m_renderer->GetAPI() != api) {
-		// clean-up old API
-		m_renderer->Shutdown();
+	if (m_renderer != nullptr && m_renderer->GetAPI() != api) {
+		error("Cannot change graphics API at runtime (yet)");
 		abort();
-	}
-
-	switch (api) {
-		case Renderer::API::None:
-			print("Using None");
-			break;
-		case Renderer::API::Vulkan:
-			m_renderer = new VulkanRenderer();
-			break;
-		case Renderer::API::OpenGL:
-			error("OpenGL is not currently supported");
-			break;
 	}
 
 	m_currentAPI = api;
@@ -63,16 +52,25 @@ Engine::Engine() : m_app(nullptr), m_main_window(nullptr) {}
 bool Engine::Initialize() {
 	if (!m_isInitialized) {
 		if (m_currentAPI != graphics::Renderer::API::None) {
-			m_main_window = new Window(m_app->GetWindowOptions());
-
-            print("Using " + m_renderer->GetAPIString() + " graphics");
+			m_main_window = CreateScopeRef<Window>(m_app->GetWindowOptions());
 
 			if (!m_app->Initialize())
 				return false;
 
 			m_isInitialized = true;
 
-			if (!m_main_window->Initialize(this->m_currentAPI)) {
+			switch (m_currentAPI) {
+				case graphics::API::None:
+					break;
+				case graphics::Renderer::API::Vulkan:
+					m_renderer = CreateScopeRef<graphics::VulkanRenderer>(); // new graphics::VulkanRenderer();
+					print("Using renderer " + m_renderer->GetAPIString());
+					break;
+				case graphics::API::OpenGL:
+					break;
+			}
+
+			if (!m_main_window->Initialize(m_renderer.get())) {
 				Shutdown();
 				return false;
 			}
@@ -80,7 +78,7 @@ bool Engine::Initialize() {
 			m_isRunning = true;
 			return true;
 		} else {
-            print("Running Andromeda Application without a renderer (headless mode)");
+			print("Running Andromeda Application without a renderer (headless mode)");
 
 			if (!m_app->Initialize())
 				return false;
@@ -120,7 +118,8 @@ void Engine::Render() {
 
 void Engine::Shutdown() {
 	m_app->Shutdown();
+	m_main_window->Shutdown();
 
-	if (m_main_window != nullptr)
-		delete m_main_window;
+	if (m_renderer != nullptr)
+		m_renderer->Shutdown();
 }

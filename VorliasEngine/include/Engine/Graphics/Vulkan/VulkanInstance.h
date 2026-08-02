@@ -9,9 +9,9 @@
 
 namespace andromeda::graphics {
 	class VulkanContext {
+	public:
 		constexpr static uint32_t VulkanVersion{VK_API_VERSION_1_4};
 
-	public:
 		bool InitVulkan();
 		void Shutdown();
 		inline VkInstance GetInstance() const {

@@ -20,7 +20,11 @@ int main() {
 
 		if (app != nullptr) {
 			auto& engine = Engine::GetInstance();
+
+#if ANDROMEDA_LINUX || ANDROMEDA_WIN || ANDROMEDA_MAC
 			engine.SetGraphicsAPI(graphics::Renderer::API::Vulkan);
+#endif
+
 			engine.Run(app);
 		}
 

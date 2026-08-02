@@ -10,6 +10,10 @@ class GameApplication : public andromeda::Application {
 		return true;
 	}
 
+	virtual andromeda::graphics::Renderer::API GetGraphicsAPI() const override {
+		return andromeda::graphics::Renderer::API::Vulkan;
+	}
+
 	void Update() override {
 		// andromeda::print("update frame");
 	}

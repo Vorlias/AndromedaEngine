@@ -78,7 +78,7 @@ namespace andromeda {
 		Window(const WindowOptions& options);
 		~Window();
 
-		bool Initialize(graphics::Renderer::API api);
+		bool Initialize(graphics::Renderer* renderer);
 
 #if ANDROMEDA_EXPERIMENTAL
 		const std::optional<WindowEvent> PollEvent();
