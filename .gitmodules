@@ -1,0 +1,12 @@
+[submodule "Luau"]
+	path = Luau
+	url = https://github.com/luau-lang/luau
+[submodule "External/entt"]
+	path = External/entt
+	url = https://github.com/skypjack/entt
+[submodule "External/spdlog"]
+	path = External/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "External/cpptrace"]
+	path = External/cpptrace
+	url = https://github.com/jeremy-rifkin/cpptrace
