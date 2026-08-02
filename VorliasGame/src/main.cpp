@@ -1,20 +1,33 @@
 #include <iostream>
 #include "Engine/Log.h"
-#include "Engine/Main.h"
-#include "Engine/Luau/LuauScript.h"
+#include "Engine/Window.h"
 
-class GameApplication : public andromeda::Application {
-	bool Initialize() override {
-		using namespace andromeda;
-		LuauScript script;
+// class GameApplication : public andromeda::Application {
+// 	bool Initialize() override {
+// 		using namespace andromeda;
+// 		LuauScript script;
 
-		return true;
+// 		return true;
+// 	}
+
+// 	void Shutdown() override {
+// 		using namespace andromeda;
+// 		print("Shutting down!");
+// 	}
+// };
+
+// MAIN_APP(GameApplication);
+
+int main() {
+	andromeda::Window window{};
+
+	if (window.Initialize(andromeda::WindowOptions())) {
+		while (!window.HasRequestedExit()) {
+			window.PushEvents();
+		}
+
+		window.Shutdown();
 	}
 
-	void Shutdown() override {
-		using namespace andromeda;
-		print("Shutting down!");
-	}
-};
-
-MAIN_APP(GameApplication);
+	return 0;
+}

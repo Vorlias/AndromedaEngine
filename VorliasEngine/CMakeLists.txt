@@ -31,6 +31,8 @@ target_sources(
     src/Engine/Log.cpp
     include/Engine/Platform.h
     src/Engine/Platform.cpp
+    include/Engine/Window.h
+    src/Engine/Window.cpp
     PUBLIC # exposed
     include/Engine/Application.h
     include/Engine/Luau/LuauScript.h
