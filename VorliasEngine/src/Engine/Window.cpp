@@ -2,7 +2,6 @@
 #include "SDL3/SDL.h"
 #include <optional>
 #include "Engine/Log.h"
-
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 
@@ -155,4 +154,8 @@ SDL_Window* andromeda::Window::GetHandle() const {
 
 SDL_WindowID andromeda::Window::GetWindowId() const {
 	return SDL_GetWindowID(m_window);
+}
+void andromeda::Window::Resized(int width, int height) {
+	if (m_graphics_context != nullptr)
+		m_graphics_context->Resized(width, height);
 }

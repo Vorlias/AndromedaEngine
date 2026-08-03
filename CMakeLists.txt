@@ -3,6 +3,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 # Have to use this so all the code is using the "-fPIC" thing
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
+
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
 set(VERSION_REVIS 5)
@@ -29,6 +31,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebIn
 else()
     add_compile_definitions(ANDROMEDA_RELEASE=1)
 endif()
+
 
 add_subdirectory(VorliasEngine)
 add_subdirectory(VorliasGame)

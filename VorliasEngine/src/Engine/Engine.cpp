@@ -53,7 +53,7 @@ Engine::Engine() : m_app(nullptr), m_main_window(nullptr) {}
 bool Engine::Initialize() {
 	if (!m_isInitialized) {
 		if (m_currentAPI != graphics::Renderer::API::None) {
-			m_main_window = CreateScopeRef<Window>(m_app->GetWindowOptions());
+			m_main_window = CreateRef<Window>(m_app->GetWindowOptions());
 
 			if (!m_app->Initialize())
 				return false;
@@ -105,6 +105,10 @@ void Engine::Update() {
 			switch (e.type) {
 				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 					Quit();
+					break;
+				case SDL_EVENT_WINDOW_RESIZED:
+					m_main_window->Resized(e.window.data1, e.window.data2);
+					andromeda::trace("Resized to " + std::to_string(e.window.data1) + "x" + std::to_string(e.window.data2));
 					break;
 			}
 		}

@@ -36,6 +36,13 @@ namespace andromeda::graphics {
 		if (!CreateSwapchain(width, height)) {
 			return;
 		}
+
+		if (!CreateShaders()) return;
+	}
+
+	void VulkanWindowContext::Resized(int width, int height) {
+		DestroySwapchain();
+		CreateSwapchain(width, height);
 	}
 
 	void VulkanWindowContext::Shutdown() {
@@ -177,13 +184,14 @@ namespace andromeda::graphics {
 			.arrayLayers = 1, // single image depth buffer
 			.samples = VK_SAMPLE_COUNT_1_BIT, // don't need to multisample
 			.tiling = VK_IMAGE_TILING_OPTIMAL,
-			.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, // depth or stencil operations
+			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED, // let vulkan know we don't care looking at memory that is init alloc
 		};
 
+		// Let VMA allocate the image
 		VmaAllocationCreateInfo allocInfo{
-			.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-			.usage = VMA_MEMORY_USAGE_AUTO,
+			.flags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT, // chunk of data for dedicated for the depth buffer
+			.usage = VMA_MEMORY_USAGE_AUTO, // vma determines what to do with it
 		};
 
 		if (vmaCreateImage(vmaAllocator, &depthCreateInfo, &allocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS) {
@@ -370,5 +378,9 @@ namespace andromeda::graphics {
 		}
 
 		return selectedFamilyIndex;
+	}
+
+	bool VulkanWindowContext::CreateShaders() {
+		return false;
 	}
 } // namespace andromeda::graphics

@@ -18,11 +18,14 @@ namespace andromeda::graphics {
 		VulkanWindowContext(VulkanContext& vulkan, SDL_Window* window);
 		void Initialize() override;
 		void Shutdown() override;
+		void Resized(int width, int height) override;
 
+		inline VkDevice GetDevice() const { return device; }
 	private:
 		bool CreateSurface();
 		bool InitializeVMA();
 		bool CreateDevice(uint32_t queueIndex);
+		bool CreateShaders();
 
 		VkPhysicalDevice FindPhysicalDevice();
 		uint32_t FindGraphicsQueue();
@@ -41,7 +44,7 @@ namespace andromeda::graphics {
 
 		VkImage depthImage = VK_NULL_HANDLE;
 		VkImageView depthImageView = VK_NULL_HANDLE;
-		VmaAllocation depthImageAllocation = nullptr;
+		VmaAllocation depthImageAllocation = VK_NULL_HANDLE;
 
 		VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 		std::vector<VkImage> swapchainImages;

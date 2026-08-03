@@ -5,6 +5,7 @@
 #include <SDL3/SDL.h>
 #include "Engine/Graphics/RendererAPI.h"
 #include "Engine/Graphics/GraphicsContext.h"
+#include "Engine/Graphics/Shader.h"
 
 namespace andromeda {
 	struct WindowOptions {
@@ -74,6 +75,7 @@ namespace andromeda {
 #endif
 
 	class Window {
+		friend class graphics::Shader;
 	public:
 		Window(const WindowOptions& options);
 		~Window();
@@ -99,6 +101,7 @@ namespace andromeda {
 			return m_requestedExit;
 		}
 
+		void Resized(int width, int height);
 	private:
 		friend class Engine;
 		graphics::GraphicsContext* m_graphics_context;

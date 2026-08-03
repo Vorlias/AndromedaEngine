@@ -34,6 +34,9 @@ namespace ENGINE_NS {
 		void Run(Application* app);
 		void Quit();
 
+		inline graphics::Renderer::API GetCurrentAPI() const { return m_currentAPI; }
+		inline const ScopeRef<graphics::Renderer>& GetRenderer() const { return m_renderer; }
+		inline Ref<Window> GetMainWindow() const { return m_main_window; }
 	private:
 		static Engine* s_instance;
 		Engine();
@@ -48,7 +51,7 @@ namespace ENGINE_NS {
 		bool m_isRunning = false;
 		bool m_isInitialized = false;
 
-		ScopeRef<Window> m_main_window = nullptr;
+		Ref<Window> m_main_window = nullptr;
 		ScopeRef<graphics::Renderer> m_renderer = nullptr;
 
 		graphics::Renderer::API m_currentAPI = graphics::Renderer::API::None;
