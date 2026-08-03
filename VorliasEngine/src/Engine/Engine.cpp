@@ -2,8 +2,6 @@
 #include "Engine/Application.h"
 #include "spdlog/spdlog.h"
 #include "Engine/Log.h"
-
-
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 
 USING_ENGINE;
@@ -26,8 +24,11 @@ void Engine::Run(Application* app) {
 		return;
 	m_app = app;
 
+#if defined(ANDROMEDA_DEBUG)
+	spdlog::set_level(spdlog::level::trace);
+#endif
 
-	print("Initializing Andromeda Application " ANDROMEDA_VERSION_STRING);
+	print("Initializing " ANDROMEDA_VERSION_STRING);
 	if (Initialize()) {
 		while (m_isRunning) {
 			Update();

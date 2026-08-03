@@ -1,8 +1,15 @@
 #pragma once
 #include "Application.h"
 #include "Engine/Engine.h"
+#include "Engine/Log.h"
 #include <exception>
 #include <iostream>
+// #include <spdlog/spdlog.h>
+
+namespace ENGINE_NS {
+	struct ApplicationEntryPoint {
+	};
+} // namespace ENGINE_NS
 
 ENGINE_NS::Application* ApplicationMain();
 
@@ -15,6 +22,7 @@ ENGINE_NS::Application* ApplicationMain();
 int main() {
 	USING_ENGINE;
 
+	ApplicationEntryPoint ep{};
 	try {
 		Application* app = ApplicationMain();
 

@@ -6,6 +6,8 @@ namespace andromeda::graphics {
 	bool VulkanRenderer::Initialize() {
 		if (!context.InitVulkan())
 			return false;
+
+		andromeda::trace("Vulkan Initialized");
 		return true;
 	}
 
@@ -15,6 +17,7 @@ namespace andromeda::graphics {
 
 	void VulkanRenderer::Shutdown() {
 		context.Shutdown();
+		andromeda::trace("Shutdown Vulkan Renderer");
 	}
 } // namespace andromeda::graphics
 
@@ -24,14 +27,13 @@ const std::string andromeda::graphics::VulkanRenderer::GetAPIString() const {
 }
 
 andromeda::graphics::GraphicsContext* andromeda::graphics::VulkanRenderer::CreateWindowGraphicsContext(SDL_Window* window) {
+	andromeda::trace("Create new Vulkan Window Context");
 	return new VulkanWindowContext(context, window);
 }
 
 
 andromeda::ScopeRef<andromeda::graphics::GraphicsContext> andromeda::graphics::VulkanRenderer::CreateGraphicsContext(SDL_Window* window) {
-    return CreateScopeRef<andromeda::graphics::VulkanWindowContext>(context, window);
+	return CreateScopeRef<andromeda::graphics::VulkanWindowContext>(context, window);
 }
 
-andromeda::graphics::VulkanRenderer::~VulkanRenderer() {
-    this->Shutdown();
-}
+andromeda::graphics::VulkanRenderer::~VulkanRenderer() {}

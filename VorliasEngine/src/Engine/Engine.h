@@ -2,6 +2,23 @@
 #include "Engine/Window.h"
 #include "Engine/Common.h"
 
+// #define ANDROMEDA_MEMORY_DEBUG
+#ifdef ANDROMEDA_MEMORY_DEBUG
+static int s_allocationCount = 0;
+
+void* operator new(size_t size) {
+	s_allocationCount += 1;
+
+	std::cout << s_allocationCount << " allocations" << std::endl;
+	return malloc(size);
+}
+
+void operator delete(void* p) {
+	s_allocationCount -= 1;
+	free(p);
+}
+#endif
+
 namespace ENGINE_NS {
 	namespace graphics {
 		class GraphicsContext;

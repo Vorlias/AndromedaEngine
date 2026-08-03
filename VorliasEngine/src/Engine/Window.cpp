@@ -53,9 +53,11 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 
 	if (renderer != nullptr) {
 		renderer->Initialize();
-		m_graphics_context = renderer->CreateWindowGraphicsContext(main_window);
+		m_graphics_context = renderer->CreateWindowGraphicsContext(m_window);
+		m_graphics_context->Initialize();
 	}
 
+	andromeda::trace("Created window " + std::to_string(m_window_id));
 	return true;
 }
 
@@ -130,7 +132,7 @@ void andromeda::Window::Close() {
 void andromeda::Window::Shutdown() {
 	if (m_window != nullptr) {
 		s_windows.erase(m_window_id);
-		SDL_DestroyWindow(m_window);
+
 
 		if (s_primary_window_id == m_window_id) {
 			for (auto& window : s_windows) {
@@ -138,8 +140,12 @@ void andromeda::Window::Shutdown() {
 			}
 
 			s_primary_window_id = 0;
-			m_graphics_context->Shutdown();
 		}
+
+		m_graphics_context->Shutdown();
+		andromeda::trace("Cleaned up window " + std::to_string(m_window_id));
+
+		SDL_DestroyWindow(m_window);
 	}
 }
 

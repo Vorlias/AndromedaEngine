@@ -2,6 +2,7 @@ include(FetchContent)
 
 
 add_compile_definitions(ANDROMEDA_INTERNAL=1)
+add_compile_definitions(ANDROMEDA_DEBUG=1)
 #add_compile_definitions(ANDROMEDA_EDITOR=0)
 add_executable(VorliasGame)
 target_sources(
