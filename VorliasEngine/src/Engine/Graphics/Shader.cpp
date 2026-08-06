@@ -7,7 +7,7 @@
 #include "Engine/File.h"
 
 namespace andromeda::graphics {
-	Ref<Shader> Shader::LoadShaderFromFile(const std::string& fileName, ShaderType type) {
+	SharedRef<Shader> Shader::LoadShaderFromFile(const std::string& fileName, ShaderType type) {
 		auto api = Engine::GetInstance().GetCurrentAPI();
 		switch (api) {
 			case graphics::API::Vulkan: {
@@ -15,7 +15,7 @@ namespace andromeda::graphics {
                 auto main_window = Engine::GetInstance().GetMainWindow();
                 auto context = static_cast<VulkanWindowContext*>(main_window->m_graphics_context); 
 
-				Ref<VulkanShader> shader = CreateRef<VulkanShader>(context->GetDevice(), type);
+				SharedRef<VulkanShader> shader = CreateSharedRef<VulkanShader>(context->GetDevice(), type);
                 if (shader->LoadFromFile(fileName)) {
                     return shader;
                 }

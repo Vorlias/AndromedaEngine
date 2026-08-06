@@ -8,12 +8,30 @@
 #include "Engine/Graphics/Shader.h"
 
 namespace andromeda {
+	enum class WindowFlags : uint64_t {
+		Resizable = SDL_WINDOW_RESIZABLE,
+		Fullscreen = SDL_WINDOW_FULLSCREEN,
+
+		Borderless = SDL_WINDOW_BORDERLESS,
+		Maximized = SDL_WINDOW_MAXIMIZED,
+		AlwaysOnTop = SDL_WINDOW_ALWAYS_ON_TOP,
+
+		// Modal = SDL_WINDOW_MODAL,
+		// Utility = SDL_WINDOW_UTILITY,
+
+		BorderlessFullscreen = Fullscreen | Borderless,
+		Default = Resizable,
+	};
+
 	struct WindowOptions {
-		int width = 1024;
-		int height = 768;
+		Vector2u size = Vector2u(1024, 768);
+		Vector2i position = Vector2i(SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+
 		const char* title = "Andromeda";
-		unsigned long window_flags = SDL_WINDOW_RESIZABLE;
+		WindowFlags window_flags = WindowFlags::Default;
 		WindowOptions();
+		WindowOptions(const char* title, Vector2u size): title(title), size(size) {}
+		WindowOptions(const char* title, Vector2u size, WindowFlags flags): title(title), size(size), window_flags(flags) {}
 	};
 
 #if ANDROMEDA_EXPERIMENTAL
@@ -76,6 +94,7 @@ namespace andromeda {
 
 	class Window {
 		friend class graphics::Shader;
+
 	public:
 		Window(const WindowOptions& options);
 		~Window();
@@ -86,10 +105,8 @@ namespace andromeda {
 		const std::optional<WindowEvent> PollEvent();
 #endif
 
-#if ANDROMEDA_INTERNAL
-        // Uses SDL window polling - not guaranteed to always be a thing 
+		// Uses SDL window polling - not guaranteed to always be a thing
 		bool PollSDLEvent(SDL_Event* e);
-#endif
 
 		void Shutdown();
 
@@ -102,6 +119,7 @@ namespace andromeda {
 		}
 
 		void Resized(int width, int height);
+
 	private:
 		friend class Engine;
 		graphics::GraphicsContext* m_graphics_context;

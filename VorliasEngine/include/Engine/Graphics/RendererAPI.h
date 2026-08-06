@@ -7,7 +7,24 @@ namespace andromeda::graphics {
 	enum class API {
 		None = 0,
 		Vulkan = 1,
+#ifdef ANDROMEDA_OPENGL
 		OpenGL = 2,
+#endif
+#ifdef ANDROMEDA_MAC
+		Metal = 3,
+#endif
+#ifdef ANDROMEDA_WIN
+		DirectX = 4,
+#endif
+	};
+
+	// A collection of supported APIs in Andromeda
+	constexpr API supportedAPIs[] = {
+		API::None,
+		API::Vulkan,
+// #if ANDROMEDA_OPENGL
+// 		API::OpenGL,
+// #endif
 	};
 
 	class Renderer {

@@ -8,7 +8,7 @@ namespace andromeda::graphics {
     };
 
     class Shader {
-        static Ref<Shader> LoadShaderFromFile(const std::string& fileName, ShaderType type);
+        static SharedRef<Shader> LoadShaderFromFile(const std::string& fileName, ShaderType type);
     public:
 
     private:

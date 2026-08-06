@@ -1,4 +1,4 @@
-#include "Engine.h"
+#include "Engine/Engine.h"
 #include "Engine/Application.h"
 #include "spdlog/spdlog.h"
 #include "Engine/Log.h"
@@ -19,6 +19,8 @@ void andromeda::Engine::SetGraphicsAPI(graphics::Renderer::API api) {
 	m_currentAPI = api;
 }
 
+static Time defaultFrameTime = milliseconds(5); // 200hz
+
 void Engine::Run(Application* app) {
 	if (m_app != nullptr)
 		return;
@@ -31,9 +33,21 @@ void Engine::Run(Application* app) {
 	print("Initializing " ANDROMEDA_VERSION_STRING);
 	if (Initialize()) {
 		while (m_isRunning) {
+			uint64_t currentTicks = SDL_GetTicks();
+			app->elapsedTime = currentTicks / 1000.0f;
+
 			Update();
 			if (m_renderer != nullptr)
 				Render();
+
+			if (app->frameTime != Time::Zero) {
+				sleep(app->frameTime);
+			} else {
+				sleep(defaultFrameTime);
+			}
+
+			uint64_t deltaTime = SDL_GetTicks() - currentTicks;
+			app->deltaTime = (deltaTime / 1000.0f);
 		}
 
 		Shutdown();
@@ -53,7 +67,7 @@ Engine::Engine() : m_app(nullptr), m_main_window(nullptr) {}
 bool Engine::Initialize() {
 	if (!m_isInitialized) {
 		if (m_currentAPI != graphics::Renderer::API::None) {
-			m_main_window = CreateRef<Window>(m_app->GetWindowOptions());
+			m_main_window = CreateSharedRef<Window>(m_app->GetWindowOptions());
 
 			if (!m_app->Initialize())
 				return false;
@@ -67,8 +81,10 @@ bool Engine::Initialize() {
 					m_renderer = CreateScopeRef<graphics::VulkanRenderer>(); // new graphics::VulkanRenderer();
 					print("Using renderer " + m_renderer->GetAPIString());
 					break;
+#if ANDROMEDA_OPENGL
 				case graphics::API::OpenGL:
 					break;
+#endif
 			}
 
 			if (!m_main_window->Initialize(m_renderer.get())) {

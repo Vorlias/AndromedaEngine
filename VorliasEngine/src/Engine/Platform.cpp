@@ -1,4 +1,5 @@
 #include "Engine/Platform.h"
+#include "Engine/Time.h"
 #include <string>
 #include <sstream>
 
@@ -32,6 +33,23 @@ bool andromeda::FileExists(const char* path) {
 	struct stat st;
 	return stat(path, &st) == 0;
 }
+
+// int32_t secondsToMilliseconds(float seconds) {
+// 	return (int32_t)(seconds * 1'000);
+// }
+
+// long secondsToMicroseconds(float seconds) {
+// 	return (int64_t)(seconds * 1'000'000);
+// }
+
+// void andromedasleep(time_t seconds) {
+// 	timespec ti{
+// 		.tv_sec = static_cast<time_t>(seconds),
+// 		.tv_nsec = static_cast<long>(seconds * 1'000'000),
+// 	};
+
+// 	while ((nanosleep(&ti, &ti) == -1) && (errno == EINTR)) {}
+// }
 #endif
 
 const std::vector<std::string> andromeda::PathComponents(const std::string& filePath) {

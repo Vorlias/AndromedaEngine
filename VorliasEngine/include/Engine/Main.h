@@ -4,39 +4,56 @@
 #include "Engine/Log.h"
 #include <exception>
 #include <iostream>
-// #include <spdlog/spdlog.h>
 
-namespace ENGINE_NS {
-	struct ApplicationEntryPoint {
+namespace andromeda {
+	struct ApplicationInit {
+		// The argumetns passed to this application
+		const std::vector<std::string>& args;
+		// The renderer to use for this application
+		mutable graphics::Renderer::API renderer;
 	};
-} // namespace ENGINE_NS
+} // namespace andromeda
 
-ENGINE_NS::Application* ApplicationMain();
+andromeda::Application* ApplicationMain(const andromeda::ApplicationInit& init);
+
+#define WINDOW_OPTIONS(...) \
+	const andromeda::WindowOptions GetWindowOptions() const override { \
+		return andromeda::WindowOptions(__VA_ARGS__); \
+	}
 
 // Define an application class as the main
-#define MAIN_APP(_APP) \
-	ENGINE_NS::Application* ApplicationMain() { \
+#define ANDROMEDA_APP(_APP) \
+	andromeda::Application* ApplicationMain(const andromeda::ApplicationInit& app) { \
 		return new _APP(); \
 	}
 
-int main() {
-	USING_ENGINE;
+#define APP_MAIN(_AP) andromeda::Application* ApplicationMain(const andromeda::ApplicationInit& _AP)
 
-	ApplicationEntryPoint ep{};
+int main(int argc, char* argv[]) {
+	using namespace andromeda;
+
+	std::vector<std::string> args;
+	args.reserve(argc);
+
+	for (int i = 1; i < argc; i++) {
+		args.push_back(argv[i]);
+	}
+
+	ApplicationInit ep{
+		.args = args,
+		.renderer = graphics::Renderer::API::Vulkan,
+	};
+
 	try {
-		Application* app = ApplicationMain();
+		Application* app = ApplicationMain(ep);
 
 		if (app != nullptr) {
 			auto& engine = Engine::GetInstance();
-
-#if ANDROMEDA_LINUX || ANDROMEDA_WIN || ANDROMEDA_MAC
-			engine.SetGraphicsAPI(graphics::Renderer::API::Vulkan);
-#endif
-
+			engine.SetGraphicsAPI(ep.renderer);
 			engine.Run(app);
-		}
 
-		delete app;
+			delete app;
+		}
 	} catch (const std::exception& e) {
 		error(e.what());
 	}

@@ -1,6 +1,9 @@
 #pragma once
 #include "Engine/Graphics/Shader.h"
+#if ANDROMEDA_SHADER_COMPILATION || ANDROMEDA_EDITOR
+#warning "including compiler"
 #include <shaderc/shaderc.hpp>
+#endif
 #include <vulkan/vulkan.h>
 
 namespace andromeda::graphics {
@@ -9,10 +12,15 @@ namespace andromeda::graphics {
         VulkanShader(VkDevice device, ShaderType type);
         bool LoadFromFile(const std::string& fileName);
     private:
-        VkShaderModule CreateShaderModule(const std::string& source, shaderc_shader_kind kind);
+#if ANDROMEDA_SHADER_COMPILATION || ANDROMEDA_EDITOR
+        VkShaderModule CompileShaderModuleFromSource(const std::string& source, shaderc_shader_kind kind);
+#endif
+
         std::string fileName;
 
+#if ANDROMEDA_SHADER_COMPILATION || ANDROMEDA_EDITOR
         shaderc_shader_kind shader_kind;
+#endif
 
         VkDevice device = VK_NULL_HANDLE;
         VkShaderModule shaderModule = VK_NULL_HANDLE;

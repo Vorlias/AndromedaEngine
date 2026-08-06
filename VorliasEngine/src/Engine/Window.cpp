@@ -16,7 +16,7 @@ std::map<SDL_WindowID, andromeda::Window&> andromeda::Window::s_windows{};
 bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	using namespace graphics;
 
-	int window_flags = m_window_options.window_flags;
+	uint64_t window_flags = (uint64_t)m_window_options.window_flags;
 	Renderer::API api = renderer != nullptr ? renderer->GetAPI() : graphics::Renderer::API::None;
 
 	if (api != graphics::Renderer::API::None) {
@@ -29,18 +29,22 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 		case Renderer::API::Vulkan:
 			window_flags |= SDL_WINDOW_VULKAN;
 			break;
+#ifdef ANDROMEDA_OPENGL
 		case Renderer::API::OpenGL:
 			break;
+#endif
 		default:
 			break;
 	}
 
-	m_window = SDL_CreateWindow(m_window_options.title, m_window_options.width, m_window_options.height, window_flags);
+	m_window = SDL_CreateWindow(m_window_options.title, m_window_options.size.x, m_window_options.size.y, window_flags);
 
 	if (!m_window) {
 		andromeda::error("Failed to initialize window!");
 		return false;
 	}
+
+	SDL_SetWindowPosition(m_window, m_window_options.position.x, m_window_options.position.y);
 
 	m_window_id = SDL_GetWindowID(m_window);
 	SDL_Window* main_window = SDL_GetWindowFromID(s_primary_window_id);
@@ -118,11 +122,9 @@ const std::optional<andromeda::WindowEvent> andromeda::Window::PollEvent() {
 }
 #endif
 
-#if ANDROMEDA_INTERNAL
 bool andromeda::Window::PollSDLEvent(SDL_Event* e) {
 	return SDL_PollEvent(e);
 }
-#endif
 
 void andromeda::Window::Close() {
 	m_requestedExit = true;

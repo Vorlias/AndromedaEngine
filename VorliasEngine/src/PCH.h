@@ -19,11 +19,11 @@
 
 using byte = unsigned char;
 
+#define NO_COPY(_CLS) \
+	_CLS(const _CLS&) = delete; \
+	_CLS& operator=(const _CLS&) = delete;
+
 #define ANDROMEDA_VERSION_INT (ANDROMEDA_VERSION_MAJOR * 10000) + ANDROMEDA_VERSION_MINOR * 100 + ANDROMEDA_VERSION_PATCH
-
-#ifdef ANDROMEDA_DEBUG
-
-#endif
 
 #ifdef _WIN32
 #	define ANDROMEDA_WIN 1

@@ -20,7 +20,7 @@ namespace andromeda::graphics {
 		void Shutdown() override;
 		void Resized(int width, int height) override;
 
-		inline VkDevice GetDevice() const { return device; }
+		[[nodiscard]] VkDevice GetDevice() const { return device; }
 	private:
 		bool CreateSurface();
 		bool InitializeVMA();

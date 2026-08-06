@@ -10,3 +10,6 @@
 [submodule "External/cpptrace"]
 	path = External/cpptrace
 	url = https://github.com/jeremy-rifkin/cpptrace
+[submodule "External/SDL"]
+	path = External/SDL
+	url = https://github.com/libsdl-org/SDL

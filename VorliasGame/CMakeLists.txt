@@ -12,5 +12,4 @@ target_sources(
 )
 
 # Include Luau pls
-target_link_libraries(VorliasGame PRIVATE AndromedaEngine) 
-
+target_link_libraries(VorliasGame PUBLIC AndromedaEngine)
