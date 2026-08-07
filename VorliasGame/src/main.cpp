@@ -4,7 +4,8 @@
 #include "Engine/Window.h"
 #include "Engine/FileDialogs.h"
 
-#include <SDL3/SDL.h>
+
+// #include <SDL3/SDL.h>
 
 // #include "Engine/Platform.h"
 // #include "Engine/Time.h"
@@ -16,16 +17,25 @@ class GameApplication : public andromeda::Application {
 		return andromeda::WindowOptions("", andromeda::Vector2u(800, 600), andromeda::WindowFlags::Default);
 	}
 
-	void Update() override {
-		std::cout << " time is " << GetDeltaTime() << ", elapsed = " << GetElapsedTime() << std::endl;
+	void WindowEvent(SDL_Event& e) override {
+
+	}
+
+	void RawRender(andromeda::graphics::Renderer& r) override {
+		
+	}
+
+	void Update(float deltaTime) override {
+		std::cout << " time is " << deltaTime << ", elapsed = " << GetElapsedTime() << std::endl;
 	}
 
 	bool Initialize() override {
-		SetFramerate(200);
+		SetFramerateLimit(60);
+		std::cout << "framerate limit is " << GetFramerateLimit() << std::endl;
 		return true;
 	}
 };
 
 andromeda::Application* ApplicationMain(const andromeda::ApplicationInit& init) {
-	return new GameApplication();
+	return nullptr; // new GameApplication();
 }

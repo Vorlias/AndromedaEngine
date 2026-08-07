@@ -13,3 +13,4 @@ target_sources(
 
 # Include Luau pls
 target_link_libraries(VorliasGame PUBLIC AndromedaEngine)
+target_link_libraries(VorliasGame PUBLIC IMGUI)

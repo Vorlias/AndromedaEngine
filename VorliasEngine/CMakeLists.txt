@@ -24,7 +24,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fetch_vk_bootstrap)
 
-add_compile_definitions(ANDROMEDA_INTERNAL=0)
+add_compile_definitions(ANDROMEDA_INTERNAL=1)
 add_compile_definitions(ANDROMEDA_EXPERIMENTAL=0)
 add_compile_definitions(ANDROMEDA_EDITOR=0)
 
@@ -91,12 +91,13 @@ target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 # Include Luau pls
-target_link_libraries(AndromedaEngine PRIVATE 
+target_link_libraries(AndromedaEngine PUBLIC 
     Luau.Common Luau.Config Luau.Compiler Luau.VM # Luau 
     EnTT::EnTT # EnTT
     spdlog # Logging
     Vulkan::volk vk-bootstrap::vk-bootstrap Vulkan::shaderc_combined # Vulkan Libs
     SDL3::SDL3 # SDL
+    IMGUI
 )
 
 if(OPENGL_RENDERER)

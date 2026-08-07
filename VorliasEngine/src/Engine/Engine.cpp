@@ -32,22 +32,35 @@ void Engine::Run(Application* app) {
 
 	print("Initializing " ANDROMEDA_VERSION_STRING);
 	if (Initialize()) {
+		uint64_t lastFixedUpdate = SDL_GetTicks();
+
 		while (m_isRunning) {
 			uint64_t currentTicks = SDL_GetTicks();
-			app->elapsedTime = currentTicks / 1000.0f;
+			app->m_elapsedTime = currentTicks / 1000.0f;
 
 			Update();
+
+			// uint64_t nextFixedUpdate = SDL_GetTicks() - lastFixedUpdate;
+			// if (nextFixedUpdate >= app->m_fixedFrameTime.toMilliseconds()) {
+			// 	FixedUpdate();
+			// 	app->m_fixedDeltaTime = (nextFixedUpdate / 1000.0f);
+			// 	lastFixedUpdate = SDL_GetTicks();
+			// }
+			
 			if (m_renderer != nullptr)
 				Render();
 
-			if (app->frameTime != Time::Zero) {
-				sleep(app->frameTime);
+			if (app->m_frameTime != Time::Zero) {
+				sleep(app->m_frameTime);
 			} else {
 				sleep(defaultFrameTime);
 			}
 
 			uint64_t deltaTime = SDL_GetTicks() - currentTicks;
-			app->deltaTime = (deltaTime / 1000.0f);
+			app->m_deltaTime = (deltaTime / 1000.0f);
+
+			if (app->m_quitRequested)
+				Quit();
 		}
 
 		Shutdown();
@@ -127,13 +140,24 @@ void Engine::Update() {
 					andromeda::trace("Resized to " + std::to_string(e.window.data1) + "x" + std::to_string(e.window.data2));
 					break;
 			}
+			
+#if ANDROMEDA_INTERNAL
+			m_app->WindowEvent(e);
+#endif
 		}
 	}
 
-	m_app->Update();
+	m_app->Update(m_app->m_deltaTime);
+}
+
+void Engine::FixedUpdate() {
+	// m_app->FixedUpdate(m_app->m_fixedDeltaTime);
 }
 
 void Engine::Render() {
+#if ANDROMEDA_INTERNAL
+	m_app->RawRender(*m_renderer);
+#endif
 	m_app->Render();
 }
 

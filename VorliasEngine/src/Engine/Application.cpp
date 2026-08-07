@@ -2,22 +2,22 @@
 #include "Engine/Log.h"
 
 namespace andromeda {
-    float Application::GetElapsedTime() const {
-        return elapsedTime;
-    }
 
-    float Application::GetDeltaTime() const {
-        return deltaTime;
-    }
 
-    void Application::SetFramerate(uint32_t limit) {
+    void Application::SetFramerateLimit(uint32_t limit) {
         if (limit <= 0) {
-            frameTime = Time::Zero;
+            m_frameTime = Time::Zero;
             return;
         }
 
-        frameTime = (seconds(1.f / static_cast<float>(limit)));
-        
-        andromeda::print("Framerate set to " + std::to_string(limit) + "hz");
+        m_frameTime = (seconds(1.f / static_cast<float>(limit)));
+    }
+
+    uint32_t Application::GetFramerateLimit() const {
+        return 1.f / m_frameTime.toSeconds();
+    }
+
+    void Application::Quit() {
+        m_quitRequested = true;
     }
 }

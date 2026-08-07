@@ -43,6 +43,7 @@ namespace ENGINE_NS {
 
         bool Initialize();
 		void Update();
+		void FixedUpdate();
 		void Render();
         void Shutdown();
 

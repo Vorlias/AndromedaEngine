@@ -22,6 +22,7 @@ option(BUILTIN_SHADER_COMPILER "Build with shader compilation" OFF)
 
 # Add Luau as a dependency here
 add_subdirectory(Luau)
+add_subdirectory(External/imgui)
 add_subdirectory(External/spdlog)
 add_subdirectory(External/entt)
 add_subdirectory(External/SDL)
