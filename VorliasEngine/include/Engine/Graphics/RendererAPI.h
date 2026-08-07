@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Data/Color.h"
+#include "Engine/Data/Vector.h"
 #include "Engine/Graphics/GraphicsContext.h"
 #include <SDL3/SDL.h>
 
@@ -22,9 +23,49 @@ namespace andromeda::graphics {
 	constexpr API supportedAPIs[] = {
 		API::None,
 		API::Vulkan,
-// #if ANDROMEDA_OPENGL
-// 		API::OpenGL,
-// #endif
+	};
+
+	class Drawable {
+	protected:
+		friend class RenderSurface;
+		virtual void Draw(GraphicsContext* ctx) = 0;
+	};
+
+	struct Vertex {
+		Vector2 position;
+		Color color{1, 1, 1};
+
+		Vertex() = default;
+		Vertex(Vector2 position) : position(position) {}
+		Vertex(Vector2 position, Color color) : position(position), color(color) {}
+	};
+
+	struct VertexArray {
+		VertexArray(std::vector<Vertex> vertices) {
+			data = vertices.data();
+			size = vertices.size();
+		}
+
+		template<std::size_t N>
+		VertexArray(std::array<Vertex, N> vertices) {
+			data = vertices.data();
+			size = N;
+		}
+
+		Vertex* data;
+		size_t size;
+	};
+
+	class RenderSurface {
+		void Clear(Color color) {}
+		void Draw(Drawable& drawable) {
+			drawable.Draw(context);
+		}
+
+		void Draw(const VertexArray& vertices) {}
+
+	private:
+		GraphicsContext* context;
 	};
 
 	class Renderer {
@@ -43,3 +84,23 @@ namespace andromeda::graphics {
 		virtual ~Renderer() {}
 	};
 } // namespace andromeda::graphics
+
+namespace andromeda {
+	inline std::string to_string(const graphics::Vertex& vertex) {
+		return std::format("position: {}, color: {}", to_string(vertex.position), to_string(vertex.color));
+	}
+
+	inline std::string to_string(const graphics::VertexArray& array) {
+		std::stringstream ss;
+
+		for (int i = 0; i < array.size; i++) {
+			ss << to_string(array.data[i]);
+			if (i < array.size - 1) {
+				ss << ", ";
+			}
+		}
+
+		return ss.str();
+	}
+
+} // namespace andromeda

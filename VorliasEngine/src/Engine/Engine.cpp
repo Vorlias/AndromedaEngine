@@ -134,25 +134,6 @@ void Engine::Quit() {
 
 void Engine::Update() {
 	m_app->UpdateWindows();
-
-	// 	if (m_main_window != nullptr) {
-	// 		SDL_Event e;
-	// 		while (m_main_window->PollSDLEvent(&e)) {
-	// 			switch (e.type) {
-	// 				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-	// 					Quit();
-	// 					break;
-	// 				case SDL_EVENT_WINDOW_RESIZED:
-	// 					m_main_window->Resized(e.window.data1, e.window.data2);
-	// 					andromeda::trace("Resized to " + std::to_string(e.window.data1) + "x" + std::to_string(e.window.data2));
-	// 					break;
-	// 			}
-
-	// #if ANDROMEDA_INTERNAL
-	// 			m_app->WindowEvent(e);
-	// #endif
-	// 		}
-	// 	}
 	m_app->Update(m_app->m_deltaTime);
 }
 
@@ -164,7 +145,7 @@ void Engine::Render() {
 #if ANDROMEDA_INTERNAL
 	m_app->RawRender(*m_renderer);
 #endif
-	m_app->Render();
+	// m_app->Render();
 }
 
 void Engine::Shutdown() {

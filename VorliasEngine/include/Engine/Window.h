@@ -122,6 +122,15 @@ namespace andromeda {
 
 		void Resized(int width, int height);
 
+		constexpr Vector2i GetWindowSizeInPixels() const {
+			int w, h;
+			SDL_GetWindowSizeInPixels(m_window, &w, &h);
+			return Vector2i(w, h);
+		}
+
+		constexpr graphics::GraphicsContext* GetGraphicsContext() const {
+			return m_graphics_context;
+		}
 	private:
 		friend class Engine;
 		graphics::GraphicsContext* m_graphics_context;

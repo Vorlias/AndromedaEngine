@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Graphics/GraphicsContext.h"
 #include "Engine/Graphics/Vulkan/VulkanInstance.h"
+#include "imgui/imgui_impl_vulkan.h"
 #include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
 
@@ -20,15 +21,16 @@ namespace andromeda::graphics {
 		void Shutdown() override;
 		void Resized(int width, int height) override;
 
-		[[nodiscard]] VkDevice GetDevice() const { return device; }
-	private:
-		bool CreateSurface();
-		bool InitializeVMA();
-		bool CreateDevice(uint32_t queueIndex);
-		bool CreateShaders();
+		[[nodiscard]] constexpr VkDevice GetDevice() const { return device; }
+		[[nodiscard]] constexpr VkSurfaceKHR GetSurface() const { return surface; }
+		[[nodiscard]] constexpr VkSwapchainKHR GetSwapchain() const { return swapchain; }
 
-		VkPhysicalDevice FindPhysicalDevice();
-		uint32_t FindGraphicsQueue();
+		void SetupIMGUI(ImGui_ImplVulkanH_Window* wd);
+	private:
+		[[nodiscard]] bool CreateSurface();
+		[[nodiscard]] bool InitializeVMA();
+		[[nodiscard]] bool CreateDevice(uint32_t queueIndex);
+		[[nodiscard]] bool CreateShaders();
 
 		bool CreateSwapchain(int width, int height);
 		void DestroySwapchain();
@@ -38,7 +40,7 @@ namespace andromeda::graphics {
 
 		VmaAllocator vmaAllocator = VK_NULL_HANDLE;
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
-		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+		// VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 		VkQueue graphicsQueue = VK_NULL_HANDLE;
 		VkDevice device = VK_NULL_HANDLE;
 

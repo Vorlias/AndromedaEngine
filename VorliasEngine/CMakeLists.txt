@@ -69,6 +69,8 @@ target_sources(
     src/Engine/Time.cpp
     src/Engine/Application.cpp
     src/Engine/IMGUI.cpp
+    src/Engine/Graphics/Vulkan/VulkanUtils.h
+    src/Engine/Graphics/Vulkan/VulkanUtils.cpp
     PUBLIC # exposed
     include/Engine/Engine.h
     include/Engine/Platform.h

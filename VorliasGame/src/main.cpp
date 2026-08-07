@@ -1,45 +1,46 @@
-#include <iostream>
-#include <Engine/Memory.h>
-#include "Engine/Main.h"
+
+#define ANDROMEDA_INTERNAL 1
 #include "Engine/Window.h"
-#include "Engine/FileDialogs.h"
+#include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
+#include "Engine/Graphics/Vulkan/VulkanInstance.h"
 #include "Engine/IMGUI.h"
 
 
-// #include <SDL3/SDL.h>
+namespace AN = andromeda;
 
-// #include "Engine/Platform.h"
-// #include "Engine/Time.h"
-// #include "Engine/DateTime.h"
+static andromeda::graphics::VulkanRenderer vr{};
+int main() {
+	AN::Window window = AN::Window(AN::WindowOptions());
 
+	if (!SDL_Init(SDL_INIT_VIDEO)) return -1;
+	
 
-class GameApplication : public andromeda::Application {
-	const andromeda::WindowOptions GetWindowOptions() const override {
-		return andromeda::WindowOptions("", andromeda::Vector2u(800, 600), andromeda::WindowFlags::Default);
+	if (!vr.Initialize()) {
+		vr.Shutdown();
+		return 1;
 	}
 
-	void WindowEvent(SDL_Event& e) override {
-
+	if (!window.Initialize(&vr)) {
+		vr.Shutdown();
+		return 2;
 	}
 
-	void RawRender(andromeda::graphics::Renderer& r) override {
-		
+	auto imWindow = AN::ImWindowContext::Create(&vr);
+	imWindow->Initialize(window);
+	
+	while (!window.HasRequestedExit()) {
+		SDL_Event e;
+		while (window.PollSDLEvent(&e)) {
+			switch (e.type) {
+				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+					window.Close();
+					break;
+			}
+		}
 	}
 
-	void Update(float deltaTime) override {
-		// std::cout << " time is " << deltaTime << ", elapsed = " << GetElapsedTime() << std::endl;
-	}
-
-	bool Initialize() override {
-		SetFramerateLimit(60);
-		
-		auto opts = andromeda::WindowOptions("Test", andromeda::Vector2u(800, 600), andromeda::WindowFlags::Default);
-		CreateWindow(opts);
-
-		return true;
-	}
-};
-
-andromeda::Application* ApplicationMain(const andromeda::ApplicationInit& init) {
-	return new GameApplication();
+	window.Shutdown();
+	imWindow->Shutdown();
+	vr.Shutdown();
+	return 0;
 }

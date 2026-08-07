@@ -4,10 +4,13 @@
 
 namespace andromeda::graphics {
 	bool VulkanRenderer::Initialize() {
-		if (context != nullptr) return false;
-		context = new VulkanContext();
 
-		if (!context->InitVulkan())
+		if (m_context != nullptr) {
+			return false;
+		}
+
+		m_context = new VulkanContext();
+		if (!m_context->InitVulkan())
 			return false;
 
 		andromeda::trace("Vulkan Initialized");
@@ -19,9 +22,9 @@ namespace andromeda::graphics {
 	void VulkanRenderer::SetClearColor(Color color) {}
 
 	void VulkanRenderer::Shutdown() {
-		context->Shutdown();
+		m_context->Shutdown();
 		andromeda::trace("Shutdown Vulkan Renderer");
-		delete context;
+		delete m_context;
 	}
 } // namespace andromeda::graphics
 
@@ -32,12 +35,12 @@ const std::string andromeda::graphics::VulkanRenderer::GetAPIString() const {
 
 andromeda::graphics::GraphicsContext* andromeda::graphics::VulkanRenderer::CreateWindowGraphicsContext(SDL_Window* window) {
 	andromeda::trace("Create new Vulkan Window Context");
-	return new VulkanWindowContext(context, window);
+	return new VulkanWindowContext(m_context, window);
 }
 
 
 andromeda::ScopeRef<andromeda::graphics::GraphicsContext> andromeda::graphics::VulkanRenderer::CreateGraphicsContext(SDL_Window* window) {
-	return CreateScopeRef<andromeda::graphics::VulkanWindowContext>(context, window);
+	return CreateScopeRef<andromeda::graphics::VulkanWindowContext>(m_context, window);
 }
 
 andromeda::graphics::VulkanRenderer::~VulkanRenderer() {}

@@ -3,6 +3,8 @@
 #include "Time.h"
 
 namespace andromeda {
+	class RenderTarget {};
+
 	class Application {
 	public:
 		virtual const WindowOptions GetWindowOptions() const {
@@ -25,8 +27,8 @@ namespace andromeda {
 		DEPRECATED // TBD if using
 		virtual void FixedUpdate(float fixedDeltaTime) {}
 
-		// Called when the application hits an update frame
-		virtual void Render() {}
+		// // Called when the application hits an update frame
+		// virtual void Render(Window& window) {}
 
 		// Called when the application is shutting down
 		virtual void Shutdown() {}

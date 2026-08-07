@@ -30,4 +30,8 @@ namespace andromeda {
 			return Color(r / 255.f, g / 255.f, b / 255.f, a / 255.f);
 		}
 	};
+	
+	inline std::string to_string(const Color& color) {
+		return std::format("rgba({}, {}, {}, {})", color.r, color.g, color.b, color.a);
+	}
 } // namespace andromeda

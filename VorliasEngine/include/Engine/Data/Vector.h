@@ -50,5 +50,19 @@ namespace andromeda {
 		Vector3i(int32_t x, int32_t y, int32_t z) : x(x), y(y), z(z) {}
 	};
 
-	inline void Test() {}
+	inline std::string to_string(const Vector2& vec) {
+		return std::format("<{:.2f}f, {:.2f}f>", vec.x, vec.y);
+	}
+
+	inline std::string to_string(const Vector2u& vec) {
+		return std::format("<{:d}u, {:d}u>", vec.x, vec.y);
+	}
+
+	inline std::string to_string(const Vector2i& vec) {
+		return std::format("<{:d}, {:d}>", vec.x, vec.y);
+	}
+
+	inline std::string to_string(const Vector3i& vec) {
+		return std::format("<{:d}, {:d}, {:d}>", vec.x, vec.y, vec.z);
+	}
 } // namespace andromeda

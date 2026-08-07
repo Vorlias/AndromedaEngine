@@ -19,8 +19,13 @@ namespace andromeda::graphics {
 		GraphicsContext* CreateWindowGraphicsContext(SDL_Window* window) override;
 		ScopeRef<GraphicsContext> CreateGraphicsContext(SDL_Window* window);
 
+		VulkanContext* GetContext() {
+			return m_context;
+		}
+
 		~VulkanRenderer() override;
 	private:
-		VulkanContext* context;
+		VulkanContext* m_context{nullptr};
+		std::vector<GraphicsContext> m_contexts{};
 	};
 } // namespace andromeda::graphics

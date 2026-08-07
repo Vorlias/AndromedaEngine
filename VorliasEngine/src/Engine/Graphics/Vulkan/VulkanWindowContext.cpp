@@ -14,16 +14,16 @@ namespace andromeda::graphics {
 	void VulkanWindowContext::Initialize() {
 		if (!CreateSurface())
 			return;
-		if (physicalDevice = FindPhysicalDevice(); !physicalDevice) {
-			return;
-		}
+		// if (physicalDevice = FindPhysicalDevice(); !physicalDevice) {
+		// 	return;
+		// }
 
-		uint32_t queueIndex;
-		if (queueIndex = FindGraphicsQueue(); queueIndex == UINT32_MAX) {
-			return;
-		}
+		// uint32_t queueIndex;
+		// if (queueIndex = FindGraphicsQueue(); queueIndex == UINT32_MAX) {
+		// 	return;
+		// }
 
-		if (!CreateDevice(queueIndex)) {
+		if (!CreateDevice(vulkan->GetGraphicsFamilyIndex())) {
 			return;
 		}
 
@@ -37,7 +37,8 @@ namespace andromeda::graphics {
 			return;
 		}
 
-		if (!CreateShaders()) return;
+		if (!CreateShaders())
+			return;
 	}
 
 	void VulkanWindowContext::Resized(int width, int height) {
@@ -58,13 +59,13 @@ namespace andromeda::graphics {
 
 		if (surface != VK_NULL_HANDLE) {
 			andromeda::trace("Cleaned up surface");
-			SDL_Vulkan_DestroySurface(vulkan->instance, surface, nullptr);
+			SDL_Vulkan_DestroySurface(vulkan->GetInstance(), surface, nullptr);
 			surface = nullptr;
 		}
 	}
 
 	bool VulkanWindowContext::CreateSurface() {
-		if (!SDL_Vulkan_CreateSurface(window, vulkan->instance, nullptr, &surface)) {
+		if (!SDL_Vulkan_CreateSurface(window, vulkan->GetInstance(), nullptr, &surface)) {
 			andromeda::warn("Could not create surface for window " + std::to_string(SDL_GetWindowID(window)));
 			return false;
 		}
@@ -77,10 +78,10 @@ namespace andromeda::graphics {
 		VmaVulkanFunctions vmaFuncInfo{};
 		VmaAllocatorCreateInfo vmaAllocInfo{
 			.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
-			.physicalDevice = physicalDevice,
+			.physicalDevice = vulkan->GetPhysicalDevice(),
 			.device = device,
 			.pVulkanFunctions = &vmaFuncInfo,
-			.instance = vulkan->instance,
+			.instance = vulkan->GetInstance(),
 			.vulkanApiVersion = VulkanContext::VulkanVersion,
 		};
 
@@ -101,7 +102,7 @@ namespace andromeda::graphics {
 
 		// Ensure tracking apropriate number of images
 		VkSurfaceCapabilitiesKHR surfaceCaps{};
-		if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &surfaceCaps) != VK_SUCCESS) {
+		if (vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkan->GetPhysicalDevice(), surface, &surfaceCaps) != VK_SUCCESS) {
 			andromeda::error("Could not get the surface capabilities");
 			return false;
 		}
@@ -239,52 +240,31 @@ namespace andromeda::graphics {
 		}
 	}
 
-	VkPhysicalDevice VulkanWindowContext::FindPhysicalDevice() {
-		uint32_t physicalDeviceCount = 0;
-		vkEnumeratePhysicalDevices(vulkan->instance, &physicalDeviceCount, nullptr);
+	// VkPhysicalDevice VulkanWindowContext::FindPhysicalDevice() {
+	// 	VkPhysicalDevice physicalDevice = vulkan->GetPhysicalDevice();
 
-		std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
-		vkEnumeratePhysicalDevices(vulkan->instance, &physicalDeviceCount, physicalDevices.data());
+	// 	// Ensure the desired swapchain format is supported
+	// 	uint32_t formatCount = 0;
+	// 	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
+	// 	std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
+	// 	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, surfaceFormats.data());
 
-		VkPhysicalDevice physicalDevice = nullptr;
-		if (physicalDeviceCount) {
-			physicalDevice = physicalDevices[0];
+	// 	bool formatSupported = false;
+	// 	for (const VkSurfaceFormatKHR& surfFormat : surfaceFormats) {
+	// 		if (surfFormat.format == swapchainFormat) {
+	// 			formatSupported = true;
+	// 			break;
+	// 		}
+	// 	}
 
-			// Find a dGPU
-			for (auto& physicalDevice : physicalDevices) {
-				VkPhysicalDeviceProperties props{};
-				vkGetPhysicalDeviceProperties(physicalDevice, &props);
-
-				if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-					this->physicalDevice = physicalDevice;
-					spdlog::info("Using physical device {}", props.deviceName);
-					break;
-				}
-			}
-		}
-
-		// Ensure the desired swapchain format is supported
-		uint32_t formatCount = 0;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
-		std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, surfaceFormats.data());
-
-		bool formatSupported = false;
-		for (const VkSurfaceFormatKHR& surfFormat : surfaceFormats) {
-			if (surfFormat.format == swapchainFormat) {
-				formatSupported = true;
-				break;
-			}
-		}
-
-		if (!formatSupported) {
-			andromeda::error("Requested swapchain format is not supported by the surface");
-			return nullptr;
-		}
+	// 	if (!formatSupported) {
+	// 		andromeda::error("Requested swapchain format is not supported by the surface");
+	// 		return nullptr;
+	// 	}
 
 
-		return physicalDevice;
-	}
+	// 	return physicalDevice;
+	// }
 
 	bool VulkanWindowContext::CreateDevice(uint32_t graphicsQueueIndex) {
 		VkPhysicalDeviceVulkan14Features supportedFeatures14{.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES, .pNext = nullptr};
@@ -296,7 +276,7 @@ namespace andromeda::graphics {
 		};
 		VkPhysicalDeviceFeatures2 supportedFeatures{.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, .pNext = &supportedFeatures12};
 
-		vkGetPhysicalDeviceFeatures2(physicalDevice, &supportedFeatures);
+		vkGetPhysicalDeviceFeatures2(vulkan->GetPhysicalDevice(), &supportedFeatures);
 
 		// Check if what we need is supported
 		if (!supportedFeatures13.dynamicRendering || !supportedFeatures13.synchronization2 || !supportedFeatures13.synchronization2 ||
@@ -344,7 +324,7 @@ namespace andromeda::graphics {
 			.pEnabledFeatures = nullptr, // better to use pNext linked list for features
 		};
 
-		if (vkCreateDevice(physicalDevice, &devCreateInfo, nullptr, &device) != VK_SUCCESS) {
+		if (vkCreateDevice(vulkan->GetPhysicalDevice(), &devCreateInfo, nullptr, &device) != VK_SUCCESS) {
 			return false;
 		}
 
@@ -357,30 +337,14 @@ namespace andromeda::graphics {
 		return true;
 	}
 
-	uint32_t VulkanWindowContext::FindGraphicsQueue() {
-		uint32_t selectedFamilyIndex = UINT32_MAX;
-		uint32_t queueFamilyCount = 0;
-		vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyCount, nullptr);
-
-		std::vector<VkQueueFamilyProperties2> queueFamilyProperties(queueFamilyCount, {.sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2});
-		vkGetPhysicalDeviceQueueFamilyProperties2(physicalDevice, &queueFamilyCount, queueFamilyProperties.data());
-
-		for (int familyIndex = 0; familyIndex < queueFamilyProperties.size(); familyIndex++) {
-			// ensure it has presentation support
-			VkBool32 hasPresentSupport = VK_FALSE;
-			vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, familyIndex, surface, &hasPresentSupport);
-
-			// ensure this is a GRAPHICS queue with presentation support
-			const auto& props = queueFamilyProperties[familyIndex];
-			if (props.queueFamilyProperties.queueFlags & VK_QUEUE_GRAPHICS_BIT && hasPresentSupport) {
-				selectedFamilyIndex = familyIndex;
-			}
-		}
-
-		return selectedFamilyIndex;
-	}
-
 	bool VulkanWindowContext::CreateShaders() {
 		return false;
+	}
+
+	void VulkanWindowContext::SetupIMGUI(ImGui_ImplVulkanH_Window* wd) {
+		wd->Surface = surface;
+		wd->Swapchain = swapchain;
+		wd->Width = swapchainWidth;
+		wd->Height = swapchainHeight;
 	}
 } // namespace andromeda::graphics
