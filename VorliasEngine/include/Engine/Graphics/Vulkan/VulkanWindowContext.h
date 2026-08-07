@@ -15,7 +15,7 @@ namespace andromeda::graphics {
 		constexpr static VkFormat depthFormat{VK_FORMAT_D32_SFLOAT}; // represents a depth buffer of 32 bit floats
 
 	public:
-		VulkanWindowContext(VulkanContext& vulkan, SDL_Window* window);
+		VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window);
 		void Initialize() override;
 		void Shutdown() override;
 		void Resized(int width, int height) override;
@@ -34,7 +34,7 @@ namespace andromeda::graphics {
 		void DestroySwapchain();
 
 		SDL_Window* window;
-		VulkanContext& vulkan;
+		VulkanContext* vulkan;
 
 		VmaAllocator vmaAllocator = VK_NULL_HANDLE;
 		VkSurfaceKHR surface = VK_NULL_HANDLE;

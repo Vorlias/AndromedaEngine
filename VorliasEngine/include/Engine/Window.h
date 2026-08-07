@@ -8,6 +8,8 @@
 #include "Engine/Graphics/Shader.h"
 
 namespace andromeda {
+	using WindowID = SDL_WindowID;
+
 	enum class WindowFlags : uint64_t {
 		Resizable = SDL_WINDOW_RESIZABLE,
 		Fullscreen = SDL_WINDOW_FULLSCREEN,
@@ -113,7 +115,7 @@ namespace andromeda {
 		void Close();
 
 		SDL_Window* GetHandle() const;
-		SDL_WindowID GetWindowId() const;
+		WindowID GetWindowId() const;
 		inline bool HasRequestedExit() const {
 			return m_requestedExit;
 		}
@@ -123,13 +125,12 @@ namespace andromeda {
 	private:
 		friend class Engine;
 		graphics::GraphicsContext* m_graphics_context;
-
 		WindowOptions m_window_options;
 		SDL_WindowID m_window_id;
 		SDL_Window* m_window = nullptr;
 		bool m_requestedExit = false;
 
-		static SDL_WindowID s_primary_window_id;
-		static std::map<SDL_WindowID, Window&> s_windows;
+		// static SDL_WindowID s_primary_window_id;
+		// static std::map<SDL_WindowID, Window&> s_windows;
 	};
 } // namespace andromeda

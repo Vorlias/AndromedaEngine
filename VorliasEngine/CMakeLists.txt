@@ -68,6 +68,7 @@ target_sources(
     src/Engine/Data/Vector.cpp
     src/Engine/Time.cpp
     src/Engine/Application.cpp
+    src/Engine/IMGUI.cpp
     PUBLIC # exposed
     include/Engine/Engine.h
     include/Engine/Platform.h
@@ -86,6 +87,7 @@ target_sources(
     include/Engine/Data/Vector.h
     include/Engine/Time.h
     include/Engine/DateTime.h
+    include/Engine/IMGUI.h
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

@@ -46,7 +46,7 @@ void Engine::Run(Application* app) {
 			// 	app->m_fixedDeltaTime = (nextFixedUpdate / 1000.0f);
 			// 	lastFixedUpdate = SDL_GetTicks();
 			// }
-			
+
 			if (m_renderer != nullptr)
 				Render();
 
@@ -75,18 +75,15 @@ Engine& Engine::GetInstance() {
 	return *s_instance;
 }
 
-Engine::Engine() : m_app(nullptr), m_main_window(nullptr) {}
+Engine::Engine() : m_app(nullptr) {}
+
+std::shared_ptr<Window> Engine::GetMainWindow() const {
+	return m_app->GetMainWindow();
+}
 
 bool Engine::Initialize() {
 	if (!m_isInitialized) {
 		if (m_currentAPI != graphics::Renderer::API::None) {
-			m_main_window = CreateSharedRef<Window>(m_app->GetWindowOptions());
-
-			if (!m_app->Initialize())
-				return false;
-
-			m_isInitialized = true;
-
 			switch (m_currentAPI) {
 				case graphics::API::None:
 					break;
@@ -100,11 +97,19 @@ bool Engine::Initialize() {
 #endif
 			}
 
-			if (!m_main_window->Initialize(m_renderer.get())) {
-				Shutdown();
+			if (!m_app->Initialize())
+				return false;
+
+			// If no window, we can't really do anything lol
+			auto main_window = m_app->GetMainWindow();
+			if (main_window == nullptr) {
+				andromeda::warn("No main window set, shutting down...");
+				m_app->Shutdown();
 				return false;
 			}
 
+
+			m_isInitialized = true;
 			m_isRunning = true;
 			return true;
 		} else {
@@ -128,25 +133,26 @@ void Engine::Quit() {
 }
 
 void Engine::Update() {
-	if (m_main_window != nullptr) {
-		SDL_Event e;
-		while (m_main_window->PollSDLEvent(&e)) {
-			switch (e.type) {
-				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-					Quit();
-					break;
-				case SDL_EVENT_WINDOW_RESIZED:
-					m_main_window->Resized(e.window.data1, e.window.data2);
-					andromeda::trace("Resized to " + std::to_string(e.window.data1) + "x" + std::to_string(e.window.data2));
-					break;
-			}
-			
-#if ANDROMEDA_INTERNAL
-			m_app->WindowEvent(e);
-#endif
-		}
-	}
+	m_app->UpdateWindows();
 
+	// 	if (m_main_window != nullptr) {
+	// 		SDL_Event e;
+	// 		while (m_main_window->PollSDLEvent(&e)) {
+	// 			switch (e.type) {
+	// 				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+	// 					Quit();
+	// 					break;
+	// 				case SDL_EVENT_WINDOW_RESIZED:
+	// 					m_main_window->Resized(e.window.data1, e.window.data2);
+	// 					andromeda::trace("Resized to " + std::to_string(e.window.data1) + "x" + std::to_string(e.window.data2));
+	// 					break;
+	// 			}
+
+	// #if ANDROMEDA_INTERNAL
+	// 			m_app->WindowEvent(e);
+	// #endif
+	// 		}
+	// 	}
 	m_app->Update(m_app->m_deltaTime);
 }
 
@@ -163,7 +169,7 @@ void Engine::Render() {
 
 void Engine::Shutdown() {
 	m_app->Shutdown();
-	m_main_window->Shutdown();
+	m_app->CloseAllWindows();
 
 	if (m_renderer != nullptr)
 		m_renderer->Shutdown();

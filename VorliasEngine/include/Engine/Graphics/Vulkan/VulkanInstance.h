@@ -10,6 +10,9 @@
 namespace andromeda::graphics {
 	class VulkanContext {
 	public:
+		VulkanContext() = default;
+		NO_COPY(VulkanContext)
+
 		constexpr static uint32_t VulkanVersion{VK_API_VERSION_1_4};
 
 		bool InitVulkan();

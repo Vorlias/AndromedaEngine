@@ -21,6 +21,6 @@ namespace andromeda::graphics {
 
 		~VulkanRenderer() override;
 	private:
-		VulkanContext context;
+		VulkanContext* context;
 	};
 } // namespace andromeda::graphics

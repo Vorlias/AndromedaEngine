@@ -7,7 +7,7 @@
 #include <spdlog/spdlog.h>
 
 namespace andromeda::graphics {
-	VulkanWindowContext::VulkanWindowContext(VulkanContext& vulkan, SDL_Window* window) : vulkan(vulkan), window(window) {
+	VulkanWindowContext::VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window) : vulkan(vulkan), window(window) {
 		andromeda::trace("Create window context");
 	}
 
@@ -58,13 +58,13 @@ namespace andromeda::graphics {
 
 		if (surface != VK_NULL_HANDLE) {
 			andromeda::trace("Cleaned up surface");
-			SDL_Vulkan_DestroySurface(vulkan.instance, surface, nullptr);
+			SDL_Vulkan_DestroySurface(vulkan->instance, surface, nullptr);
 			surface = nullptr;
 		}
 	}
 
 	bool VulkanWindowContext::CreateSurface() {
-		if (!SDL_Vulkan_CreateSurface(window, vulkan.instance, nullptr, &surface)) {
+		if (!SDL_Vulkan_CreateSurface(window, vulkan->instance, nullptr, &surface)) {
 			andromeda::warn("Could not create surface for window " + std::to_string(SDL_GetWindowID(window)));
 			return false;
 		}
@@ -80,7 +80,7 @@ namespace andromeda::graphics {
 			.physicalDevice = physicalDevice,
 			.device = device,
 			.pVulkanFunctions = &vmaFuncInfo,
-			.instance = vulkan.instance,
+			.instance = vulkan->instance,
 			.vulkanApiVersion = VulkanContext::VulkanVersion,
 		};
 
@@ -241,10 +241,10 @@ namespace andromeda::graphics {
 
 	VkPhysicalDevice VulkanWindowContext::FindPhysicalDevice() {
 		uint32_t physicalDeviceCount = 0;
-		vkEnumeratePhysicalDevices(vulkan.instance, &physicalDeviceCount, nullptr);
+		vkEnumeratePhysicalDevices(vulkan->instance, &physicalDeviceCount, nullptr);
 
 		std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
-		vkEnumeratePhysicalDevices(vulkan.instance, &physicalDeviceCount, physicalDevices.data());
+		vkEnumeratePhysicalDevices(vulkan->instance, &physicalDeviceCount, physicalDevices.data());
 
 		VkPhysicalDevice physicalDevice = nullptr;
 		if (physicalDeviceCount) {

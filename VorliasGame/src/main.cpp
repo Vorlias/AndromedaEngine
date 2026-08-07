@@ -3,6 +3,7 @@
 #include "Engine/Main.h"
 #include "Engine/Window.h"
 #include "Engine/FileDialogs.h"
+#include "Engine/IMGUI.h"
 
 
 // #include <SDL3/SDL.h>
@@ -26,16 +27,19 @@ class GameApplication : public andromeda::Application {
 	}
 
 	void Update(float deltaTime) override {
-		std::cout << " time is " << deltaTime << ", elapsed = " << GetElapsedTime() << std::endl;
+		// std::cout << " time is " << deltaTime << ", elapsed = " << GetElapsedTime() << std::endl;
 	}
 
 	bool Initialize() override {
 		SetFramerateLimit(60);
-		std::cout << "framerate limit is " << GetFramerateLimit() << std::endl;
+		
+		auto opts = andromeda::WindowOptions("Test", andromeda::Vector2u(800, 600), andromeda::WindowFlags::Default);
+		CreateWindow(opts);
+
 		return true;
 	}
 };
 
 andromeda::Application* ApplicationMain(const andromeda::ApplicationInit& init) {
-	return nullptr; // new GameApplication();
+	return new GameApplication();
 }

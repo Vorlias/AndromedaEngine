@@ -10,8 +10,8 @@ andromeda::WindowOptions::WindowOptions() {}
 andromeda::Window::Window(const WindowOptions& options) : m_window_options(options) {}
 andromeda::Window::~Window() {}
 
-SDL_WindowID andromeda::Window::s_primary_window_id{};
-std::map<SDL_WindowID, andromeda::Window&> andromeda::Window::s_windows{};
+// SDL_WindowID andromeda::Window::s_primary_window_id{};
+// std::map<SDL_WindowID, andromeda::Window&> andromeda::Window::s_windows{};
 
 bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	using namespace graphics;
@@ -47,12 +47,6 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	SDL_SetWindowPosition(m_window, m_window_options.position.x, m_window_options.position.y);
 
 	m_window_id = SDL_GetWindowID(m_window);
-	SDL_Window* main_window = SDL_GetWindowFromID(s_primary_window_id);
-	if (main_window == nullptr) {
-		s_primary_window_id = m_window_id;
-	}
-
-	s_windows.insert({m_window_id, *this});
 
 	if (renderer != nullptr) {
 		renderer->Initialize();
@@ -132,16 +126,16 @@ void andromeda::Window::Close() {
 
 void andromeda::Window::Shutdown() {
 	if (m_window != nullptr) {
-		s_windows.erase(m_window_id);
+		// s_windows.erase(m_window_id);
 
 
-		if (s_primary_window_id == m_window_id) {
-			for (auto& window : s_windows) {
-				window.second.Shutdown();
-			}
+		// if (s_primary_window_id == m_window_id) {
+		// 	for (auto& window : s_windows) {
+		// 		window.second.Shutdown();
+		// 	}
 
-			s_primary_window_id = 0;
-		}
+		// 	s_primary_window_id = 0;
+		// }
 
 		m_graphics_context->Shutdown();
 		andromeda::trace("Cleaned up window " + std::to_string(m_window_id));

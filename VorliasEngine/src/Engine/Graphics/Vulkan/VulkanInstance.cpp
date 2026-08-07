@@ -11,6 +11,7 @@ namespace andromeda::graphics {
 			return false;
 		}
 
+		andromeda::print("Created Vulkan Context");
 		return true;
 	}
 
@@ -38,11 +39,11 @@ namespace andromeda::graphics {
 				break;
 #if defined(ANDROMEDA_DEBUG)
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-			    andromeda::print(pCallbackData->pMessage);
-			    break;
+				andromeda::print(pCallbackData->pMessage);
+				break;
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-			    andromeda::trace(pCallbackData->pMessage);
-			    break;
+				andromeda::trace(pCallbackData->pMessage);
+				break;
 #endif
 			default:
 				break;
@@ -53,6 +54,7 @@ namespace andromeda::graphics {
 
 	bool VulkanContext::CreateVulkanInstance() {
 		if (volkInitialize() != VK_SUCCESS) {
+			andromeda::error("Could not initialize Volk");
 			return false;
 		}
 
@@ -87,6 +89,7 @@ namespace andromeda::graphics {
 		};
 
 		if (vkCreateInstance(&instCreateInfo, nullptr, &instance) != VK_SUCCESS) {
+			andromeda::error("Could not create vulkan instance");
 			return false;
 		}
 

@@ -4,7 +4,10 @@
 
 namespace andromeda::graphics {
 	bool VulkanRenderer::Initialize() {
-		if (!context.InitVulkan())
+		if (context != nullptr) return false;
+		context = new VulkanContext();
+
+		if (!context->InitVulkan())
 			return false;
 
 		andromeda::trace("Vulkan Initialized");
@@ -16,8 +19,9 @@ namespace andromeda::graphics {
 	void VulkanRenderer::SetClearColor(Color color) {}
 
 	void VulkanRenderer::Shutdown() {
-		context.Shutdown();
+		context->Shutdown();
 		andromeda::trace("Shutdown Vulkan Renderer");
+		delete context;
 	}
 } // namespace andromeda::graphics
 

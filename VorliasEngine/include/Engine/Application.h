@@ -6,12 +6,12 @@ namespace andromeda {
 	class Application {
 	public:
 		virtual const WindowOptions GetWindowOptions() const {
-			return WindowOptions();
+			return WindowOptions("AndromedaEngine", Vector2u(1024, 768), WindowFlags::Default);
 		}
 
 		// Set up the application - returns a boolean indicating if initialization was successful
 		virtual bool Initialize() {
-			return true;
+			return CreateWindow(GetWindowOptions()) != nullptr;
 		}
 
 #if ANDROMEDA_INTERNAL
@@ -30,6 +30,11 @@ namespace andromeda {
 
 		// Called when the application is shutting down
 		virtual void Shutdown() {}
+
+	protected:
+		std::shared_ptr<Window> CreateWindow(const WindowOptions& windowOptions);
+		std::shared_ptr<Window> GetMainWindow() const;
+		std::shared_ptr<Window> GetWindowById(WindowID id) const;
 	public:
 		// Gets the amount of time the application has been open
         [[nodiscard]] constexpr float GetElapsedTime() const;
@@ -43,7 +48,20 @@ namespace andromeda {
 
 		void Quit();
 	private:
+		void UpdateWindows();
+		void CloseAllWindows() {
+			for (auto wnd : m_windows) {
+				wnd->Shutdown();
+			}
+
+			m_windows.clear();
+			m_main_window = nullptr;
+		}
+
         friend class Engine;
+
+		std::shared_ptr<Window> m_main_window;
+		std::vector<std::shared_ptr<Window>> m_windows{};
 
         Time m_frameTime;
 		float m_deltaTime;
@@ -56,11 +74,11 @@ namespace andromeda {
 		bool m_quitRequested;
 	};
 
-    constexpr float Application::GetElapsedTime() const {
-        return m_elapsedTime;
-    }
+	constexpr float Application::GetElapsedTime() const {
+		return m_elapsedTime;
+	}
 
-    constexpr float Application::GetDeltaTime() const {
+	constexpr float Application::GetDeltaTime() const {
         return m_deltaTime;
     }
 } // namespace andromeda
