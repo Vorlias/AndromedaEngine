@@ -12,5 +12,8 @@ target_sources(IMGUI PUBLIC
     imgui/imstb_textedit.h
     imgui/imstb_truetype.h
     imgui/imgui_impl_vulkan.h
-    imgui/imgui_impl_vulkan.cpp)
+    imgui/imgui_impl_vulkan.cpp
+    imgui/imgui_impl_sdl3.h
+    imgui/imgui_impl_sdl3.cpp
+)
 target_include_directories(IMGUI PUBLIC .)
