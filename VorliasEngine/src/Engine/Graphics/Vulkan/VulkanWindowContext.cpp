@@ -342,9 +342,10 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::SetupIMGUI(ImGui_ImplVulkanH_Window* wd) {
-		wd->Surface = surface;
-		wd->Swapchain = swapchain;
-		wd->Width = swapchainWidth;
-		wd->Height = swapchainHeight;
+		// wd->Surface = surface;
+		// wd->Swapchain = swapchain;
+		// wd->Width = swapchainWidth;
+		// wd->Height = swapchainHeight;
+		
 	}
 } // namespace andromeda::graphics

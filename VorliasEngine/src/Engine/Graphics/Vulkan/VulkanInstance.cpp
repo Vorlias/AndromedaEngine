@@ -5,6 +5,7 @@
 #include <SDL3/SDL_vulkan.h>
 #include "VulkanUtils.h"
 #include <algorithm>
+using namespace andromeda::graphics;
 
 namespace andromeda::graphics {
 	static VulkanContext* s_context;
@@ -202,4 +203,28 @@ int32_t andromeda::graphics::VulkanContext::SelectGraphicsQueueFamilyIndex() {
 	}
 
 	return -1;
+}
+
+VkDevice VulkanContext::CreateDevice(const VkVec<const char*>& extensions, const VkVec<VkDeviceQueueCreateInfo>& createInfos) const {
+	VkDeviceCreateInfo createInfo{
+		.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+		.queueCreateInfoCount = createInfos.count,
+		.pQueueCreateInfos = createInfos.data,
+		.enabledExtensionCount = extensions.count,
+		.ppEnabledExtensionNames = extensions.data,
+	};
+
+	VkDevice device;
+	if (vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+		andromeda::error("Failed to create device from physical device");
+		return VK_NULL_HANDLE;
+	}
+
+	return device;
+}
+
+VkQueue VulkanContext::CreateDeviceQueue(VkDevice device, uint32_t familyQueue, uint32_t queueIndex) const {
+	VkQueue queue;
+	vkGetDeviceQueue(device, familyQueue, queueIndex, &queue);
+	return queue;
 }

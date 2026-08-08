@@ -4,6 +4,7 @@
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Log.h"
+#include "Engine/Graphics/Vulkan/VulkanUtils.h"
 
 
 #include "imgui/imgui_impl_vulkan.h"
@@ -51,18 +52,11 @@ public:
 				.pQueuePriorities = queue_priority,
 			}};
 
-			VkDeviceCreateInfo createInfo{
-				.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-				.queueCreateInfoCount = sizeof(queue_info) / sizeof(queue_info[0]),
-				.pQueueCreateInfos = queue_info,
-				.enabledExtensionCount = (uint32_t)device_extensions.Size,
-				.ppEnabledExtensionNames = device_extensions.Data,
-			};
-
-			if (vkCreateDevice(ctx->GetPhysicalDevice(), &createInfo, nullptr, &m_device) != VK_SUCCESS) {
-				andromeda::error("Failed to create device for IMGUI");
+			m_device = ctx->CreateDevice(device_extensions, {queue_info, 1});
+			if (m_device == nullptr)
 				return;
-			}
+
+			vkGetDeviceQueue(m_device, ctx->GetGraphicsFamilyIndex(), 0, &m_queue);
 		}
 
 		// Create Descriptor Pool
@@ -94,53 +88,40 @@ public:
 
 		andromeda::Vector2i windowSize = window.GetWindowSizeInPixels();
 
-		// Check for WSI support
-		ImGui_ImplVulkanH_Window* wd = &m_windowData;
-		VkBool32 res;
-
+		VkBool32 res = VK_FALSE;
 		vkGetPhysicalDeviceSurfaceSupportKHR(m_context->GetPhysicalDevice(), m_context->GetGraphicsFamilyIndex(), m_surface, &res);
 		if (res != VK_TRUE) {
 			andromeda::error("No WSI support on physical device");
 			exit(-1);
 		}
-
 		IMGUI_CHECKVERSION();
+		auto imguiContext = ImGui::CreateContext();
 
-		ImGui::CreateContext();
-
-		const VkFormat requestSurfaceImageFormat[] = {
-			VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM
+		ImGui_ImplVulkan_InitInfo initInfo{
+			.ApiVersion = andromeda::graphics::VulkanContext::VulkanVersion,
+			.Instance = m_context->GetInstance(),
+			.PhysicalDevice = m_context->GetPhysicalDevice(),
+			.QueueFamily = (uint32_t)m_context->GetGraphicsFamilyIndex(),
+			.Device = m_device,
+			.Queue = m_queue,
+			.DescriptorPool = m_descriptorPool,
+			.ImageCount = 2,
+			.MinImageCount = 2,
+			.PipelineCache = VK_NULL_HANDLE,
+			.PipelineInfoMain{
+				.RenderPass = VK_NULL_HANDLE,
+				.Subpass = 0,
+			},
+			.UseDynamicRendering = true,
 		};
-		const VkColorSpaceKHR requestSurfaceColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-		wd->Surface = m_surface;
-		wd->SurfaceFormat = ImGui_ImplVulkanH_SelectSurfaceFormat(
-			m_context->GetPhysicalDevice(),
-			wd->Surface,
-			requestSurfaceImageFormat,
-			(size_t)IM_COUNTOF(requestSurfaceImageFormat),
-			requestSurfaceColorSpace
-		);
 
-		VkPresentModeKHR present_modes[] = {VK_PRESENT_MODE_FIFO_KHR};
-		wd->PresentMode =
-			ImGui_ImplVulkanH_SelectPresentMode(m_context->GetPhysicalDevice(), wd->Surface, &present_modes[0], IM_COUNTOF(present_modes));
+		if (!ImGui_ImplVulkan_Init(&initInfo)) {
+			return false;
+		}
 
-		// Create SwapChain, RenderPass, Framebuffer, etc.
-		IM_ASSERT(g_MinImageCount >= 2);
-		// ImGui_ImplVulkanH_CreateOrResizeWindow(
-		// 	m_context->GetInstance(),
-		// 	m_context->GetPhysicalDevice(),
-		// 	m_device,
-		// 	wd,
-		// 	m_context->GetGraphicsFamilyIndex(),
-		// 	nullptr,
-		// 	windowSize.x,
-		// 	windowSize.y,
-		// 	g_MinImageCount,
-		// 	0
-		// );
-
-		windowContext->SetupIMGUI(wd);
+		if (!ImGui_ImplSDL3_InitForVulkan(window.GetHandle())) {
+			return false;
+		}
 
 		return true;
 	}
@@ -150,6 +131,9 @@ public:
 			vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 			m_descriptorPool = VK_NULL_HANDLE;
 		}
+
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplSDL3_Shutdown();
 
 		if (m_device != VK_NULL_HANDLE) {
 			vkDestroyDevice(m_device, nullptr);
@@ -162,6 +146,7 @@ private:
 
 	andromeda::graphics::VulkanContext* m_context{nullptr};
 	VkDevice m_device{VK_NULL_HANDLE};
+	VkQueue m_queue{VK_NULL_HANDLE};
 	VkDescriptorPool m_descriptorPool{VK_NULL_HANDLE};
 	ImGui_ImplVulkanH_Window m_windowData{};
 };

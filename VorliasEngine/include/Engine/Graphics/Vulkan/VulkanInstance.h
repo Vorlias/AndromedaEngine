@@ -3,11 +3,25 @@
 // #define VMA_IMPLEMENTATION
 // #include "vk_mem_alloc.h"
 
+#include "Engine/Log.h"
 #include "Engine/Graphics/GraphicsContext.h"
 #include <SDL3/SDL.h>
-#include <vulkan/vulkan.h>
+#include <imgui/imgui.h>
+#include <volk.h>
 
 namespace andromeda::graphics {
+	// Data structure that contains an array and size portion that can be passed directly to vulkan
+	template<typename T>
+	struct VkVec {
+		const T* data{nullptr};
+		uint32_t count{0};
+
+		VkVec(T* data, uint32_t size) : data(data), count(size) {}
+		VkVec(std::vector<T> vector) : data(vector.data()), count(vector.size()) {}
+		VkVec(ImVector<T> vector) : data(vector.Data), count((uint32_t)vector.Size) {}
+		VkVec(std::pair<T*, uint32_t> pair) : data(pair.first), count(pair.second) {}
+	};
+
 	struct VulkanQueueFamily {
 		int32_t queueIndex{-1};
 		VkQueueFlags queueFlags{0};
@@ -28,6 +42,10 @@ namespace andromeda::graphics {
 
 		bool InitVulkan();
 		void Shutdown();
+
+		// Create a logical device instance for the physical device
+		VkDevice CreateDevice(const VkVec<const char*>& extensions, const VkVec<VkDeviceQueueCreateInfo>& createInfos) const;
+		VkQueue CreateDeviceQueue(VkDevice device, uint32_t familyQueue, uint32_t queueIndex) const;
 
 		constexpr VkInstance GetInstance() const {
 			return m_instance;
