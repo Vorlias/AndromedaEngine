@@ -12,10 +12,10 @@ typedef struct VmaAllocation_T* VmaAllocation;
 
 namespace andromeda::graphics {
 	class VulkanWindowContext : public GraphicsContext {
+	public:
 		constexpr static VkFormat swapchainFormat{VK_FORMAT_B8G8R8A8_SRGB};
 		constexpr static VkFormat depthFormat{VK_FORMAT_D32_SFLOAT}; // represents a depth buffer of 32 bit floats
 
-	public:
 		VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window);
 		void Initialize() override;
 		void Shutdown() override;
@@ -24,6 +24,7 @@ namespace andromeda::graphics {
 		[[nodiscard]] constexpr VkDevice GetDevice() const { return device; }
 		[[nodiscard]] constexpr VkSurfaceKHR GetSurface() const { return surface; }
 		[[nodiscard]] constexpr VkSwapchainKHR GetSwapchain() const { return swapchain; }
+		[[nodiscard]] constexpr VkQueue GetGraphicsQueue() const { return graphicsQueue; }
 
 		void SetupIMGUI(ImGui_ImplVulkanH_Window* wd);
 	private:

@@ -37,10 +37,16 @@ int main() {
 					break;
 			}
 		}
+
+		imWindow->NewFrame();
+		ImGui::ShowDemoWindow();
+		imWindow->Render();
 	}
 
 	window.Shutdown();
 	imWindow->Shutdown();
 	vr.Shutdown();
+
+	SDL_Quit();
 	return 0;
 }

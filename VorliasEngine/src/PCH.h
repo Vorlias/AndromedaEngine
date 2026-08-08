@@ -121,7 +121,7 @@ using byte = unsigned char;
 
 #ifdef ANDROMEDA_DEBUG
 #	define ANDROMEDA_ASSERT(expr) \
-		if (!expr) { \
+		if (!(expr)) { \
 			fprintf( \
 				stderr, COLOR_RED "[%s] ASSERTION FAILED: %s\n" COLOR_YELLOW "\tFile: %s:%d\n\n" COLOR_RESET, __TIME__, #expr, __FILE__, __LINE__ \
 			); \

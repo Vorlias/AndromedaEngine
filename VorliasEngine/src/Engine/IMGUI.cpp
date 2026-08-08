@@ -25,39 +25,42 @@ public:
 			abort();
 		}
 
-		m_context = ctx;
+		m_context = ctx; // set this
+	}
 
-		// We've already set up instance + physicalDevice + queue in ctx
-		// Create logical device with one queue
-		{
-			ImVector<const char*> device_extensions;
-			device_extensions.push_back("VK_KHR_swapchain");
+	constexpr static uint32_t g_MinImageCount = 2;
+	bool Initialize(andromeda::Window& window) override {
+		auto vulkanWindowContext = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
+		m_windowContext = vulkanWindowContext;
 
-			uint32_t properties_count;
-			ImVector<VkExtensionProperties> properties;
-			vkEnumerateDeviceExtensionProperties(ctx->GetPhysicalDevice(), nullptr, &properties_count, nullptr);
-			properties.resize(properties_count);
-			vkEnumerateDeviceExtensionProperties(ctx->GetPhysicalDevice(), nullptr, &properties_count, properties.Data);
+		m_surface = vulkanWindowContext->GetSurface(); // get window surface from window
+		m_device = vulkanWindowContext->GetDevice();
+		m_queue = vulkanWindowContext->GetGraphicsQueue();
 
-#ifdef VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME
-			if (IsExtensionAvailable(properties, VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME))
-				device_extensions.push_back(VK_KHR_PORTABILITY_SUBSET_EXTENSION_NAME);
-#endif
+		ANDROMEDA_ASSERT((m_context != 0));
+		const VkFormat requestSurfaceImageFormat[] = {
+			VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM
+		};
+		const VkColorSpaceKHR requestSurfaceColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+		m_surfaceFormat = ImGui_ImplVulkanH_SelectSurfaceFormat(
+			m_context->GetPhysicalDevice(),
+			m_surface,
+			requestSurfaceImageFormat,
+			(size_t)IM_COUNTOF(requestSurfaceImageFormat),
+			requestSurfaceColorSpace
+		);
 
-			const float queue_priority[] = {1.0f};
-			VkDeviceQueueCreateInfo queue_info[1] = {{
-				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-				.queueFamilyIndex = (uint32_t)ctx->GetGraphicsFamilyIndex(),
-				.queueCount = 1,
-				.pQueuePriorities = queue_priority,
-			}};
+		VkPresentModeKHR present_modes[] = {VK_PRESENT_MODE_FIFO_KHR};
+		m_presentMode = ImGui_ImplVulkanH_SelectPresentMode(m_context->GetPhysicalDevice(), m_surface, &present_modes[0], IM_COUNTOF(present_modes));
 
-			m_device = ctx->CreateDevice(device_extensions, {queue_info, 1});
-			if (m_device == nullptr)
-				return;
-
-			vkGetDeviceQueue(m_device, ctx->GetGraphicsFamilyIndex(), 0, &m_queue);
+		VkBool32 res = VK_FALSE;
+		vkGetPhysicalDeviceSurfaceSupportKHR(m_context->GetPhysicalDevice(), m_context->GetGraphicsFamilyIndex(), m_surface, &res);
+		if (res != VK_TRUE) {
+			andromeda::error("No WSI support on physical device");
+			exit(-1);
 		}
+		IMGUI_CHECKVERSION();
+		auto imguiContext = ImGui::CreateContext();
 
 		// Create Descriptor Pool
 		// If you wish to load e.g. additional textures you may need to alter pools sizes and maxSets.
@@ -76,26 +79,9 @@ public:
 			pool_info.pPoolSizes = pool_sizes;
 			if (vkCreateDescriptorPool(m_device, &pool_info, nullptr, &m_descriptorPool) != VK_SUCCESS) {
 				andromeda::error("Failed to create descriptor pool for IMGUI");
-				return;
+				return false;
 			}
 		}
-	}
-
-	constexpr static uint32_t g_MinImageCount = 2;
-	bool Initialize(andromeda::Window& window) override {
-		auto windowContext = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
-		m_surface = windowContext->GetSurface(); // get window surface from window
-
-		andromeda::Vector2i windowSize = window.GetWindowSizeInPixels();
-
-		VkBool32 res = VK_FALSE;
-		vkGetPhysicalDeviceSurfaceSupportKHR(m_context->GetPhysicalDevice(), m_context->GetGraphicsFamilyIndex(), m_surface, &res);
-		if (res != VK_TRUE) {
-			andromeda::error("No WSI support on physical device");
-			exit(-1);
-		}
-		IMGUI_CHECKVERSION();
-		auto imguiContext = ImGui::CreateContext();
 
 		ImGui_ImplVulkan_InitInfo initInfo{
 			.ApiVersion = andromeda::graphics::VulkanContext::VulkanVersion,
@@ -109,11 +95,24 @@ public:
 			.MinImageCount = 2,
 			.PipelineCache = VK_NULL_HANDLE,
 			.PipelineInfoMain{
-				.RenderPass = VK_NULL_HANDLE,
+				.RenderPass = VK_NULL_HANDLE, // dynamic rendering enabled
 				.Subpass = 0,
+				.PipelineRenderingCreateInfo{
+					VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+					.colorAttachmentCount = 1,
+					.pColorAttachmentFormats = &andromeda::graphics::VulkanWindowContext::swapchainFormat,
+				},
 			},
 			.UseDynamicRendering = true,
 		};
+
+		ImGui_ImplVulkan_LoadFunctions(
+			andromeda::graphics::VulkanContext::VulkanVersion,
+			[](const char* function_name, void* user_data) {
+				return vkGetDeviceProcAddr((VkDevice)user_data, function_name);
+			},
+			m_device
+		);
 
 		if (!ImGui_ImplVulkan_Init(&initInfo)) {
 			return false;
@@ -126,6 +125,21 @@ public:
 		return true;
 	}
 
+	void NewFrame() override {
+		ImGui_ImplVulkan_NewFrame();
+		ImGui_ImplSDL3_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	void Render() override {
+		ImGui::Render();
+		ImDrawData* drawData = ImGui::GetDrawData();
+
+		VkResult err = vkAcquireNextImageKHR( // going to need a separate swapchain here prob. ? 
+			/* device */ m_windowContext->GetDevice(),  /*swapchain*/ m_windowContext->GetSwapchain(), UINT64_MAX, /*semaphore*/ nullptr, /*fence*/ nullptr, /*pImageIndex*/ nullptr
+		);
+	}
+
 	void CleanupContext() override {
 		if (m_descriptorPool != VK_NULL_HANDLE) {
 			vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
@@ -134,21 +148,27 @@ public:
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplSDL3_Shutdown();
+		ImGui::DestroyContext();
 
-		if (m_device != VK_NULL_HANDLE) {
-			vkDestroyDevice(m_device, nullptr);
-			m_device = nullptr;
-		}
+		// if (m_device != VK_NULL_HANDLE) {
+		// 	vkDestroyDevice(m_device, nullptr);
+		// 	m_device = nullptr;
+		// }
 	}
 
 private:
 	VkSurfaceKHR m_surface{nullptr};
+	VkSurfaceFormatKHR m_surfaceFormat{};
+	VkPresentModeKHR m_presentMode{};
+
+	ImGui_ImplVulkanH_Window* m_imguiWindow{nullptr};
 
 	andromeda::graphics::VulkanContext* m_context{nullptr};
+	andromeda::graphics::VulkanWindowContext* m_windowContext{nullptr};
+
 	VkDevice m_device{VK_NULL_HANDLE};
 	VkQueue m_queue{VK_NULL_HANDLE};
 	VkDescriptorPool m_descriptorPool{VK_NULL_HANDLE};
-	ImGui_ImplVulkanH_Window m_windowData{};
 };
 
 namespace andromeda {
