@@ -31,8 +31,11 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 			break;
 #ifdef ANDROMEDA_OPENGL
 		case Renderer::API::OpenGL:
+			window_flags |= SDL_WINDOW_OPENGL;
 			break;
 #endif
+		case Renderer::API::None:
+			break;
 		default:
 			break;
 	}

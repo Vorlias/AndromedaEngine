@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <algorithm>
 
 #include <string>
 #include <sstream>
@@ -109,6 +110,8 @@ using byte = unsigned char;
 #	define COLOR_RESET ""
 #endif
 
+#define STD_FIND(HAYSTACK, NEEDLE) std::find(HAYSTACK.begin(), HAYSTACK.end(), NEEDLE) != HAYSTACK.end()
+
 #if ANDROMEDA_WIN
 #	define ANDROMEDA_BREAK __debugbreak()
 #elif ANDROMEDA_LINUX
@@ -127,9 +130,16 @@ using byte = unsigned char;
 			); \
 			abort(); \
 		}
+#	define ANDROMEDA_ASSERTM(expr, MSG) \
+		if (!(expr)) { \
+			fprintf( \
+				stderr, COLOR_RED "[%s] ASSERTION FAILED: %s\n" COLOR_YELLOW "\tFile: %s:%d\n\n" COLOR_RESET, __TIME__, #expr ": " MSG, __FILE__, __LINE__ \
+			); \
+			abort(); \
+		}
 #else
 #	define ANDROMEDA_ASSERT(expr) ((void)0)
+#	define ANDROMEDA_ASSERTM(...) ((void)0)
 #endif
 
 #endif // PCH_H
-

@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Graphics/GraphicsContext.h"
+#include "Engine/Graphics/Vulkan/VulkanShader.h"
 #include "Engine/Graphics/Vulkan/VulkanInstance.h"
 #include "imgui/imgui_impl_vulkan.h"
 #include <SDL3/SDL.h>
@@ -32,12 +33,16 @@ namespace andromeda::graphics {
 		[[nodiscard]] bool InitializeVMA();
 		[[nodiscard]] bool CreateDevice(uint32_t queueIndex);
 		[[nodiscard]] bool CreateShaders();
+		[[nodiscard]] bool CreateGraphicsPipeline();
 
 		bool CreateSwapchain(int width, int height);
 		void DestroySwapchain();
 
 		SDL_Window* window;
 		VulkanContext* vulkan;
+
+		VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+		VkPipeline pipeline = VK_NULL_HANDLE;
 
 		VmaAllocator vmaAllocator = VK_NULL_HANDLE;
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
@@ -55,5 +60,7 @@ namespace andromeda::graphics {
 		std::vector<VkSemaphore> renderCompleteSemaphores;
 		bool requireSwapchainRecreate = false;
 		uint32_t swapchainWidth, swapchainHeight;
+
+		Ref<Shader> m_shader;
 	};
 } // namespace andromeda::graphics

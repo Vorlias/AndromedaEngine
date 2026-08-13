@@ -87,18 +87,18 @@ public:
 			.ApiVersion = andromeda::graphics::VulkanContext::VulkanVersion,
 			.Instance = m_context->GetInstance(),
 			.PhysicalDevice = m_context->GetPhysicalDevice(),
-			.QueueFamily = (uint32_t)m_context->GetGraphicsFamilyIndex(),
 			.Device = m_device,
+			.QueueFamily = (uint32_t)m_context->GetGraphicsFamilyIndex(),
 			.Queue = m_queue,
 			.DescriptorPool = m_descriptorPool,
-			.ImageCount = 2,
 			.MinImageCount = 2,
+			.ImageCount = 2,
 			.PipelineCache = VK_NULL_HANDLE,
 			.PipelineInfoMain{
 				.RenderPass = VK_NULL_HANDLE, // dynamic rendering enabled
 				.Subpass = 0,
 				.PipelineRenderingCreateInfo{
-					VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+					.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 					.colorAttachmentCount = 1,
 					.pColorAttachmentFormats = &andromeda::graphics::VulkanWindowContext::swapchainFormat,
 				},
@@ -141,13 +141,14 @@ public:
 	}
 
 	void CleanupContext() override {
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplSDL3_Shutdown();
+
 		if (m_descriptorPool != VK_NULL_HANDLE) {
 			vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 			m_descriptorPool = VK_NULL_HANDLE;
 		}
 
-		ImGui_ImplVulkan_Shutdown();
-		ImGui_ImplSDL3_Shutdown();
 		ImGui::DestroyContext();
 
 		// if (m_device != VK_NULL_HANDLE) {

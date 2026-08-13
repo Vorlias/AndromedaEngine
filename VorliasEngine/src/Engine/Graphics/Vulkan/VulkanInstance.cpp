@@ -2,6 +2,7 @@
 #include "Engine/Log.h"
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
+
 #include <SDL3/SDL_vulkan.h>
 #include "VulkanUtils.h"
 #include <algorithm>
@@ -155,6 +156,8 @@ namespace andromeda::graphics {
 		volkLoadInstance(m_instance);
 		return true;
 	}
+
+	bool VulkanContext::CreateDevice(uint32_t graphicsQueueIndex) {}
 
 	VkPhysicalDevice VulkanContext::SelectPhysicalDevice() {
 		uint32_t gpu_count;

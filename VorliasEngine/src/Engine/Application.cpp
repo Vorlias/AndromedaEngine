@@ -1,7 +1,7 @@
 #include "Engine/Application.h"
 #include "Engine/Log.h"
 #include "Engine/Engine.h"
-#define DISALLOW_MULTI_WINDOWS 0
+#define DISALLOW_MULTI_WINDOWS 1
 
 namespace andromeda {
 	SharedRef<Window> Application::GetMainWindow() const {
@@ -49,6 +49,7 @@ namespace andromeda {
 				switch (e.type) {
 					case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 						if (e.window.windowID == m_main_window->GetWindowId()) {
+							shaders.UnloadAllShaders();
 							CloseAllWindows();
 							Quit();
 						} else {

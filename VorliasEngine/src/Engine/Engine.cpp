@@ -3,6 +3,7 @@
 #include "spdlog/spdlog.h"
 #include "Engine/Log.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
+#include "Engine/Graphics/OpenGL/OpenGLRenderer.h"
 
 USING_ENGINE;
 
@@ -88,11 +89,13 @@ bool Engine::Initialize() {
 				case graphics::API::None:
 					break;
 				case graphics::Renderer::API::Vulkan:
-					m_renderer = CreateScopeRef<graphics::VulkanRenderer>(); // new graphics::VulkanRenderer();
+					m_renderer = CreateScopeRef<graphics::VulkanRenderer>();
 					print("Using renderer " + m_renderer->GetAPIString());
 					break;
 #if ANDROMEDA_OPENGL
 				case graphics::API::OpenGL:
+					m_renderer = CreateScopeRef<graphics::OpenGLRenderer>();
+					print("Using renderer " + m_renderer->GetAPIString());
 					break;
 #endif
 			}

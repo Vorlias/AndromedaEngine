@@ -37,6 +37,8 @@ namespace andromeda {
 		std::shared_ptr<Window> CreateWindow(const WindowOptions& windowOptions);
 		std::shared_ptr<Window> GetMainWindow() const;
 		std::shared_ptr<Window> GetWindowById(WindowID id) const;
+		
+		graphics::ShaderLibrary shaders;
 	public:
 		// Gets the amount of time the application has been open
         [[nodiscard]] constexpr float GetElapsedTime() const;

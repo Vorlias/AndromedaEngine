@@ -133,7 +133,7 @@ namespace andromeda {
 		}
 	private:
 		friend class Engine;
-		graphics::GraphicsContext* m_graphics_context;
+		graphics::GraphicsContext* m_graphics_context = nullptr;
 		WindowOptions m_window_options;
 		SDL_WindowID m_window_id;
 		SDL_Window* m_window = nullptr;

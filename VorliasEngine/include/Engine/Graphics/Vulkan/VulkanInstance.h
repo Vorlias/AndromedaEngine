@@ -61,19 +61,18 @@ namespace andromeda::graphics {
 
 	protected:
 		friend class VulkanWindowContext;
+	private:
+		bool CreateVulkanInstance();
+		VkPhysicalDevice SelectPhysicalDevice();
+		int32_t SelectGraphicsQueueFamilyIndex();
 
-
+		bool CreateDevice(uint32_t graphicsQueueIndex);
 	private:
 		VkInstance m_instance{VK_NULL_HANDLE};
 		VkPhysicalDevice m_physicalDevice{VK_NULL_HANDLE};
+		VkDevice m_device;
 
 		int32_t m_graphicsFamilyIndex{-1};
-
-		bool CreateVulkanInstance();
-
-		VkPhysicalDevice SelectPhysicalDevice();
-
-		int32_t SelectGraphicsQueueFamilyIndex();
 	};
 } // namespace andromeda::graphics
 

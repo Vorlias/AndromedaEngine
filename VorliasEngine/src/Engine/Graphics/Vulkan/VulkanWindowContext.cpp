@@ -1,10 +1,12 @@
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
+#include "Engine/Graphics/Vulkan/VulkanUtils.h"
 #include "Engine/Log.h"
 #include <volk.h>
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 #include <SDL3/SDL_vulkan.h>
 #include <spdlog/spdlog.h>
+#include "Engine/Graphics/Vulkan/VulkanShader.h"
 
 namespace andromeda::graphics {
 	VulkanWindowContext::VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window) : vulkan(vulkan), window(window) {
@@ -14,14 +16,6 @@ namespace andromeda::graphics {
 	void VulkanWindowContext::Initialize() {
 		if (!CreateSurface())
 			return;
-		// if (physicalDevice = FindPhysicalDevice(); !physicalDevice) {
-		// 	return;
-		// }
-
-		// uint32_t queueIndex;
-		// if (queueIndex = FindGraphicsQueue(); queueIndex == UINT32_MAX) {
-		// 	return;
-		// }
 
 		if (!CreateDevice(vulkan->GetGraphicsFamilyIndex())) {
 			return;
@@ -39,6 +33,9 @@ namespace andromeda::graphics {
 
 		if (!CreateShaders())
 			return;
+
+		if (!CreateGraphicsPipeline())
+			return;
 	}
 
 	void VulkanWindowContext::Resized(int width, int height) {
@@ -47,6 +44,8 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::Shutdown() {
+		m_shader.Reset();
+
 		DestroySwapchain();
 
 		if (vmaAllocator) {
@@ -338,7 +337,60 @@ namespace andromeda::graphics {
 	}
 
 	bool VulkanWindowContext::CreateShaders() {
-		return false;
+		VulkanShader* vertShader = new VulkanShader(device);
+		vertShader->LoadFromFile("VorliasEngine/src/Shaders/shader.vert", ShaderType::Vertex);
+		vertShader->LoadFromFile("VorliasEngine/src/Shaders/shader.frag", ShaderType::Fragment);
+		m_shader = vertShader;
+		return true;
+	}
+
+	bool VulkanWindowContext::CreateGraphicsPipeline() {
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+			.setLayoutCount = 0,
+			.pushConstantRangeCount = 0,
+		};
+
+		VK_CHECK_ELSE_RETURN(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout), false);
+
+		auto shader = static_cast<VulkanShader*>(m_shader.AsPtr());
+		// std::vector<VkPipelineShaderStageCreateInfo> shaderStages = shader->GetShaderStages();
+
+		const auto& modules = shader->GetShaderModules();
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages{};
+		shaderStages.resize(modules.size());
+
+		// vertex pulling, don't define vertex input details
+		VkPipelineVertexInputStateCreateInfo vertInputInfo {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+		};
+
+		// input assembly, we'll be drawing triangle lists
+		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		};
+
+		// depth/stencil configuration
+		VkPipelineDepthStencilStateCreateInfo depthStencilInfo {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+			.depthTestEnable = VK_TRUE,
+			.depthWriteEnable = VK_TRUE,
+			.depthCompareOp = VK_COMPARE_OP_LESS,
+			.stencilTestEnable = VK_FALSE,
+		};
+
+		// dynamic rendering allows to set this up.. dynamically
+		// wel still need this struct though
+		VkPipelineViewportStateCreateInfo viewportInfo {
+			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+			.viewportCount = 1,
+			.pViewports = nullptr,
+			.scissorCount = 1,
+			.pScissors = nullptr,
+		};
+
+		return true;
 	}
 
 	void VulkanWindowContext::SetupIMGUI(ImGui_ImplVulkanH_Window* wd) {
@@ -346,6 +398,5 @@ namespace andromeda::graphics {
 		// wd->Swapchain = swapchain;
 		// wd->Width = swapchainWidth;
 		// wd->Height = swapchainHeight;
-		
 	}
 } // namespace andromeda::graphics

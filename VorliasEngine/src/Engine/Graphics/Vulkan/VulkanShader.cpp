@@ -4,20 +4,8 @@
 #include <volk.h>
 
 namespace andromeda::graphics {
-	VulkanShader::VulkanShader(VkDevice device, ShaderType type) : device(device) {
-#if ANDROMEDA_SHADER_COMPILATION || ANDROMEDA_EDITOR
-		shaderc_shader_kind kind;
-		switch (type) {
-			case ShaderType::Fragment:
-				kind = shaderc_fragment_shader;
-				break;
-			case ShaderType::Vertex:
-				kind = shaderc_vertex_shader;
-				break;
-		}
-
-		shader_kind = kind;
-#endif
+	VulkanShader::VulkanShader(VkDevice device) : m_device(device) {
+		m_modules.reserve(2); // for fragment + vertex
 	}
 
 #if ANDROMEDA_SHADER_COMPILATION || ANDROMEDA_EDITOR
@@ -27,6 +15,12 @@ namespace andromeda::graphics {
 			return nullptr;
 		}
 
+		std::string targetSource = source;
+
+		if (!targetSource.starts_with("#version")) {
+			targetSource = "#version 460\n" + targetSource;
+		}
+
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions opts;
 
@@ -34,7 +28,7 @@ namespace andromeda::graphics {
 		opts.SetTargetSpirv(shaderc_spirv_version_1_6);
 		opts.SetOptimizationLevel(shaderc_optimization_level_performance);
 
-		shaderc::CompilationResult result = compiler.CompileGlslToSpv(source, kind, fileName.c_str(), opts);
+		shaderc::CompilationResult result = compiler.CompileGlslToSpv(targetSource, kind, fileName.c_str(), opts);
 		if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
 			andromeda::error("Failed to compile shader: " + result.GetErrorMessage());
 			return nullptr;
@@ -48,7 +42,7 @@ namespace andromeda::graphics {
 		};
 
 		VkShaderModule shaderModule = nullptr;
-		if (vkCreateShaderModule(device, &moduleCreateInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+		if (vkCreateShaderModule(m_device, &moduleCreateInfo, nullptr, &shaderModule) != VK_SUCCESS) {
 			andromeda::error("Failed creating shader module");
 			return nullptr;
 		}
@@ -57,7 +51,32 @@ namespace andromeda::graphics {
 	}
 #endif
 
-	bool VulkanShader::LoadFromFile(const std::string& fileName) {
+	VkShaderModule VulkanShader::LoadShaderModule(const std::vector<char>& shader) {
+		VkShaderModuleCreateInfo moduleCreateInfo{
+			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+			.codeSize = shader.size(),
+			.pCode = reinterpret_cast<const uint32_t*>(shader.data()),
+		};
+
+		VkShaderModule shaderModule = nullptr;
+		if (vkCreateShaderModule(m_device, &moduleCreateInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+			andromeda::error("Failed creating shader module");
+			return nullptr;
+		}
+
+		return shaderModule;
+	}
+
+	bool VulkanShader::LoadSPIRV(const std::vector<char>& data, ShaderType shaderType, const char* entryPoint) {
+		VkShaderModule shaderModule = LoadShaderModule(data);
+		if (shaderModule == nullptr)
+			return false;
+
+		m_modules.emplace_back(shaderType, shaderModule, entryPoint);
+		return true;
+	}
+
+	bool VulkanShader::LoadFromFile(const std::string& fileName, ShaderType shaderType, const char* entryPoint) {
 		auto src = andromeda::ReadFile(fileName);
 		if (src.empty()) {
 			andromeda::error("Failed to create shader at path " + fileName + ", empty or non-existent.");
@@ -65,16 +84,45 @@ namespace andromeda::graphics {
 		}
 
 		if (fileName.ends_with(".spv")) {
-			return false;
+			auto data = std::vector<char>(src.begin(), src.end());
+			return LoadSPIRV(data, shaderType, entryPoint);
 		} else {
 #if ANDROMEDA_SHADER_COMPILATION || ANDROMEDA_EDITOR
-			andromeda::trace("Compiling shader at path " + fileName);
-			shaderModule = CompileShaderModuleFromSource(fileName, shader_kind);
-			return shaderModule != nullptr;
+			shaderc_shader_kind kind;
+			switch (shaderType) {
+				case ShaderType::Fragment:
+					kind = shaderc_fragment_shader;
+					break;
+				case ShaderType::Vertex:
+					kind = shaderc_vertex_shader;
+					break;
+			}
+
+			auto shaderModule = CompileShaderModuleFromSource(src, kind);
+			if (shaderModule != nullptr) {
+				m_modules.emplace_back(shaderType, shaderModule, entryPoint);
+				return true;
+			}
+
+			return false;
 #else
-            andromeda::error("File must be saved as .spv to be loaded without the compiler");
-            return false;
+			andromeda::error("Shader must be an .spv file");
+			return false;
 #endif
 		}
 	}
+
+	void VulkanShader::Unload() {
+		andromeda::print("UNload shader");
+		ANDROMEDA_ASSERTM(vkDestroyShaderModule, "Vulkan shader module cannot be cleaned up when Vulkan has been destroyed");
+
+		for (auto& module : m_modules) {
+			if (module.shaderModule != nullptr)
+				vkDestroyShaderModule(m_device, module.shaderModule, nullptr);
+		}
+
+		m_modules.clear();
+	}
+
+	VulkanShader::~VulkanShader() {}
 } // namespace andromeda::graphics

@@ -5,11 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Build",
+            "type": "cmake",
+            "request": "launch",
+        },
+        {
             "name": "Debug (Linux GDB)",
             "type": "cppdbg",
             "request": "launch",
-            "cwd": ".",
-            "program": "${workspaceFolder}/build/VorliasGame/VorliasGame",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/bin/VorliasGame",
+            "preLaunchTask": "Build Project using CMake",
             // "processId": "${command:pickProcess}",
             "linux": {
                 "MIMode": "gdb"

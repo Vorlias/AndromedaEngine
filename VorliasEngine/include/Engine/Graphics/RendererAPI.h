@@ -7,6 +7,7 @@
 namespace andromeda::graphics {
 	enum class API {
 		None = 0,
+		// Experimental Vulkan Support
 		Vulkan = 1,
 #ifdef ANDROMEDA_OPENGL
 		OpenGL = 2,
@@ -23,6 +24,9 @@ namespace andromeda::graphics {
 	constexpr API supportedAPIs[] = {
 		API::None,
 		API::Vulkan,
+#ifdef ANDROMEDA_OPENGL
+		API::OpenGL,
+#endif
 	};
 
 	class Drawable {
@@ -76,6 +80,9 @@ namespace andromeda::graphics {
 		virtual void Clear() = 0;
 		virtual void SetClearColor(Color color) = 0;
 		virtual void Shutdown() = 0;
+
+		virtual void BeginRenderFrame() {}
+		virtual void EndRenderFrame() {}
 
 		virtual API GetAPI() = 0;
 		virtual const std::string GetAPIString() const = 0;

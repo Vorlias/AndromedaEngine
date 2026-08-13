@@ -2,9 +2,9 @@
 #include <atomic>
 
 namespace andromeda {
-    class RefCounted;
-    
-    // A reference to a ref counted object
+	class RefCounted;
+
+	// A reference to a ref counted object
 	template<typename T>
 	class Ref {
 	public:
@@ -15,14 +15,19 @@ namespace andromeda {
 			Increment();
 		}
 
-		template<typename T2>
-			requires(std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
-		Ref(Ref<T2>&& other) {
-			ptr = (T*)other.ptr;
-			other.ptr = nullptr;
+		constexpr Ref<T>& operator=(const Ref<T>& lhs){
+			this->ptr = lhs.ptr;
+			Increment();
+			return *this;
 		}
 
-		Ref(const Ref<T>& other) : ptr(other.ptr) {
+		constexpr Ref<T>& operator=(const std::nullptr_t lhs) {
+			Reset();
+			return *this;
+		}
+
+		Ref(const Ref<T>& other)
+			: ptr(other.ptr) {
 			Increment();
 		}
 
@@ -36,6 +41,8 @@ namespace andromeda {
 		}
 
 		const size_t GetRefCount() const {
+			if (ptr == nullptr)
+				return 0;
 			return ptr->GetRefCount();
 		}
 
@@ -44,13 +51,18 @@ namespace andromeda {
 			ptr = instance;
 		}
 
-        T* AsPtr() { return ptr; }
+		T* AsPtr() {
+			return ptr;
+		}
 
-        template<typename T2>
-        requires(std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
-        Ref<T2> As() const {
-            return Ref<T2>(*this);
-        }
+		template<typename T2>
+			requires(std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
+		Ref<T2> As() const {
+			Ref<T2> newRef = Ref<T2>((T2*)this->ptr);
+			std::cout << "newRef count is " << newRef.GetRefCount() << std::endl;
+			// this->ptr = nullptr;
+			return newRef;
+		}
 
 		T* operator->() {
 			return ptr;
@@ -66,19 +78,24 @@ namespace andromeda {
 
 		const T& operator*() const {
 			return ptr;
-        }
+		}
 
-        operator bool() { return ptr != nullptr; }
-        operator bool() const { return ptr != nullptr; }
+		operator bool() {
+			return ptr != nullptr;
+		}
+		operator bool() const {
+			return ptr != nullptr;
+		}
 
-        bool operator==(const Ref<T>& other) {
-            return ptr == other.ptr;
-        }
+		bool operator==(const Ref<T>& other) {
+			return ptr == other.ptr;
+		}
 
-        bool operator!=(const Ref<T>& other) {
-            return !(*this == other);
-        }
-	private:
+		bool operator!=(const Ref<T>& other) {
+			return !(*this == other);
+		}
+
+	protected:
 		inline void Increment() {
 			if (ptr) {
 				ptr->IncRefCount();
@@ -96,7 +113,7 @@ namespace andromeda {
 			}
 		}
 
-		mutable T* ptr;
+		mutable T* ptr{nullptr};
 	};
 
 	class RefCounted {
@@ -104,8 +121,13 @@ namespace andromeda {
 		RefCounted() = default;
 		virtual ~RefCounted() = default;
 
+	public:
+		uint32_t GetRefCount() const {
+			return m_RefCount.load();
+		}
+
 	private:
-        template<typename T2>
+		template<typename T2>
 		friend class Ref;
 
 		void IncRefCount() const {
@@ -116,16 +138,13 @@ namespace andromeda {
 			--m_RefCount;
 		}
 
-		uint32_t GetRefCount() const {
-			return m_RefCount.load();
-		}
+
 		mutable std::atomic<uint32_t> m_RefCount = 0;
 	};
 
-    
-	template<typename T, typename ... Args>
-	DEPRECATED constexpr Ref<T> CreateRef(Args&& ... args)
-	{
+
+	template<typename T, typename... Args>
+	DEPRECATED constexpr Ref<T> CreateRef(Args&&... args) {
 		return Ref<T>::Create(std::forward<Args>(args)...);
 	}
 } // namespace andromeda

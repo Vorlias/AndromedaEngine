@@ -17,7 +17,7 @@
 	{ \
 		VkBool32 res = V; \
 		if (res != VK_SUCCESS) { \
-			andromeda::error("Check " #V "failed") \
+			andromeda::error("Check " #V "failed with code " + std::to_string(res)); \
 			return R; \
 		} \
 	}

@@ -6,8 +6,13 @@ include(FetchContent)
 message(STATUS "Include OPENGL " ${OPENGL_RENDERER})
 
 find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
-find_package(glslang REQUIRED)
-find_package(SPIRV-Tools REQUIRED)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux") # need this on linux for whatever reason
+    message(STATUS "Include SPIRV-Tools for Linux " ${BUILTIN_SHADER_COMPILER})
+
+    find_package(glslang REQUIRED)
+    find_package(SPIRV-Tools REQUIRED)
+endif()
 
 if(OPENGL_RENDERER)
     find_package(OpenGL REQUIRED COMPONENTS EGL GLX)
@@ -71,6 +76,9 @@ target_sources(
     src/Engine/IMGUI.cpp
     src/Engine/Graphics/Vulkan/VulkanUtils.h
     src/Engine/Graphics/Vulkan/VulkanUtils.cpp
+    src/Engine/Graphics/OpenGL/OpenGLShader.cpp
+    src/Engine/Graphics/OpenGL/OpenGLRenderer.cpp
+    src/Engine/Graphics/OpenGL/OpenGLWindowContext.cpp
     PUBLIC # exposed
     include/Engine/Engine.h
     include/Engine/Platform.h
@@ -90,6 +98,10 @@ target_sources(
     include/Engine/Time.h
     include/Engine/DateTime.h
     include/Engine/IMGUI.h
+    include/Engine/Graphics/OpenGL/OpenGLShader.h
+    include/Engine/Graphics/OpenGL/OpenGLRenderer.h
+    include/Engine/Graphics/OpenGL/OpenGLWindowContext.h
+    include/Engine/Graphics/OpenGL/OpenGLHelpers.h
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -107,6 +119,7 @@ target_link_libraries(AndromedaEngine PUBLIC
 if(OPENGL_RENDERER)
     target_link_libraries(AndromedaEngine PRIVATE 
         OpenGL::OpenGL # Open GL Libs
+        glad
     )
 endif()
 
