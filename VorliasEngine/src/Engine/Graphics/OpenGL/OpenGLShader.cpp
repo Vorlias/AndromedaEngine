@@ -204,6 +204,15 @@ void OpenGLShader::Unload() {
 	m_programId = 0;
 }
 
+int OpenGLShader::GetUniformLocation(const std::string& name) {
+	auto it = m_uniformLocations.find(name);
+	if (it == m_uniformLocations.end()) {
+		m_uniformLocations[name] = glGetUniformLocation(m_programId, name.c_str());
+	}
+
+	return m_uniformLocations[name];
+}
+
 OpenGLShader::~OpenGLShader() {
 	glUseProgram(0);
 	ANDROMEDA_CHECK_GL_ERROR;

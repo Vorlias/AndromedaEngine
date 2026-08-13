@@ -1,13 +1,12 @@
 #ifndef VULKAN_INST_H
 #define VULKAN_INST_H
-// #define VMA_IMPLEMENTATION
-// #include "vk_mem_alloc.h"
 
 #include "Engine/Log.h"
 #include "Engine/Graphics/GraphicsContext.h"
 #include <SDL3/SDL.h>
 #include <imgui/imgui.h>
 #include <volk.h>
+#include "Engine/Graphics/Vulkan/VulkanBase.h"
 
 namespace andromeda::graphics {
 	// Data structure that contains an array and size portion that can be passed directly to vulkan
@@ -40,23 +39,31 @@ namespace andromeda::graphics {
 
 		constexpr static uint32_t VulkanVersion{VK_API_VERSION_1_4};
 
-		bool InitVulkan();
+		[[nodiscard]] bool InitVulkan();
 		void Shutdown();
 
 		// Create a logical device instance for the physical device
 		VkDevice CreateDevice(const VkVec<const char*>& extensions, const VkVec<VkDeviceQueueCreateInfo>& createInfos) const;
 		VkQueue CreateDeviceQueue(VkDevice device, uint32_t familyQueue, uint32_t queueIndex) const;
 
-		constexpr VkInstance GetInstance() const {
+		[[nodiscard]] constexpr VkInstance GetInstance() const {
 			return m_instance;
 		}
 
-		constexpr int32_t GetGraphicsFamilyIndex() const {
+		[[nodiscard]] constexpr VkDevice GetDevice() const {
+			return m_device;
+		}
+
+		[[nodiscard]] constexpr int32_t GetGraphicsFamilyIndex() const {
 			return m_graphicsFamilyIndex;
 		}
 
-		constexpr VkPhysicalDevice GetPhysicalDevice() const {
+		[[nodiscard]] constexpr VkPhysicalDevice GetPhysicalDevice() const {
 			return m_physicalDevice;
+		}
+
+		[[nodiscard]] constexpr VmaAllocator GetAllocator() const {
+			return m_allocator;
 		}
 
 	protected:
@@ -67,10 +74,15 @@ namespace andromeda::graphics {
 		int32_t SelectGraphicsQueueFamilyIndex();
 
 		bool CreateDevice(uint32_t graphicsQueueIndex);
+		bool InitializeVMA();
 	private:
 		VkInstance m_instance{VK_NULL_HANDLE};
 		VkPhysicalDevice m_physicalDevice{VK_NULL_HANDLE};
-		VkDevice m_device;
+
+		VmaAllocator m_allocator = VK_NULL_HANDLE;
+
+		VkDevice m_device = VK_NULL_HANDLE;
+		VkQueue m_graphicsQueue = VK_NULL_HANDLE;
 
 		int32_t m_graphicsFamilyIndex{-1};
 	};

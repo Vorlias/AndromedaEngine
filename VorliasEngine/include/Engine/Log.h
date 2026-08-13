@@ -1,6 +1,7 @@
 #ifndef LOG_H
 #define LOG_H
 #include <format>
+#include "spdlog/spdlog.h"
 
 #if ANDROMEDA_INTERNAL
 #	define ENGINE_LOGGER_NAME "AndromedaEngine"
@@ -31,4 +32,16 @@ namespace ENGINE_NS {
 // #	define ANDROMEDA_ERR(...) spdlog::error(__VA_ARGS__)
 // #endif
 
+#define ANDROMEDA_VRB(...) spdlog::trace(__VA_ARGS__)
+#define ANDROMEDA_LOG(...) spdlog::info(__VA_ARGS__)
+#define ANDROMEDA_WRN(...) spdlog::warn(__VA_ARGS__)
+#define ANDROMEDA_ERR(...) spdlog::error(__VA_ARGS__)
+
+#define ANDROMEDA_VK_CHECK(cond, ...) \
+	{ \
+		if (!(cond)) { \
+			ANDROMEDA_ERR(__VA_ARGS__); \
+			return false; \
+		} \
+	}
 #endif

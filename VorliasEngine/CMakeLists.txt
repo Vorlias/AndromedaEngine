@@ -102,6 +102,8 @@ target_sources(
     include/Engine/Graphics/OpenGL/OpenGLRenderer.h
     include/Engine/Graphics/OpenGL/OpenGLWindowContext.h
     include/Engine/Graphics/OpenGL/OpenGLHelpers.h
+    include/Engine/Graphics/Vulkan/VulkanBase.h
+    src/Engine/Graphics/Vulkan/VulkanBase.cpp
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

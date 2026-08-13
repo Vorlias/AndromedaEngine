@@ -5,11 +5,12 @@
 #include "imgui/imgui_impl_vulkan.h"
 #include <SDL3/SDL.h>
 #include <vulkan/vulkan.h>
+#include "Engine/Graphics/Vulkan/VulkanBase.h"
 
-struct VmaAllocator_T;
-typedef struct VmaAllocator_T* VmaAllocator;
-struct VmaAllocation_T;
-typedef struct VmaAllocation_T* VmaAllocation;
+// struct VmaAllocator_T;
+// typedef struct VmaAllocator_T* VmaAllocator;
+// struct VmaAllocation_T;
+// typedef struct VmaAllocation_T* VmaAllocation;
 
 namespace andromeda::graphics {
 	class VulkanWindowContext : public GraphicsContext {
@@ -30,12 +31,10 @@ namespace andromeda::graphics {
 		void SetupIMGUI(ImGui_ImplVulkanH_Window* wd);
 	private:
 		[[nodiscard]] bool CreateSurface();
-		[[nodiscard]] bool InitializeVMA();
-		[[nodiscard]] bool CreateDevice(uint32_t queueIndex);
 		[[nodiscard]] bool CreateShaders();
 		[[nodiscard]] bool CreateGraphicsPipeline();
 
-		bool CreateSwapchain(int width, int height);
+		[[nodiscard]] bool CreateSwapchain(int width, int height);
 		void DestroySwapchain();
 
 		SDL_Window* window;
@@ -44,9 +43,8 @@ namespace andromeda::graphics {
 		VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
 		VkPipeline pipeline = VK_NULL_HANDLE;
 
-		VmaAllocator vmaAllocator = VK_NULL_HANDLE;
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
-		// VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
 		VkQueue graphicsQueue = VK_NULL_HANDLE;
 		VkDevice device = VK_NULL_HANDLE;
 

@@ -16,6 +16,8 @@ namespace andromeda::graphics {
 		void Unbind() const;
 
 		void Unload() override;
+
+		int GetUniformLocation(const std::string& name);
 	private:
 		int CompileShaderBytes(
 			uint32_t programId,
@@ -26,8 +28,9 @@ namespace andromeda::graphics {
 		);
 		int CompileShaderSource(uint32_t programId, uint32_t* shaderId, ShaderType shaderType, const std::string& source);
 
+		std::unordered_map<std::string, int> m_uniformLocations{};
 		uint32_t m_programId{0};
-        std::vector<uint32_t> m_shaderIds{};
+		std::vector<uint32_t> m_shaderIds{};
 	};
 }; // namespace andromeda::graphics
 #endif

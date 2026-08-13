@@ -113,7 +113,6 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanShader::Unload() {
-		andromeda::print("UNload shader");
 		ANDROMEDA_ASSERTM(vkDestroyShaderModule, "Vulkan shader module cannot be cleaned up when Vulkan has been destroyed");
 
 		for (auto& module : m_modules) {

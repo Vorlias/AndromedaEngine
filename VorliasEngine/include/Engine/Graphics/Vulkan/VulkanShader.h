@@ -59,7 +59,7 @@ namespace andromeda::graphics {
 		void Unload() override;
 		~VulkanShader();
 
-		const std::vector<ShaderModule>& GetShaderModules() const {
+		[[nodiscard]] const std::vector<ShaderModule>& GetShaderModules() const {
 			return m_modules;
 		}
 

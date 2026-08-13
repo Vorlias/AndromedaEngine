@@ -1,9 +1,10 @@
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 #include "Engine/Graphics/Vulkan/VulkanUtils.h"
 #include "Engine/Log.h"
-#include <volk.h>
-#define VMA_IMPLEMENTATION
-#include "vk_mem_alloc.h"
+
+
+#include "Engine/Graphics/Vulkan/VulkanBase.h"
+
 #include <SDL3/SDL_vulkan.h>
 #include <spdlog/spdlog.h>
 #include "Engine/Graphics/Vulkan/VulkanShader.h"
@@ -17,14 +18,8 @@ namespace andromeda::graphics {
 		if (!CreateSurface())
 			return;
 
-		if (!CreateDevice(vulkan->GetGraphicsFamilyIndex())) {
-			return;
-		}
-
-		if (!InitializeVMA()) {
-			return;
-		}
-
+		device = vulkan->GetDevice();
+		
 		int width, height;
 		SDL_GetWindowSize(window, &width, &height);
 		if (!CreateSwapchain(width, height)) {
@@ -44,17 +39,14 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::Shutdown() {
+		m_shader->Unload();
 		m_shader.Reset();
 
+		if (pipelineLayout != VK_NULL_HANDLE) {
+			vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
+		}
+
 		DestroySwapchain();
-
-		if (vmaAllocator) {
-			vmaDestroyAllocator(vmaAllocator);
-		}
-
-		if (device != VK_NULL_HANDLE) {
-			vkDestroyDevice(device, nullptr);
-		}
 
 		if (surface != VK_NULL_HANDLE) {
 			andromeda::trace("Cleaned up surface");
@@ -70,27 +62,6 @@ namespace andromeda::graphics {
 		}
 
 		andromeda::trace("Create surface for window");
-		return true;
-	}
-
-	bool VulkanWindowContext::InitializeVMA() {
-		VmaVulkanFunctions vmaFuncInfo{};
-		VmaAllocatorCreateInfo vmaAllocInfo{
-			.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
-			.physicalDevice = vulkan->GetPhysicalDevice(),
-			.device = device,
-			.pVulkanFunctions = &vmaFuncInfo,
-			.instance = vulkan->GetInstance(),
-			.vulkanApiVersion = VulkanContext::VulkanVersion,
-		};
-
-		// vma can import directly from volk
-		vmaImportVulkanFunctionsFromVolk(&vmaAllocInfo, &vmaFuncInfo);
-
-		if (vmaCreateAllocator(&vmaAllocInfo, &vmaAllocator) != VK_SUCCESS) {
-			return false;
-		}
-
 		return true;
 	}
 
@@ -194,7 +165,7 @@ namespace andromeda::graphics {
 			.usage = VMA_MEMORY_USAGE_AUTO, // vma determines what to do with it
 		};
 
-		if (vmaCreateImage(vmaAllocator, &depthCreateInfo, &allocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS) {
+		if (vmaCreateImage(vulkan->GetAllocator(), &depthCreateInfo, &allocInfo, &depthImage, &depthImageAllocation, nullptr) != VK_SUCCESS) {
 			andromeda::error("Failed to allocate depth image");
 			return false;
 		}
@@ -234,106 +205,9 @@ namespace andromeda::graphics {
 
 		if (depthImageView) {
 			vkDestroyImageView(device, depthImageView, nullptr);
-			vmaDestroyImage(vmaAllocator, depthImage, depthImageAllocation);
+			vmaDestroyImage(vulkan->GetAllocator(), depthImage, depthImageAllocation);
 			depthImageView = nullptr;
 		}
-	}
-
-	// VkPhysicalDevice VulkanWindowContext::FindPhysicalDevice() {
-	// 	VkPhysicalDevice physicalDevice = vulkan->GetPhysicalDevice();
-
-	// 	// Ensure the desired swapchain format is supported
-	// 	uint32_t formatCount = 0;
-	// 	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
-	// 	std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
-	// 	vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, surfaceFormats.data());
-
-	// 	bool formatSupported = false;
-	// 	for (const VkSurfaceFormatKHR& surfFormat : surfaceFormats) {
-	// 		if (surfFormat.format == swapchainFormat) {
-	// 			formatSupported = true;
-	// 			break;
-	// 		}
-	// 	}
-
-	// 	if (!formatSupported) {
-	// 		andromeda::error("Requested swapchain format is not supported by the surface");
-	// 		return nullptr;
-	// 	}
-
-
-	// 	return physicalDevice;
-	// }
-
-	bool VulkanWindowContext::CreateDevice(uint32_t graphicsQueueIndex) {
-		VkPhysicalDeviceVulkan14Features supportedFeatures14{.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES, .pNext = nullptr};
-		VkPhysicalDeviceVulkan13Features supportedFeatures13{
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES, .pNext = &supportedFeatures14
-		};
-		VkPhysicalDeviceVulkan12Features supportedFeatures12{
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, .pNext = &supportedFeatures13
-		};
-		VkPhysicalDeviceFeatures2 supportedFeatures{.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, .pNext = &supportedFeatures12};
-
-		vkGetPhysicalDeviceFeatures2(vulkan->GetPhysicalDevice(), &supportedFeatures);
-
-		// Check if what we need is supported
-		if (!supportedFeatures13.dynamicRendering || !supportedFeatures13.synchronization2 || !supportedFeatures13.synchronization2 ||
-		    !supportedFeatures12.timelineSemaphore) {
-			andromeda::error("Physical device does not meet the feature requirements");
-			return false;
-		}
-
-		// Then providing a set of features for the device to use - only ones planned to be used
-		// Good practice is to keep it separate.
-		VkPhysicalDeviceVulkan14Features features14{.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_4_FEATURES, .pNext = nullptr};
-		VkPhysicalDeviceVulkan13Features features13{
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-			.pNext = &features14,
-			.synchronization2 = VK_TRUE,
-			.dynamicRendering = VK_TRUE
-		};
-		VkPhysicalDeviceVulkan12Features features12{
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES, .pNext = &features13, .timelineSemaphore = VK_TRUE
-		};
-
-		VkPhysicalDeviceFeatures2 features{.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2, .pNext = &features12};
-
-		// request the queues to be used
-		std::vector<float> queuePriorities{1.0f};
-		VkDeviceQueueCreateInfo graphicsQueueInfo{
-			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = graphicsQueueIndex,
-			.queueCount = 1,
-			.pQueuePriorities = queuePriorities.data(),
-		};
-
-		// device-specific extensions
-		const std::vector<const char*> deviceExtensions{// Companion to surface extension
-		                                                VK_KHR_SWAPCHAIN_EXTENSION_NAME
-		};
-
-		VkDeviceCreateInfo devCreateInfo{
-			.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-			.pNext = &features,
-			.queueCreateInfoCount = 1,
-			.pQueueCreateInfos = &graphicsQueueInfo,
-			.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
-			.ppEnabledExtensionNames = deviceExtensions.data(),
-			.pEnabledFeatures = nullptr, // better to use pNext linked list for features
-		};
-
-		if (vkCreateDevice(vulkan->GetPhysicalDevice(), &devCreateInfo, nullptr, &device) != VK_SUCCESS) {
-			return false;
-		}
-
-		vkGetDeviceQueue(device, graphicsQueueIndex, 0, &graphicsQueue);
-		if (!graphicsQueue) {
-			andromeda::error("Couldn't get the graphics queue");
-			return false;
-		}
-
-		return true;
 	}
 
 	bool VulkanWindowContext::CreateShaders() {
