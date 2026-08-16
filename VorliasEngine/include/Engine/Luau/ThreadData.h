@@ -1,6 +1,11 @@
 #include <lua.h>
 
 namespace andromeda_luau {
+	enum class LuauThreadTag {
+		None,
+		ThreadWait,
+	};
+
 	struct LuauThreadData {
 		// if thread is alive
 		bool alive;

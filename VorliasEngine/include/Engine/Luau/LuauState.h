@@ -1,5 +1,6 @@
 #pragma once
 #include "lua.h"
+#include "LuauTimeoutHandler.h"
 #include <unordered_map>
 
 constexpr const char* kLuauState = "LuauStates";
@@ -21,8 +22,6 @@ namespace ENGINE_NS {
 		LuauState(LuauStateContext context);
 		~LuauState();
 
-		void SetGlobal(const std::string& name, lua_CFunction f);
-
 		lua_State* GetLuaState();
 		inline bool IsValid() {
 			return L != nullptr;
@@ -34,5 +33,6 @@ namespace ENGINE_NS {
 	private:
 		lua_State* L;
 		LuauStateContext m_context;
+		LuauTimeoutHandler* m_timeoutHandler;
 	};
 } // namespace ENGINE_NS

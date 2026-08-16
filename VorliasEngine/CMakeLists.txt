@@ -65,10 +65,6 @@ target_sources(
     src/Engine/Graphics/Vulkan/VulkanShader.cpp
     src/Engine/Graphics/Shader.cpp
     src/Engine/File.cpp
-    include/Engine/Graphics/Vulkan/VulkanWindowContext.h
-    include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
-    include/Engine/Graphics/Vulkan/VulkanInstance.h
-    include/Engine/Graphics/Vulkan/VulkanShader.h
     src/Engine/Data/Vector.cpp
     src/Engine/Time.cpp
     src/Engine/Application.cpp
@@ -81,7 +77,15 @@ target_sources(
     src/Engine/Luau/Task.cpp
     src/Engine/Luau/Lib.cpp
     src/Engine/Luau/ThreadData.cpp
+    src/Engine/Graphics/Vulkan/VulkanBase.cpp
+    src/Engine/Luau/PrettyPrint.cpp
+    src/Engine/ObjectPool.cpp
+    src/Engine/Luau/LuauRuntime.cpp
     PUBLIC # exposed
+    include/Engine/Graphics/Vulkan/VulkanWindowContext.h
+    include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
+    include/Engine/Graphics/Vulkan/VulkanInstance.h
+    include/Engine/Graphics/Vulkan/VulkanShader.h
     include/Engine/Engine.h
     include/Engine/Platform.h
     include/Engine/Window.h
@@ -106,12 +110,14 @@ target_sources(
     include/Engine/Graphics/OpenGL/OpenGLWindowContext.h
     include/Engine/Graphics/OpenGL/OpenGLHelpers.h
     include/Engine/Graphics/Vulkan/VulkanBase.h
-    src/Engine/Graphics/Vulkan/VulkanBase.cpp
     include/Engine/Luau/Task.h
     include/Engine/Luau/Lib.h
     include/Engine/Luau/ThreadData.h
     include/Engine/Luau/PrettyPrint.h
-    src/Engine/Luau/PrettyPrint.cpp
+    include/Engine/ObjectPool.h
+    include/Engine/Luau/LuauRuntime.h
+    include/Engine/Luau/LuauTimeoutHandler.h
+    src/Engine/Luau/LuauTimeoutHandler.cpp
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

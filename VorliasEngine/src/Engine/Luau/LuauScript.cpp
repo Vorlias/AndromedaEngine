@@ -74,7 +74,7 @@ bool LuauScriptThread::Create() {
 	if (m_thread != nullptr)
 		return false;
 
-	if (!m_script.IsCompiled()) {
+	if (!m_script->IsCompiled()) {
 		return false;
 	}
 
@@ -84,8 +84,8 @@ bool LuauScriptThread::Create() {
 	m_thread = lua_newthread(M);
 	luaL_sandboxthread(m_thread);
 
-	LuauBytecode bytecode = m_script.GetBytecode();
-	int result = luau_load(m_thread, (std::string("=") + m_script.GetFileName()).c_str(), static_cast<const char*>(bytecode.data), bytecode.size, 0);
+	LuauBytecode bytecode = m_script->GetBytecode();
+	int result = luau_load(m_thread, (std::string("=") + m_script->GetFileName()).c_str(), static_cast<const char*>(bytecode.data), bytecode.size, 0);
 
 	if (result != 0) {
 		// there was an error here
@@ -117,13 +117,13 @@ bool LuauScriptThread::Run() {
 	using namespace andromeda_luau;
 
 	if (m_thread == nullptr) {
-		if (m_script.HasErrored()) {
-			error("Thread failed to compile: {}", m_script.GetError());
-		} else if (m_script.IsCompiled()) {
-			if (m_script.GetFileName().empty()) {
+		if (m_script->HasErrored()) {
+			error("Thread failed to compile: {}", m_script->GetError());
+		} else if (m_script->IsCompiled()) {
+			if (m_script->GetFileName().empty()) {
 				error("Script has not had a thread created for it yet - use CreateThread()");
 			} else {
-				error("Script '{}' has not had a thread created for it yet - use CreateThread()", m_script.GetFileName());
+				error("Script '{}' has not had a thread created for it yet - use CreateThread()", m_script->GetFileName());
 			}
 		} else {
 			error("No bytecode was loaded for script - use Compile()");

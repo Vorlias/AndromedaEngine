@@ -2,6 +2,7 @@
 #include <string>
 #include "lua.h"
 #include "LuauState.h"
+#include "Engine/Memory.h"
 #include <memory.h>
 
 
@@ -21,7 +22,7 @@ namespace andromeda {
 		bytecode_t data;
 	};
 
-	class LuauScript {
+	class LuauScript : public RefCounted {
 		bool CompileSource(const char* source, int source_len, const char* file_name, int file_name_len, int optimization_level);
 
 	public:
@@ -62,16 +63,19 @@ namespace andromeda {
 		static const LuauBytecodeVersion GetBytecodeVersion();
 
 		// Creates a script and the associated thread for it
-		[[nodiscard]] static constexpr LuauScript CreateScript(std::string_view source, const std::string& fileName) {
-			LuauScript script;
-			script.Compile(source, fileName);
-			return script;
+		[[nodiscard]] static constexpr Ref<LuauScript> CreateScript(std::string_view source, const std::string& fileName) {
+			auto ref = Ref<LuauScript>::Create();
+			ref->Compile(source, fileName);
+			return ref;
 		};
 
-		[[nodiscard]] static constexpr LuauScript CreateScript(const LuauBytecode& bytecode, const std::string& fileName) {
-			LuauScript script;
-			script.LoadBytecode(bytecode, fileName);
-			return script;
+		[[nodiscard]] static constexpr Ref<LuauScript> CreateScript(const LuauBytecode& bytecode, const std::string& fileName) {
+			// LuauScript script;
+			// script.LoadBytecode(bytecode, fileName);
+			// return script;
+			auto ref = Ref<LuauScript>::Create();
+			ref->LoadBytecode(bytecode, fileName);
+			return ref;
 		}
 
 	private:
@@ -103,10 +107,10 @@ namespace andromeda {
 		bool Create();
 
 	public:
-		LuauScriptThread(const LuauScript& script) : m_script(script) {
+		LuauScriptThread(Ref<LuauScript> script) : m_script(script) {
 			Create();
 		}
-		[[nodiscard]] constexpr LuauScript& GetScript() {
+		[[nodiscard]] constexpr Ref<LuauScript> GetScript() {
 			return m_script;
 		}
 		bool Run();
@@ -119,8 +123,12 @@ namespace andromeda {
 
 		~LuauScriptThread();
 
+		operator lua_State*() const {
+			return m_thread;
+		}
+
 	private:
-		LuauScript m_script;
+		Ref<LuauScript> m_script;
 		lua_State* m_thread = nullptr;
 	};
 

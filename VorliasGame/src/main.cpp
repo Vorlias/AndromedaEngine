@@ -2,6 +2,7 @@
 // #define ANDROMEDA_INTERNAL 1
 #define ANDROMEDA_OPENGL 1
 #include "Engine/Main.h"
+#include "Engine/ObjectPool.h"
 #include "Engine/Window.h"
 #include "Engine/Common.h"
 #include "Engine/File.h"
@@ -16,6 +17,7 @@
 
 #include "Engine/Luau/LuauScript.h"
 #include "Engine/Luau/Task.h"
+#include "Engine/Luau/LuauRuntime.h"
 
 #include <thread>
 #include <chrono>
@@ -36,46 +38,33 @@ public:
 
 	bool Initialize() override {
 		auto testScript = R"(
-			local test = { message = "test", test = function()end }
-			print("the value of test is", test)
+			print("Hello 1");
 
-			while true do
-			end
+			task.spawn(function()
+				task.wait(1);
+				print("hello after 1 second")
+			end)
+
+			task.wait(2);
+			print("hello after 2 seconds");
 		)";
+		
+		auto script2 = LuauScript::CreateScript("task.wait(5); print('hi dere');", "test2.luau");
+		auto script = LuauScript::CreateScript(testScript, "test.luau");
 
-		// auto script = LuauScript::CreateScript(testScript, "test.luau");
+		luau.ExecuteScript(script);
+		// luau.ExecuteScript(script2);
 
-		// 	LuauState* gameState = LuauState::GetMainThread(LuauStateContext::Game);
-		// 	std::chrono::high_resolution_clock ck;
-
-		// 	while (true) {
-		// 		std::this_thread::sleep_for(10ms);
-		// 		andromeda_luau::luaL_runscheduler(gameState->GetLuaState(), 0);
-		// 	}
-		// // LuauScriptThread thread(script);
-		// // std::thread t([&thread]() {
-		// // 	thread.Run();
-		// // });
-
-		// // std::thread t2([&thread]() {
-		// // 	std::this_thread::sleep_for(1s);
-		// // 	std::cout << "status is " << to_string(thread.GetThreadStatus()) << ", " << thread.IsRunning() << std::endl;
-		// // 	thread.Reset();
-		// // });
-
-
-		// // t2.join();
-		// // t.join();
-
-		// luauScheduler.join();
-		CreateWindow(WindowOptions());
+		// CreateWindow(WindowOptions());
 		return true;
 	}
 
 	void Update(float dt) override {
-		andromeda::LuauState* gameState = LuauState::GetMainThread(LuauStateContext::Game);
-		andromeda_luau::luaL_runscheduler(gameState->GetLuaState(), GetElapsedTime());
+		luau.Update(dt); // ezpz
+		// std::cout << "do thing " << GetElapsedTime() << std::endl;
 	}
+private:
+	LuauRuntime luau;
 };
 
 

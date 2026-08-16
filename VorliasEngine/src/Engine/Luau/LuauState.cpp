@@ -117,7 +117,7 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 
 	// Open libraries
 	luaL_openlibs(L);
-	luaL_openTaskLib(L);
+	openTaskLib(L);
 
 	// Protect core libraries and metatables from modification
 	luaL_sandbox(L);
@@ -142,6 +142,9 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 
 	lua_Callbacks* cb = lua_callbacks(L);
 	cb->userthread = handleNewOrDestroyedThread;
+
+	m_timeoutHandler = new LuauTimeoutHandler(L);
+	m_timeoutHandler->Start();
 }
 
 LuauState* LuauState::GetLuauState(lua_State* L) {
@@ -171,5 +174,10 @@ lua_State* LuauState::GetLuaState() {
 }
 
 LuauState::~LuauState() {
+	if (m_timeoutHandler != nullptr) {
+		m_timeoutHandler->Stop();
+		delete m_timeoutHandler;
+	}
+
 	lua_close(L);
 }
