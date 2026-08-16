@@ -18,7 +18,6 @@ namespace andromeda::graphics {
 				auto main_window = Engine::GetInstance().GetMainWindow();
 
 				ANDROMEDA_ASSERTM(main_window != nullptr, "Cannot create a shader without a window graphics context");
-
 				auto context = static_cast<VulkanWindowContext*>(main_window->GetGraphicsContext());
 
 
@@ -28,8 +27,9 @@ namespace andromeda::graphics {
 
 				Ref<Shader> shaderRef = shader;
 				m_shaders.insert({name, shaderRef});
+
+				ANDROMEDA_VRB("Loaded vulkan shader '{}'", name);
 				return shaderRef;
-				break;
 			}
 #if ANDROMEDA_OPENGL
 			case graphics::API::OpenGL: {
@@ -38,8 +38,9 @@ namespace andromeda::graphics {
 				ANDROMEDA_ASSERT(shader->LoadFromFile(fragmentFileName, ShaderType::Fragment));
 				Ref<Shader> shaderRef = shader;
 				m_shaders.insert({name, shaderRef});
+
+				ANDROMEDA_VRB("Loaded OpenGL shader '{}'", name);
 				return shaderRef;
-				break;
 			}
 #endif
 			default:
@@ -51,7 +52,9 @@ namespace andromeda::graphics {
 	}
 
 	void ShaderLibrary::UnloadAllShaders() {
-		for (auto& [_, shader] : m_shaders) {
+		for (auto& [id, shader] : m_shaders) {
+			ANDROMEDA_VRB("Unloaded shader '{}'", id);
+
 			shader->Unload();
 			shader.Reset();
 		}

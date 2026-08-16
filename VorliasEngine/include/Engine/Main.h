@@ -11,6 +11,7 @@ namespace andromeda {
 		const std::vector<std::string>& args;
 		// The renderer to use for this application
 		mutable graphics::Renderer::API renderer;
+		mutable std::filesystem::path persistentDataDir{};
 	};
 } // namespace andromeda
 

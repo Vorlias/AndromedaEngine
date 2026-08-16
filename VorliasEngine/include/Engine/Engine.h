@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Window.h"
 #include "Engine/Common.h"
+#include <thread>
 
 // #define ANDROMEDA_MEMORY_DEBUG
 #ifdef ANDROMEDA_MEMORY_DEBUG
@@ -57,5 +58,7 @@ namespace ENGINE_NS {
 		uint32_t lastTime;
 
 		graphics::Renderer::API m_currentAPI = graphics::Renderer::API::None;
+
+		std::vector<std::thread> m_threads{};
 	};
 } // namespace ENGINE_NS

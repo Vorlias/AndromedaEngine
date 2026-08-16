@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Time.h"
+#include <initializer_list>
 
 namespace andromeda {
 	enum class Platform {
@@ -8,7 +9,7 @@ namespace andromeda {
 		Mac,
 		Unknown,
 	};
-	
+
 	constexpr Platform supportedPlatforms[] = {
 		Platform::Linux,
 	};
@@ -25,6 +26,10 @@ namespace andromeda {
 #endif
 	}
 
-	static const std::vector<std::string> PathComponents(const std::string& filePath);
+	namespace path {
+		const std::string join(std::initializer_list<std::string> list);
+		const std::vector<std::string> components(const std::string& filePath);
+	}
+
 	static bool FileExists(const char* path);
 } // namespace andromeda

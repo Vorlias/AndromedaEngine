@@ -52,6 +52,20 @@ bool andromeda::FileExists(const char* path) {
 // }
 #endif
 
-const std::vector<std::string> andromeda::PathComponents(const std::string& filePath) {
+const std::vector<std::string> andromeda::path::components(const std::string& filePath) {
 	return split(filePath, PATH_SEP);
+}
+
+const std::string andromeda::path::join(std::initializer_list<std::string> list) {
+	std::stringstream sstr;
+
+	int i = 0;
+	for (auto item : list) {
+		sstr << item;
+
+		if (i < list.size() - 1) sstr << PATH_SEPSTR;
+		i++;
+	}
+
+	return sstr.str();
 }

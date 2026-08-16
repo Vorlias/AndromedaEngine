@@ -13,8 +13,6 @@
 #include <sstream>
 #include <iostream>
 
-
-
 // Collections
 #include <array>
 #include <vector>
@@ -110,7 +108,7 @@ using byte = unsigned char;
 #	define COLOR_RESET ""
 #endif
 
-#define STD_FIND(HAYSTACK, NEEDLE) std::find(HAYSTACK.begin(), HAYSTACK.end(), NEEDLE) != HAYSTACK.end()
+#define _STR(T) #T
 
 #if ANDROMEDA_WIN
 #	define ANDROMEDA_BREAK __debugbreak()

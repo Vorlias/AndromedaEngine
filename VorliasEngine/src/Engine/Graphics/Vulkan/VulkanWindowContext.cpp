@@ -19,7 +19,7 @@ namespace andromeda::graphics {
 			return;
 
 		device = vulkan->GetDevice();
-		
+
 		int width, height;
 		SDL_GetWindowSize(window, &width, &height);
 		if (!CreateSwapchain(width, height)) {
@@ -219,7 +219,7 @@ namespace andromeda::graphics {
 	}
 
 	bool VulkanWindowContext::CreateGraphicsPipeline() {
-		VkPipelineLayoutCreateInfo pipelineLayoutInfo {
+		VkPipelineLayoutCreateInfo pipelineLayoutInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 			.setLayoutCount = 0,
 			.pushConstantRangeCount = 0,
@@ -228,25 +228,28 @@ namespace andromeda::graphics {
 		VK_CHECK_ELSE_RETURN(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout), false);
 
 		auto shader = static_cast<VulkanShader*>(m_shader.AsPtr());
-		// std::vector<VkPipelineShaderStageCreateInfo> shaderStages = shader->GetShaderStages();
+		auto mods = shader->GetShaderModules();
 
-		const auto& modules = shader->GetShaderModules();
-		std::vector<VkPipelineShaderStageCreateInfo> shaderStages{};
-		shaderStages.resize(modules.size());
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		shaderStages.resize(mods.size());
+		for (int i = 0; i < mods.size(); i++) {
+			auto& mod = mods[i];
+			shaderStages[i] = mod.GetShaderStage();
+		}
 
 		// vertex pulling, don't define vertex input details
-		VkPipelineVertexInputStateCreateInfo vertInputInfo {
+		VkPipelineVertexInputStateCreateInfo vertInputInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 		};
 
 		// input assembly, we'll be drawing triangle lists
-		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo {
+		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		};
 
 		// depth/stencil configuration
-		VkPipelineDepthStencilStateCreateInfo depthStencilInfo {
+		VkPipelineDepthStencilStateCreateInfo depthStencilInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 			.depthTestEnable = VK_TRUE,
 			.depthWriteEnable = VK_TRUE,
@@ -256,7 +259,7 @@ namespace andromeda::graphics {
 
 		// dynamic rendering allows to set this up.. dynamically
 		// wel still need this struct though
-		VkPipelineViewportStateCreateInfo viewportInfo {
+		VkPipelineViewportStateCreateInfo viewportInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
 			.viewportCount = 1,
 			.pViewports = nullptr,

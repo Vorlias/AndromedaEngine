@@ -1,27 +1,78 @@
 #include "Engine/Log.h"
 #include "spdlog/spdlog.h"
+#include "Engine/File.h"
+#include "Engine/Platform.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
+#include <print>
 
-namespace ENGINE_NS {
+#define DEFAULT_LOGGER_NAME "AndromedaEngine"
+namespace andromeda {
+	static std::shared_ptr<spdlog::logger> logger;
+	static bool init = false;
+
+	void initializeLogger(const std::string& logPath) {
+		if (init) return;
+		init = true;
+
+		auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+		consoleSink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^%v%$");
+		consoleSink->set_level(spdlog::level::info);
+
+		if (std::filesystem::exists(logPath)) {
+			std::filesystem::path newPath = logPath;
+			newPath.replace_filename(newPath.stem().string() + "-prev" + newPath.extension().string());
+			std::filesystem::rename(logPath, newPath);
+		}
+
+		auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logPath, true);
+		fileSink->set_level(spdlog::level::trace);
+		fileSink->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e] %l: %v%$");
+
+		std::vector<spdlog::sink_ptr> sinks{consoleSink, fileSink};
+
+		logger = std::make_shared<spdlog::logger>(DEFAULT_LOGGER_NAME, sinks.begin(), sinks.end());
+#if ANDROMEDA_DEBUG
+		logger->set_level(spdlog::level::trace);
+		logger->flush_on(spdlog::level::trace);
+#else
+		logger->set_level(spdlog::level::info);
+		logger->flush_on(spdlog::level::info);
+#endif
+
+		spdlog::register_logger(logger);
+		print("Created log file at " + logPath);
+	}
+
 	void trace(const std::string& message) {
-		spdlog::trace(message);
+		if (logger)
+			logger->trace(message);
 	}
 
 	void print(const std::string& message) {
-		spdlog::info(message);
-	}
-
-	template<typename... Args>
-	void print(std::format_string<Args...> fmt, Args&&... args) {
-		spdlog::info(fmt, std::forward<Args>(args)...);
+		if (logger)
+			logger->info(message);
+		else {
+			const std::string& expr = COLOR_GREEN + message + COLOR_RESET;
+			std::println("{}", expr);
+		}
 	}
 
 	void warn(const std::string& message) {
-		spdlog::warn(message);
+		if (logger)
+			logger->warn(message);
+		else {
+			const std::string& expr = COLOR_YELLOW + message + COLOR_RESET;
+			std::println("{}", expr);
+		}
 	}
 
 	void error(const std::string& message) {
-		spdlog::error(message);
+		if (logger)
+			logger->error(message);
+		else {
+			const std::string& expr = COLOR_RED + message + COLOR_RESET;
+			std::println("{}", expr);
+		}
 	}
-} // namespace ENGINE_NS
-
-
+} // namespace andromeda

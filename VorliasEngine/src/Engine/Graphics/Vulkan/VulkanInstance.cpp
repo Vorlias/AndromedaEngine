@@ -140,7 +140,7 @@ namespace andromeda::graphics {
 
 #if ANDROMEDA_INTERNAL
 		for (auto& extension : requestedExtensions) {
-			std::cout << COLOR_YELLOW << "[Vulkan] Request extension " << extension << COLOR_RESET << std::endl;
+			std::cout << COLOR_CYAN << "[Vulkan] Request extension " << extension << COLOR_RESET << std::endl;
 		}
 #endif
 

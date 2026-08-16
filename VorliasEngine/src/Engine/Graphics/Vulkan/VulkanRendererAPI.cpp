@@ -4,7 +4,6 @@
 
 namespace andromeda::graphics {
 	bool VulkanRenderer::Initialize() {
-
 		if (m_context != nullptr) {
 			return false;
 		}

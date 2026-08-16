@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 23)
 
 # The Andromeda Engine Project
-project(AndromedaEngine VERSION 0.0.5 LANGUAGES CXX C)
+project(AndromedaEngine VERSION 0.1.0 LANGUAGES CXX C)
 
 # Have to use this so all the code is using the "-fPIC" thing
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -36,7 +36,7 @@ add_compile_definitions(ANDROMEDA_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})
 add_compile_definitions(LUAU_VERSION=730)
 add_compile_definitions(ANDROMEDA_VERSION_MINOR=${PROJECT_VERSION_MINOR})
 add_compile_definitions(ANDROMEDA_VERSION_PATCH=${PROJECT_VERSION_PATCH})
-add_compile_definitions(ANDROMEDA_VERSION_STRING="Andromeda v${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+add_compile_definitions(ANDROMEDA_VERSION_STRING="Andromeda ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 if (ANDROMEDA_INTERNAL)
     add_compile_definitions(ANDROMEDA_INTERNAL=1)
 endif()

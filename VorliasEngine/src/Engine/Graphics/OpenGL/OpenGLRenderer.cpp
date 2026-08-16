@@ -8,8 +8,6 @@
 using namespace andromeda::graphics;
 
 bool OpenGLRenderer::Initialize() {
-	print("Load OpenGLRenderer");
-
 	return true;
 }
 
@@ -18,7 +16,7 @@ void OpenGLRenderer::Clear() {}
 void OpenGLRenderer::SetClearColor(Color color) {}
 
 const std::string OpenGLRenderer::GetAPIString() const {
-	return "OpenGL";
+	return "OpenGL " + std::to_string(GLVersion.major) + "." + std::to_string(GLVersion.minor);
 }
 
 GraphicsContext* OpenGLRenderer::CreateWindowGraphicsContext(SDL_Window* window) {

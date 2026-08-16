@@ -31,7 +31,6 @@ void Engine::Run(Application* app) {
 	spdlog::set_level(spdlog::level::trace);
 #endif
 
-	print("Initializing " ANDROMEDA_VERSION_STRING);
 	if (Initialize()) {
 		uint64_t lastFixedUpdate = SDL_GetTicks();
 
@@ -84,18 +83,24 @@ std::shared_ptr<Window> Engine::GetMainWindow() const {
 
 bool Engine::Initialize() {
 	if (!m_isInitialized) {
+#if ANDROMEDA_EDITOR
+		andromeda::initializeLogger(m_app->GetPersistentDataPath() / "AndromedaEditor.log");
+#else
+		andromeda::initializeLogger(m_app->GetPersistentDataPath() / "AndromedaGame.log");
+#endif
+
+		print("Engine:\t" ANDROMEDA_VERSION_STRING);
+
 		if (m_currentAPI != graphics::Renderer::API::None) {
 			switch (m_currentAPI) {
 				case graphics::API::None:
 					break;
 				case graphics::Renderer::API::Vulkan:
 					m_renderer = CreateScopeRef<graphics::VulkanRenderer>();
-					print("Using renderer " + m_renderer->GetAPIString());
 					break;
 #if ANDROMEDA_OPENGL
 				case graphics::API::OpenGL:
 					m_renderer = CreateScopeRef<graphics::OpenGLRenderer>();
-					print("Using renderer " + m_renderer->GetAPIString());
 					break;
 #endif
 			}
@@ -106,14 +111,18 @@ bool Engine::Initialize() {
 			// If no window, we can't really do anything lol
 			auto main_window = m_app->GetMainWindow();
 			if (main_window == nullptr) {
-				andromeda::warn("No main window set, shutting down...");
+				andromeda::warn("Initialization was successful but no window was created");
 				m_app->Shutdown();
 				return false;
 			}
 
+			if (m_renderer != nullptr) {
+				print("Renderer: {}", m_renderer->GetAPIString());
+			}
 
 			m_isInitialized = true;
 			m_isRunning = true;
+
 			return true;
 		} else {
 			print("Running Andromeda Application without a renderer (headless mode)");
