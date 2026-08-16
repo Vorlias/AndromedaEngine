@@ -32,28 +32,13 @@ using namespace andromeda;
 class TestApplication : public Application {
 public:
 	TestApplication() {
-		SetDataPath("Vorlias/src");
-		SetPersistentDataPath(GetPersistentDataPath() / "Test");
+		SetDataPath("assets"); // ./data
+		SetPersistentDataPath(".andromeda"); // ./.andromeda
 	}
 
 	bool Initialize() override {
-		auto testScript = R"(
-			print("Hello 1");
-
-			task.spawn(function()
-				task.wait(1);
-				print("hello after 1 second")
-			end)
-
-			task.wait(2);
-			print("hello after 2 seconds");
-		)";
-		
-		auto script2 = LuauScript::CreateScript("task.wait(5); print('hi dere');", "test2.luau");
-		auto script = LuauScript::CreateScript(testScript, "test.luau");
-
-		luau.ExecuteScript(script);
-		// luau.ExecuteScript(script2);
+		auto testScript = luau.LoadScriptFromFile(GetDataPath() / "scripts" / "test.luau");
+		luau.ExecuteScript(testScript);
 
 		// CreateWindow(WindowOptions());
 		return true;
@@ -61,7 +46,6 @@ public:
 
 	void Update(float dt) override {
 		luau.Update(dt); // ezpz
-		// std::cout << "do thing " << GetElapsedTime() << std::endl;
 	}
 private:
 	LuauRuntime luau;

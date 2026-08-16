@@ -63,6 +63,8 @@ namespace andromeda {
 		// Gets the path to a data directory for persistent data for this application
 		[[nodiscard]] constexpr std::filesystem::path GetPersistentDataPath() const;
 
+		[[nodiscard]] constexpr std::filesystem::path GetFullPath(const std::filesystem::path& path) const;
+
 		// Set the framerate of this application to the given limit
 		void SetFramerateLimit(uint32_t limit);
 		[[nodiscard]] uint32_t GetFramerateLimit() const;
@@ -115,6 +117,18 @@ namespace andromeda {
 		} else {
 			return std::filesystem::relative(m_dataPath, std::filesystem::current_path());
 		}
+	}
+
+	constexpr std::filesystem::path Application::GetFullPath(const std::filesystem::path& filePath) const {
+		auto dataPathFull = GetDataPath(true);
+		auto filePathFull = std::filesystem::absolute(filePath);
+
+		const auto mismatch_pair = std::mismatch(filePathFull.begin(), filePathFull.end(), dataPathFull.begin(), dataPathFull.end());
+		if (mismatch_pair.second == dataPathFull.end()) {
+			return std::filesystem::relative(filePathFull, std::filesystem::current_path());
+		}
+
+		return filePath;
 	}
 
 	constexpr std::filesystem::path Application::GetPersistentDataPath() const {

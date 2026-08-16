@@ -209,7 +209,6 @@ static void runScheduledThreads(lua_State* L) {
 
 		int retc = 0;
 		int status = luaL_runthread(L, T, data->argc, &retc);
-		std::cout << "return count is " << retc << std::endl;
 
 		if (status == LUA_OK) {
 			lua_settop(T, 0);

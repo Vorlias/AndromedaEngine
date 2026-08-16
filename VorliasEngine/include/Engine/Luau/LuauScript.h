@@ -70,9 +70,6 @@ namespace andromeda {
 		};
 
 		[[nodiscard]] static constexpr Ref<LuauScript> CreateScript(const LuauBytecode& bytecode, const std::string& fileName) {
-			// LuauScript script;
-			// script.LoadBytecode(bytecode, fileName);
-			// return script;
 			auto ref = Ref<LuauScript>::Create();
 			ref->LoadBytecode(bytecode, fileName);
 			return ref;
@@ -127,16 +124,24 @@ namespace andromeda {
 			return m_thread;
 		}
 
+		struct Cleanup {
+			void operator()(LuauScriptThread* p) {
+				std::cout << "delete script thread" << std::endl;
+				delete p;
+			}
+		};
+
 	private:
 		Ref<LuauScript> m_script;
 		lua_State* m_thread = nullptr;
 	};
 
+
+
 	inline std::string to_string(LuauThreadStatus status) {
 		switch (status) {
 			using enum LuauThreadStatus;
 			case Running:
-				// return "Running";
 				return _STR(Running);
 			case Suspended:
 				return _STR(Suspended);
