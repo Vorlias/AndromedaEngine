@@ -15,6 +15,9 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/bin/VorliasGame",
+            "args": [
+                "-headless"
+            ],
             "preLaunchTask": "Build Project using CMake",
             // "processId": "${command:pickProcess}",
             "linux": {

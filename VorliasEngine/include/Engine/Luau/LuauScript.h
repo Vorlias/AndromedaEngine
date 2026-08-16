@@ -1,41 +1,145 @@
+#pragma once
 #include <string>
 #include "lua.h"
+#include "LuauState.h"
+#include <memory.h>
 
 
-namespace ENGINE_NS {
-	struct LuauCompileResult {
-		char* compiled_data;
-		int compiled_data_size;
-		bool compiled;
+#define BYTECODE_MAX_LEN 1024 * 512
+namespace andromeda {
+	typedef char* bytecode_t;
+
+	struct LuauBytecodeVersion {
+		int min;
+		int max;
+		int target;
+	};
+
+	struct LuauBytecode {
+		LuauBytecodeVersion version;
+		size_t size;
+		bytecode_t data;
 	};
 
 	class LuauScript {
-        bool CompileSource(char* source, int source_len, char* file_name, int file_name_len, int optimization_level);
+		bool CompileSource(const char* source, int source_len, const char* file_name, int file_name_len, int optimization_level);
+
 	public:
-		static LuauScript LoadFromMemory(std::string source, std::string name);
-	
-		inline bool HasError() {
-			return m_errlen > 0;
+		bool Compile(std::string_view source, const std::string& fileName = "chunk") {
+			m_fileName = fileName;
+			return CompileSource(source.data(), source.length(), fileName.data(), fileName.length(), 2);
 		}
 
-		inline std::string GetError() const {
+		void LoadBytecode(const LuauBytecode& bytecode, const std::string& fileName) {
+			if (bytecode.size > BYTECODE_MAX_LEN) {
+				return;
+			}
+
+			memcpy(m_bytecode, (char*)bytecode.data, bytecode.size);
+			m_fileName = fileName;
+		}
+
+		constexpr bool HasErrored() const {
+			return m_errlen > 0;
+		}
+		constexpr bool IsCompiled() const {
+			return m_bytecodeSize > 0;
+		}
+
+		constexpr std::string GetFileName() const {
+			return m_fileName;
+		}
+
+		constexpr std::string GetError() const {
 			return std::string(m_err, m_errlen);
 		}
+
+		[[nodiscard]] const LuauBytecode GetBytecode() const;
 
 		LuauScript();
 		~LuauScript();
 
-        bool LoadThread();
-        bool RunThread();
-    private:
-        lua_State* m_thread;
+		static const LuauBytecodeVersion GetBytecodeVersion();
 
-        const char* m_fileName;
+		// Creates a script and the associated thread for it
+		[[nodiscard]] static constexpr LuauScript CreateScript(std::string_view source, const std::string& fileName) {
+			LuauScript script;
+			script.Compile(source, fileName);
+			return script;
+		};
+
+		[[nodiscard]] static constexpr LuauScript CreateScript(const LuauBytecode& bytecode, const std::string& fileName) {
+			LuauScript script;
+			script.LoadBytecode(bytecode, fileName);
+			return script;
+		}
+
+	private:
+		// lua_State* m_thread = nullptr;
+
+		std::string m_fileName;
 
 		char m_err[128];
 		size_t m_errlen = 0;
 
-		char m_bytecode[1024 * 512];
+		char m_bytecode[BYTECODE_MAX_LEN];
 		size_t m_bytecodeSize = 0;
 	};
-} // namespace ENGINE_NS::scripting
+
+	enum class LuauThreadStatus {
+		// Script is still runnning
+		Running = 0,
+		// Script is suspended
+		Suspended,
+		// Script resumed another coroutine
+		Normal,
+		// script has finished execution
+		Finished,
+		// script finished execution with error
+		Errored,
+	};
+
+	class LuauScriptThread {
+		bool Create();
+
+	public:
+		LuauScriptThread(const LuauScript& script) : m_script(script) {
+			Create();
+		}
+		[[nodiscard]] constexpr LuauScript& GetScript() {
+			return m_script;
+		}
+		bool Run();
+		void Reset();
+		[[nodiscard]] LuauThreadStatus GetThreadStatus() const;
+		[[nodiscard]] constexpr bool IsRunning() const {
+			auto status = GetThreadStatus();
+			return status != LuauThreadStatus::Finished && status != LuauThreadStatus::Errored;
+		}
+
+		~LuauScriptThread();
+
+	private:
+		LuauScript m_script;
+		lua_State* m_thread = nullptr;
+	};
+
+	inline std::string to_string(LuauThreadStatus status) {
+		switch (status) {
+			using enum LuauThreadStatus;
+			case Running:
+				// return "Running";
+				return _STR(Running);
+			case Suspended:
+				return _STR(Suspended);
+			case Normal:
+				return _STR(Normal);
+			case Finished:
+				return _STR(Finished);
+			case Errored:
+				return _STR(Errored);
+			default:
+				return "";
+		}
+	}
+} // namespace andromeda

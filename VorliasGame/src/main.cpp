@@ -1,9 +1,10 @@
 
-#define ANDROMEDA_INTERNAL 1
+// #define ANDROMEDA_INTERNAL 1
 #define ANDROMEDA_OPENGL 1
 #include "Engine/Main.h"
 #include "Engine/Window.h"
 #include "Engine/Common.h"
+#include "Engine/File.h"
 #include "Engine/Engine.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/OpenGL/OpenGLRenderer.h"
@@ -13,16 +14,67 @@
 #include "Engine/Graphics/OpenGL/OpenGLShader.h"
 #include "Engine/Graphics/Vulkan/VulkanShader.h"
 
+#include "Engine/Luau/LuauScript.h"
+#include "Engine/Luau/Task.h"
+
+#include <thread>
+#include <chrono>
+
+using namespace std::string_literals;
+using namespace std::chrono_literals;
+using namespace std::string_view_literals;
+
 #include "Engine/IMGUI.h"
 using namespace andromeda;
 
 class TestApplication : public Application {
+public:
+	TestApplication() {
+		SetDataPath("Vorlias/src");
+		SetPersistentDataPath(GetPersistentDataPath() / "Test");
+	}
+
 	bool Initialize() override {
+		auto testScript = R"(
+			local test = { message = "test", test = function()end }
+			print("the value of test is", test)
+
+			while true do
+			end
+		)";
+
+		// auto script = LuauScript::CreateScript(testScript, "test.luau");
+
+		// 	LuauState* gameState = LuauState::GetMainThread(LuauStateContext::Game);
+		// 	std::chrono::high_resolution_clock ck;
+
+		// 	while (true) {
+		// 		std::this_thread::sleep_for(10ms);
+		// 		andromeda_luau::luaL_runscheduler(gameState->GetLuaState(), 0);
+		// 	}
+		// // LuauScriptThread thread(script);
+		// // std::thread t([&thread]() {
+		// // 	thread.Run();
+		// // });
+
+		// // std::thread t2([&thread]() {
+		// // 	std::this_thread::sleep_for(1s);
+		// // 	std::cout << "status is " << to_string(thread.GetThreadStatus()) << ", " << thread.IsRunning() << std::endl;
+		// // 	thread.Reset();
+		// // });
+
+
+		// // t2.join();
+		// // t.join();
+
+		// luauScheduler.join();
 		CreateWindow(WindowOptions());
-
-		shaders.LoadShaderFromFiles("Main", "VorliasEngine/src/Shaders/shader.vert.spv", "VorliasEngine/src/Shaders/shader.frag.spv");
-
 		return true;
+	}
+
+	void Update(float dt) override {
+		andromeda::LuauState* gameState = LuauState::GetMainThread(LuauStateContext::Game);
+		andromeda_luau::luaL_runscheduler(gameState->GetLuaState(), GetElapsedTime());
 	}
 };
 

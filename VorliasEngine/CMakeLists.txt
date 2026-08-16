@@ -55,7 +55,6 @@ target_sources(
     src/PCH.h
     src/Engine/Luau/LuauScript.cpp
     src/Engine/Luau/LuauState.cpp
-    src/Engine/Luau/LuauState.h
     src/Engine/Engine.cpp
     src/Engine/Log.cpp
     src/Engine/Platform.cpp
@@ -79,6 +78,9 @@ target_sources(
     src/Engine/Graphics/OpenGL/OpenGLShader.cpp
     src/Engine/Graphics/OpenGL/OpenGLRenderer.cpp
     src/Engine/Graphics/OpenGL/OpenGLWindowContext.cpp
+    src/Engine/Luau/Task.cpp
+    src/Engine/Luau/Lib.cpp
+    src/Engine/Luau/ThreadData.cpp
     PUBLIC # exposed
     include/Engine/Engine.h
     include/Engine/Platform.h
@@ -86,6 +88,7 @@ target_sources(
     include/Engine/FileDialogs.h
     include/Engine/Application.h
     include/Engine/Luau/LuauScript.h
+    include/Engine/Luau/LuauState.h
     include/Engine/Log.h
     include/Engine/Graphics/GraphicsContext.h
     include/Engine/Common.h
@@ -104,6 +107,11 @@ target_sources(
     include/Engine/Graphics/OpenGL/OpenGLHelpers.h
     include/Engine/Graphics/Vulkan/VulkanBase.h
     src/Engine/Graphics/Vulkan/VulkanBase.cpp
+    include/Engine/Luau/Task.h
+    include/Engine/Luau/Lib.h
+    include/Engine/Luau/ThreadData.h
+    include/Engine/Luau/PrettyPrint.h
+    src/Engine/Luau/PrettyPrint.cpp
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
