@@ -1,8 +1,14 @@
 local fs = require("@std/fs")
 
 local atoms = {
+    -- Vector3
     "magnitude",
-    "normalized"
+    "normalized",
+    "Distance",
+    "Shrink",
+
+    -- Vector2
+    "Extend",
 }
 
 

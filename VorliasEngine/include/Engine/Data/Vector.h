@@ -27,7 +27,7 @@ namespace andromeda {
 			return Vector2(x / r, y / r);
 		}
 	};
-	
+
 	void registerVector2Lib(lua_State* L);
 	void registerVector3Lib(lua_State* L);
 
@@ -37,6 +37,7 @@ namespace andromeda {
 		Vector3() = default;
 		Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
+		Vector3 Normalize() const;
 		float GetMagnitude() const;
 		float GetDistance(Vector3 other) const;
 

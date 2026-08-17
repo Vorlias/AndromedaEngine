@@ -11,4 +11,6 @@
 
 local testVec = Vector3.new(1, 2, 3)
 print(testVec)
-print(testVec.magnitude)
+print(testVec.magnitude, testVec.normalized)
+
+print(testVec.x)
