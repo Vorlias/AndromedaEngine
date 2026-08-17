@@ -86,6 +86,7 @@ target_sources(
     src/Engine/Luau/LuauTimeoutHandler.cpp
     src/Engine/Data/Vector3.luau.cpp
     src/Engine/Luau/AtomsDef.cpp
+    src/Engine/Data/Vector2.luau.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h

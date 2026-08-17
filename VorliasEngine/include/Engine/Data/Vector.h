@@ -1,8 +1,10 @@
 #pragma once
 #include <math.h>
+#include "lualib.h"
 
 struct lua_State;
 
+static constexpr float kEpsilon = 0.00001f;
 namespace andromeda {
 	struct Vector3;
 	struct Vector2 {
@@ -11,8 +13,9 @@ namespace andromeda {
 		Vector2() = default;
 		Vector2(float x, float y) : x(x), y(y) {}
 
-		float GetMagnitude();
-		float GetDistance(Vector2 other);
+		Vector2 Normalize() const;
+		float GetMagnitude() const;
+		float GetDistance(Vector2 other) const;
 		Vector3 Extend(float z = 0);
 
 		Vector2 operator+(Vector2 other) const {
@@ -68,8 +71,20 @@ namespace andromeda {
 		Vector3i(int32_t x, int32_t y, int32_t z) : x(x), y(y), z(z) {}
 	};
 
-	inline std::string to_string(const Vector2& vec) {
-		return std::format("<{:.2f}f, {:.2f}f>", vec.x, vec.y);
+	enum class VectorFormatStyle {
+		Luau,
+		CXX,
+	};
+
+	inline std::string_view to_string(const Vector2& vec, VectorFormatStyle format = VectorFormatStyle::CXX) {
+		switch (format) {
+			case VectorFormatStyle::Luau:
+				char result[LUA_BUFFERSIZE];
+				snprintf(result, sizeof(result), "%g, %g", vec.x, vec.y);
+				return result;
+			case VectorFormatStyle::CXX:
+				return std::format("<{:.2f}f, {:.2f}f>", vec.x, vec.y);
+		}
 	}
 
 	inline std::string to_string(const Vector2u& vec) {

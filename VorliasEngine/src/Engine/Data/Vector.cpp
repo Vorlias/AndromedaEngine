@@ -8,13 +8,22 @@ static float signf(float value) {
 	return -1;
 }
 
-static constexpr float kEpsilon = 0.00001f;
+
 namespace andromeda {
-	float Vector2::GetMagnitude() {
+	float Vector2::GetMagnitude() const {
 		return sqrt(x * x + y * y);
 	}
 
-	float Vector2::GetDistance(Vector2 other) {
+	Vector2 Vector2::Normalize() const {
+		auto mag = GetMagnitude();
+		if (mag > kEpsilon) {
+			return Vector2(x / mag, y / mag);
+		} else {
+			return Vector2();
+		}
+	}
+
+	float Vector2::GetDistance(Vector2 other) const {
 		float diffX = x - other.x;
 		float diffY = y - other.y;
 		return sqrt(diffX * diffX + diffY * diffY);

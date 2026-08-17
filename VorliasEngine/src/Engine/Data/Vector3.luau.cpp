@@ -3,15 +3,6 @@
 #include "lualib.h"
 #include "Engine/Luau/AtomsDef.h"
 
-
-constexpr const char* kVector2 = "Vector2";
-
-static const luaL_Reg vector2Lib[] = {
-	{nullptr, nullptr},
-};
-void andromeda::registerVector2Lib(lua_State* L) {}
-
-
 ///////////////////////////////////////////////
 //         VECTOR 3                         //
 //////////////////////////////////////////////
@@ -27,6 +18,11 @@ static int Vector3_new(lua_State* L) {
 	return 1;
 }
 
+static int Vector3Lib_tostring(lua_State* L) {
+	lua_pushliteral(L, "Vector3");
+	return 1;
+}
+
 static int Vector3_magnitude(lua_State* L) {
 	const auto vec = reinterpret_cast<const andromeda::Vector3*>(luaL_checkvector(L, 1));
 	lua_pushnumber(L, vec->GetMagnitude());
@@ -37,6 +33,8 @@ static int Vector3_normalize(lua_State* L) {
 	const auto vec = reinterpret_cast<const andromeda::Vector3*>(luaL_checkvector(L, 1));
 	auto res = vec->Normalize();
 	lua_pushvector(L, res.x, res.y, res.z);
+
+
 	return 1;
 }
 
@@ -85,12 +83,14 @@ static int Vector3_namecall(lua_State* L) {
 	return 0;
 }
 
-static const luaL_Reg vector3Lib[] = {
+static const luaL_Reg vector2Lib[] = {
 	{"new", Vector3_new},
 	{nullptr, nullptr},
 };
 
 void andromeda::registerVector3Lib(lua_State* L) {
+	int _Top = lua_gettop(L);
+
 	lua_pushvector(L, 0, 0, 0);
 	luaL_newmetatable(L, kVector3);
 
@@ -110,5 +110,41 @@ void andromeda::registerVector3Lib(lua_State* L) {
 	lua_setmetatable(L, -2);
 	lua_pop(L, 1);
 
-	luaL_register(L, kVector3, vector3Lib);
+	luaL_register(L, kVector3, vector2Lib);
+
+	{
+		lua_pushvector(L, 0, 0, 0);
+		lua_setfield(L, -2, "zero");
+
+		lua_pushvector(L, 1, 1, 1);
+		lua_setfield(L, -2, "one");
+
+		lua_pushvector(L, 0, -1, 0);
+		lua_setfield(L, -2, "down");
+
+		lua_pushvector(L, 0, 0, 1);
+		lua_setfield(L, -2, "forward");
+
+		lua_pushvector(L, -1, 0, 0);
+		lua_setfield(L, -2, "left");
+
+		lua_pushvector(L, 1, 0, 0);
+		lua_setfield(L, -2, "right");
+
+		lua_pushvector(L, 0, 1, 0);
+		lua_setfield(L, -2, "up");
+	}
+
+	// vector3 mt
+	{
+		lua_newtable(L);
+		lua_pushcfunction(L, Vector3Lib_tostring, "Vector3Lib_tostring");
+		lua_setfield(L, -2, "__tostring");
+		lua_setreadonly(L, -1, true);
+		lua_setmetatable(L, -2);
+	}
+
+	lua_setreadonly(L, -1, true);
+	lua_pop(L, 1);
+	ANDROMEDA_ASSERT(lua_gettop(L) == _Top);
 }

@@ -1,16 +1,11 @@
--- print(task.wait(2))
 
--- task.spawn(function(x)
---     local i = 0
---     while true do
---         print(i)
---         local t=  task.wait()
---         i+=t
---     end
--- end)
+local test = Vector2.new(10, 15)
+print(test.magnitude)
+print(test.normalized)
 
-local testVec = Vector3.new(1, 2, 3)
-print(testVec)
-print(testVec.magnitude, testVec.normalized)
+local test2 = Vector3.new(10, 15, 20)
+print(test2.magnitude)
+print(test2.normalized)
+print(Vector2.new(1.005, 1.022311231213))
 
-print(testVec.x)
+

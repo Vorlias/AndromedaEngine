@@ -30,7 +30,7 @@ void andromeda_luau::luaL_registermetatable(lua_State* L, const char* objectName
 	lua_setfield(L, -2, "__type");
 
 	if (tag < LUA_UTAG_LIMIT)
-		lua_setuserdatametatable(L, tag); 
+		lua_setuserdatametatable(L, tag);
 }
 
 void luaL_registerconstructor(lua_State* L, int idx, const char* objectName, const char* name, lua_CFunction ctor) {
