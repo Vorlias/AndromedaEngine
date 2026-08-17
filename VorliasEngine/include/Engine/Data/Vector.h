@@ -87,6 +87,17 @@ namespace andromeda {
 		}
 	}
 
+	inline std::string_view to_string(const Vector3& vec, VectorFormatStyle format = VectorFormatStyle::CXX) {
+		switch (format) {
+			case VectorFormatStyle::Luau:
+				char result[LUA_BUFFERSIZE];
+				snprintf(result, sizeof(result), "%g, %g, %g", vec.x, vec.y, vec.z);
+				return result;
+			case VectorFormatStyle::CXX:
+				return std::format("<{:.2f}f, {:.2f}f, {:.2f}f>", vec.x, vec.y, vec.z);
+		}
+	}
+
 	inline std::string to_string(const Vector2u& vec) {
 		return std::format("<{:d}u, {:d}u>", vec.x, vec.y);
 	}

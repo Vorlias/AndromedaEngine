@@ -3,6 +3,7 @@
 #include "lua.h"
 #include "LuauState.h"
 #include "Engine/Memory.h"
+#include "Engine/Objects/Object.h"
 #include <memory.h>
 
 
@@ -101,8 +102,15 @@ namespace andromeda {
 	};
 
 	class LuauScriptThread {
-		bool Create();
+	public:
+		struct Cleanup {
+			void operator()(LuauScriptThread* p) {
+				delete p;
+			}
+		};
 
+	private:
+		bool Create();
 	public:
 		LuauScriptThread(Ref<LuauScript> script) : m_script(script) {
 			Create();
@@ -120,23 +128,50 @@ namespace andromeda {
 
 		~LuauScriptThread();
 
+		constexpr lua_State* GetLuauState() const { 
+			return m_thread;
+		}
+	
 		operator lua_State*() const {
 			return m_thread;
 		}
-
-		struct Cleanup {
-			void operator()(LuauScriptThread* p) {
-				std::cout << "delete script thread" << std::endl;
-				delete p;
-			}
-		};
-
 	private:
 		Ref<LuauScript> m_script;
 		lua_State* m_thread = nullptr;
+		friend class LuauScriptComponent;
 	};
 
+	class LuauScriptComponent {
+	public:
+		LuauScriptComponent() : m_script(nullptr), m_entity() {}
+		LuauScriptComponent(Ref<LuauScript> script) : m_script(script), m_entity() {}
 
+		void SetScript(Ref<LuauScript> script);
+		void SetEnabled(bool enabled);
+
+		void Awake();
+
+		constexpr bool IsEnabled() const {
+			return m_enabled;
+		}
+		constexpr bool IsAwake() const {
+			return m_awake;
+		}
+
+		constexpr bool HasError() const {
+			return m_err;
+		}
+
+	private:
+		Ref<LuauScript> m_script = nullptr;
+		std::unique_ptr<LuauScriptThread, LuauScriptThread::Cleanup> m_thread{};
+
+		Entity m_entity;
+		bool m_enabled;
+		bool m_awake;
+		bool m_err;
+		friend class Scene;
+	};
 
 	inline std::string to_string(LuauThreadStatus status) {
 		switch (status) {

@@ -169,3 +169,44 @@ void LuauScriptThread::Reset() {
 LuauScript::~LuauScript() {}
 
 LuauScriptThread::~LuauScriptThread() {}
+
+
+void LuauScriptComponent::SetScript(Ref<andromeda::LuauScript> script) {
+	m_script = script;
+}
+
+void LuauScriptComponent::SetEnabled(bool enabled) {
+
+}
+
+void LuauScriptComponent::Awake() {
+	if (m_awake) return;
+	if (m_script == nullptr) return;
+	
+	std::unique_ptr<andromeda::LuauScriptThread, andromeda::LuauScriptThread::Cleanup> thread(
+		new LuauScriptThread(m_script),
+		andromeda::LuauScriptThread::Cleanup()
+	);
+
+	// Set any component-specific stuff here
+	{
+		lua_State* L = thread->m_thread;
+		int top = lua_gettop(L);
+
+		lua_pushboolean(L, true);
+		lua_setglobal(L, "__component");
+
+		// TODO: Set appropriate globals here? 
+
+		ANDROMEDA_ASSERT(lua_gettop(L) == top); // ensure top matches at end
+	}
+
+	if (!thread->Run()) {
+		thread.reset();
+		m_err = true;
+		return;
+	}
+
+	m_thread = std::move(thread);
+	m_awake = true;
+}

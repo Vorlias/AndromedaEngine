@@ -1,15 +1,14 @@
 #pragma once
 #include <entt/entt.hpp>
-#include "Engine/Objects/Object.h"
-
 namespace andromeda {
-	class Scene : public Object {
+	class Entity;
+	class Scene {
 	public:
-		std::string_view GetName() const override {
+		std::string_view GetName() const {
 			return m_name;
 		}
 
-		void SetName(std::string_view name) override {
+		void SetName(std::string_view name) {
 			m_name = name;
 		}
 
@@ -18,10 +17,20 @@ namespace andromeda {
 		}
 
 		Entity CreateEntity(const std::string& name);
-        Entity CreateEntity();
+		Entity CreateEntity();
+
+		template<typename T>
+		void OnComponentAdded(Entity entity, T& component);
+
+		void Update(float dt);
+
 	private:
 		std::string m_name = "Scene";
 		entt::registry m_registry;
+
 		friend class Entity;
 	};
+
+
 } // namespace andromeda
+

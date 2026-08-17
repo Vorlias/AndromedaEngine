@@ -42,13 +42,16 @@ public:
 
 	bool Initialize() override {
 		auto testScript = luau.LoadScriptFromFile(GetDataPath() / "scripts" / "test.luau");
-		luau.ExecuteScript(testScript);
+
+		auto ent = scene.CreateEntity("Test Script");
+		LuauScriptComponent& script = ent.AddComponent<LuauScriptComponent>(testScript); // kick-starts a script here :-)
 
 		return true;
 	}
 
 	void Update(float dt) override {
 		luau.Update(dt); // ezpz
+		scene.Update(dt);
 	}
 
 private:
