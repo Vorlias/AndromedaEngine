@@ -81,6 +81,11 @@ target_sources(
     src/Engine/Luau/PrettyPrint.cpp
     src/Engine/ObjectPool.cpp
     src/Engine/Luau/LuauRuntime.cpp
+    src/Engine/Objects/Object.cpp
+    src/Engine/Scene/Scene.cpp
+    src/Engine/Luau/LuauTimeoutHandler.cpp
+    src/Engine/Data/Vector3.luau.cpp
+    src/Engine/Luau/AtomsDef.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -117,7 +122,12 @@ target_sources(
     include/Engine/ObjectPool.h
     include/Engine/Luau/LuauRuntime.h
     include/Engine/Luau/LuauTimeoutHandler.h
-    src/Engine/Luau/LuauTimeoutHandler.cpp
+    include/Engine/Data/Rect.h
+    include/Engine/Objects/Object.h
+    include/Engine/Scene/Scene.h
+    include/Engine/Math.h
+    include/Engine/Luau/AtomsDef.h
+
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

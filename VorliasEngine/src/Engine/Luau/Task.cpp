@@ -13,11 +13,9 @@ struct LuauScheduledData {
 	float resumeTime{};
 	int threadRef{};
 	int argc{};
-	int retc{};
-	lua_Type* retv{nullptr};
 };
 
-constexpr float kMinDelayTime = 0.000001f;
+constexpr float kMinDelayTime = 0.001f;
 constexpr const char* kScheduledThreads = "LuauScheduledThreads";
 
 static andromeda::Pool<LuauScheduledData> s_scheduledDataPool(500, 50);
@@ -51,7 +49,7 @@ lua_State* luaL_spawnthread(lua_State* L, int idx, int* argc) {
 	return T;
 }
 
-static int luaL_runthread(lua_State* L, lua_State* T, int argc, int* retc) {
+static int luaL_runthread(lua_State* L, lua_State* T, int narg) {
 	bool alive = true;
 
 	void* threadDataPtr = lua_getthreaddata(T);
@@ -68,18 +66,10 @@ static int luaL_runthread(lua_State* L, lua_State* T, int argc, int* retc) {
 	lua_xmove(T, L, 1);
 
 	int threadIdx = lua_gettop(L);
-	int status = lua_resume(T, L, argc);
+	int status = lua_resume(T, L, narg);
 
 	if (status == LUA_OK || status == LUA_YIELD) {
 		lua_remove(L, threadIdx);
-
-		// if (lua_gettop(T) > 0 && retc != nullptr) {
-		// 	std::cout << "top is " << lua_gettop(T) << ", " << luaL_typename(T, -1) << ":" << lua_tostring(T, -1) << "; "  << status << std::endl;
-		// 	*retc = lua_gettop(T);
-		// }
-
-		// std::cout << "resume result is " << status << std::endl;
-
 		return status;
 	}
 
@@ -146,10 +136,10 @@ static LuauScheduledData* schedulethread(lua_State* L, lua_State* T, int argc, f
 }
 
 static int task_spawn(lua_State* L) {
-	int argc;
-	lua_State* T = luaL_spawnthread(L, 1, &argc);
+	int nargs;
+	lua_State* T = luaL_spawnthread(L, 1, &nargs);
 
-	int status = luaL_runthread(L, T, argc, nullptr);
+	int status = luaL_runthread(L, T, nargs);
 	if (status == LUA_OK) {
 		lua_settop(T, 0);
 	}
@@ -173,8 +163,7 @@ static int task_wait(lua_State* L) {
 		delay_time = kMinDelayTime;
 	}
 
-	auto waitData = schedulethread(L, L, 0, now + delay_time);
-
+	auto waitData = schedulethread(L, L, 1, now + delay_time);
 	lua_pushnumber(L, delay_time);
 	return lua_yield(L, 1);
 }
@@ -207,8 +196,7 @@ static void runScheduledThreads(lua_State* L) {
 		if (lua_costatus(L, T) != LUA_COSUS)
 			continue;
 
-		int retc = 0;
-		int status = luaL_runthread(L, T, data->argc, &retc);
+		int status = luaL_runthread(L, T, data->argc);
 
 		if (status == LUA_OK) {
 			lua_settop(T, 0);

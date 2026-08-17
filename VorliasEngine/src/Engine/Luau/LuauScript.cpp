@@ -44,6 +44,10 @@ bool LuauScript::CompileSource(const char* source, int source_len, const char* f
 		.typeInfoLevel = 0,
 	};
 
+	options.vectorLib = "Vector3";
+	options.vectorType = "Vector3";
+	options.vectorCtor = "new";
+
 	size_t bytecode_size;
 	char* bytecode = luau_compile(source, source_len, &options, &bytecode_size);
 	int res = luau_load(L, "=check", bytecode, bytecode_size, 0);

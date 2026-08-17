@@ -1,6 +1,8 @@
 #pragma once
 #include <math.h>
 
+struct lua_State;
+
 namespace andromeda {
 	struct Vector3;
 	struct Vector2 {
@@ -12,7 +14,22 @@ namespace andromeda {
 		float GetMagnitude();
 		float GetDistance(Vector2 other);
 		Vector3 Extend(float z = 0);
+
+		Vector2 operator+(Vector2 other) const {
+			return Vector2(x + other.x, y + other.y);
+		}
+
+		Vector2 operator-(Vector2 other) const {
+			return Vector2(x - other.x, y - other.y);
+		}
+
+		Vector2 operator/(float r) const {
+			return Vector2(x / r, y / r);
+		}
 	};
+	
+	void registerVector2Lib(lua_State* L);
+	void registerVector3Lib(lua_State* L);
 
 	struct Vector3 {
 		float x, y, z;
@@ -20,13 +37,13 @@ namespace andromeda {
 		Vector3() = default;
 		Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
 
-		float GetMagnitude();
-		float GetDistance(Vector3 other);
+		float GetMagnitude() const;
+		float GetDistance(Vector3 other) const;
 
 		Vector2 Shrink();
 	};
 
-    // two dimensional unsigned-based vector
+	// two dimensional unsigned-based vector
 	struct Vector2u {
 		uint32_t x, y;
 
@@ -34,7 +51,7 @@ namespace andromeda {
 		Vector2u(uint32_t x, uint32_t y) : x(x), y(y) {}
 	};
 
-    // two dimensional integer-based vector
+	// two dimensional integer-based vector
 	struct Vector2i {
 		int32_t x, y;
 
@@ -42,7 +59,7 @@ namespace andromeda {
 		Vector2i(int32_t x, int32_t y) : x(x), y(y) {}
 	};
 
-    // three dimensional integer-based vector
+	// three dimensional integer-based vector
 	struct Vector3i {
 		int32_t x, y, z;
 

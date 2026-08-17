@@ -18,6 +18,10 @@
 #include "Engine/Luau/LuauScript.h"
 #include "Engine/Luau/Task.h"
 #include "Engine/Luau/LuauRuntime.h"
+#include "Engine/Luau/Lib.h"
+
+#include "Engine/Scene/Scene.h"
+#include "Engine/Objects/Object.h"
 
 #include <thread>
 #include <chrono>
@@ -40,15 +44,16 @@ public:
 		auto testScript = luau.LoadScriptFromFile(GetDataPath() / "scripts" / "test.luau");
 		luau.ExecuteScript(testScript);
 
-		// CreateWindow(WindowOptions());
 		return true;
 	}
 
 	void Update(float dt) override {
 		luau.Update(dt); // ezpz
 	}
+
 private:
 	LuauRuntime luau;
+	Scene scene;
 };
 
 

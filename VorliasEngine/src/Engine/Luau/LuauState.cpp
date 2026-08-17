@@ -7,6 +7,8 @@
 #include "Engine/Luau/ThreadData.h"
 #include "Engine/Luau/LuauState.h"
 #include "Engine/Luau/PrettyPrint.h"
+#include "Engine/Data/Vector.h"
+#include "Engine/Luau/AtomsDef.h"
 
 using namespace andromeda;
 
@@ -110,6 +112,19 @@ static void handleNewOrDestroyedThread(lua_State* parentThread, lua_State* threa
 	}
 }
 
+
+static int16_t handleAtom(lua_State* L, const char* c_str, size_t len) {
+	std::string_view sv(c_str, len);
+	auto iter = s_LuauAtoms.find(sv);
+
+	if (iter != s_LuauAtoms.end()) {
+		std::cout << "return atom " << iter->second << " for " << sv << std::endl;
+		return iter->second;
+	}
+
+	return -1;
+}
+
 LuauState::LuauState(LuauStateContext context) : m_context(context) {
 	using namespace andromeda_luau;
 
@@ -118,6 +133,9 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 	// Open libraries
 	luaL_openlibs(L);
 	openTaskLib(L);
+	
+	registerVector2Lib(L);
+	registerVector3Lib(L);
 
 	// Protect core libraries and metatables from modification
 	luaL_sandbox(L);
@@ -142,6 +160,7 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 
 	lua_Callbacks* cb = lua_callbacks(L);
 	cb->userthread = handleNewOrDestroyedThread;
+	cb->useratom = handleAtom;
 
 	m_timeoutHandler = new LuauTimeoutHandler(L);
 	m_timeoutHandler->Start();
