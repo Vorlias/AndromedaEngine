@@ -128,6 +128,7 @@ target_sources(
     include/Engine/Scene/Scene.h
     include/Engine/Math.h
     include/Engine/Luau/AtomsDef.h
+    include/Engine/Objects/Component.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

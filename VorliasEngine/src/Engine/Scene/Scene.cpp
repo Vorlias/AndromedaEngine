@@ -1,16 +1,17 @@
 #include "Engine/Scene/Scene.h"
 #include "Engine/Objects/Object.h"
 #include "Engine/Log.h"
+#include "Engine/Objects/Component.h"
 #include "Engine/Luau/LuauScript.h"
 using namespace andromeda;
 
 Entity Scene::CreateEntity(const std::string& name) {
 	Entity entity = {this, m_registry.create()};
 
-	auto name_component = entity.AddComponent<NameComponent>();
+	auto& name_component = entity.AddComponent<NameComponent>();
 	name_component.name = name;
 
-	andromeda::print("Created entity with name {}", name_component.name);
+	auto& relationship = entity.AddComponent<EntityRelationship>();
 	return entity;
 }
 

@@ -5,6 +5,8 @@
 #include "entt/entt.hpp"
 #include "Engine/Log.h"
 
+using namespace entt::literals;
+
 namespace andromeda {
 	// class Scene;
 	class Object {
@@ -38,10 +40,19 @@ namespace andromeda {
 			return component;
 		}
 
+		template<typename T, typename... Args>
+		T& AddNamedComponent(entt::hashed_string name, Args&&... args) {
+			// auto& storage = m_scene->m_registry.storage(name);
+			// storage.emplace()
+		}
+
 		template<typename T>
-		T& GetComponent() {
+		T& GetComponent() const {
 			return m_scene->m_registry.get<T>(m_entity);
 		}
+
+		void SetParent(const Entity& parent);
+		std::vector<Entity> GetChildren() const;
 
 		operator bool() const {
 			return m_entity != entt::null;
@@ -53,11 +64,17 @@ namespace andromeda {
 			return (uint32_t)m_entity;
 		}
 
-		void SetName(std::string_view name) {}
+		void SetName(std::string_view name) {
+			auto& nc = GetComponent<NameComponent>();
+			nc.name = name;
+		}
+	
 		std::string_view GetName() const {
-			return "";
+			auto& nc = GetComponent<NameComponent>();
+			return nc.name;
 		}
 
+		Entity GetParent() const;
 	private:
 		Scene* m_scene;
 		entt::entity m_entity{entt::null};

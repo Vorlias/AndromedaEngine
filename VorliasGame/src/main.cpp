@@ -43,8 +43,20 @@ public:
 	bool Initialize() override {
 		auto testScript = luau.LoadScriptFromFile(GetDataPath() / "scripts" / "test.luau");
 
-		auto ent = scene.CreateEntity("Test Script");
-		LuauScriptComponent& script = ent.AddComponent<LuauScriptComponent>(testScript); // kick-starts a script here :-)
+		auto testParent = scene.CreateEntity("TestParent");
+
+		auto testEntity = scene.CreateEntity("Test Script");
+		LuauScriptComponent& script = testEntity.AddComponent<LuauScriptComponent>(testScript); // kick-starts a script here :-)
+		testEntity.SetParent(testParent);
+
+		auto testChild2 = scene.CreateEntity("Testchild2");
+		testChild2.SetParent(testParent);
+
+		for (auto& child : testParent.GetChildren()) {
+			andromeda::print("Got child {}", child.GetName());
+		}
+		
+		andromeda::print("Parent of test2 is {}", testChild2.GetParent().GetName());
 
 		return true;
 	}
