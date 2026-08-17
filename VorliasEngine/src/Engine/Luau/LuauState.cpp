@@ -118,7 +118,6 @@ static int16_t handleAtom(lua_State* L, const char* c_str, size_t len) {
 	auto iter = s_LuauAtoms.find(sv);
 
 	if (iter != s_LuauAtoms.end()) {
-		std::cout << "return atom " << iter->second << " for " << sv << std::endl;
 		return iter->second;
 	}
 

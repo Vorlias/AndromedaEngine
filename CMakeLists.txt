@@ -30,7 +30,8 @@ add_subdirectory(External/spdlog)
 add_subdirectory(External/entt)
 add_subdirectory(External/SDL)
 add_subdirectory(External/glad)
-add_subdirectory(External/lute)
+
+add_subdirectory(Tools/Lute)
 # add_subdirectory(External/cpptrace)
 
 add_compile_definitions(ANDROMEDA_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})

@@ -87,6 +87,10 @@ if [[ $DEFAULT ]]; then
     BUILD_GAME=1
 fi
 
+if [[ -f "Tools/lute" ]]; then
+    ./Tools/lute ./scripts/atoms.luau
+fi
+
 if [[ $BUILD_GAME == 1 ]]; then
     generate_project #--shaderc=OFF # temporarily disabled while i figure out the vulkan stuff
     cmake --build build --target VorliasGame --config $BUILD_TYPE

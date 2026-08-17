@@ -44,3 +44,4 @@ table.insert(sourceFile, "};")
 
 fs.writeStringToFile(`VorliasEngine/include/{headerFilePath}`, table.concat(headerFile, "\n"))
 fs.writeStringToFile(`VorliasEngine/src/Engine/Luau/{sourceFilePath}`, table.concat(sourceFile, "\n"))
+print("Generated atoms for the Luau Runtime")
