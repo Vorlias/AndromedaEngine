@@ -6,4 +6,4 @@
 .idea
 /cmake-build-*
 /.andromeda
-/Tools/Lute/lute*
+/Tools/lute*
