@@ -40,19 +40,13 @@ namespace andromeda {
 			return component;
 		}
 
-		template<typename T, typename... Args>
-		T& AddNamedComponent(entt::hashed_string name, Args&&... args) {
-			// auto& storage = m_scene->m_registry.storage(name);
-			// storage.emplace()
-		}
-
 		template<typename T>
 		T& GetComponent() const {
 			return m_scene->m_registry.get<T>(m_entity);
 		}
 
 		void SetParent(const Entity& parent);
-		std::vector<Entity> GetChildren() const;
+		const std::vector<Entity> GetChildren() const;
 
 		operator bool() const {
 			return m_entity != entt::null;
@@ -68,17 +62,28 @@ namespace andromeda {
 			auto& nc = GetComponent<NameComponent>();
 			nc.name = name;
 		}
-	
+
 		std::string_view GetName() const {
 			auto& nc = GetComponent<NameComponent>();
 			return nc.name;
 		}
 
 		Entity GetParent() const;
+
 	private:
+		friend class LuauScriptComponent;
+
 		Scene* m_scene;
 		entt::entity m_entity{entt::null};
 	};
+
+	struct EntityHandle {
+		Scene* scene;
+		entt::entity entity{entt::null};
+	};
+
+	static void registerObjectLib(lua_State* L);
+	EntityHandle* pushEntityHandle(lua_State* L, andromeda::Scene* scene, entt::entity entity);
 } // namespace andromeda
 
 template<typename T>

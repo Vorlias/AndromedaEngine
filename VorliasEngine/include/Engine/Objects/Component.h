@@ -1,41 +1,43 @@
 #include <entt/entt.hpp>
 
 namespace andromeda {
-	struct EntityRelationship {
+	struct EntityRelationships {
 		// The parent of this entity
 		entt::entity parent{entt::null};
 
 		// The number of children on this entity
-		std::size_t children{};
+		std::size_t childCount{};
 
 		// The entity identifier of the first child of this entity
-		entt::entity first{entt::null};
+		entt::entity firstChild{entt::null};
 
 		// The previous sibling of this entity
-		entt::entity prev{entt::null};
+		entt::entity prevSibling{entt::null};
 
 		// The next sibling of this entity
-		entt::entity next{entt::null};
+		entt::entity nextSibling{entt::null};
 
 
 		void AddChild(entt::registry& registry, entt::entity entity) {
-			auto& child = first;
-			if (first == entt::null) {
-				first = entity;
-				children = 1;
-				std::cout << "updated child count to " << children << std::endl;
+			if (firstChild == entt::null) {
+				firstChild = entity;
+				childCount = 1;
 				return;
 			}
 
-			for (std::size_t i{}; i < children - 1; ++i) {
-				child = registry.get<EntityRelationship>(child).next;
+			auto& child = firstChild;
+			for (std::size_t i{}; i < childCount - 1; ++i) {
+				child = registry.get<EntityRelationships>(child).nextSibling;
 			}
 
-			auto& lastChild = registry.get<EntityRelationship>(child);
-			lastChild.next = entity;
+			auto& lastChild = registry.get<EntityRelationships>(child);
+			lastChild.nextSibling = entity;
 
-			children += 1;
-			std::cout << "updated child count to " << children << std::endl;
+			childCount += 1;
+		}
+
+		void RemoveChild(entt::registry& registry, entt::entity entity) {
+			if (childCount == 0) return; // if no children, just skip this lol
 		}
 	};
 } // namespace andromeda

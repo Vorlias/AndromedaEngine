@@ -3,6 +3,7 @@
 #include "Engine/Log.h"
 #include "Engine/Objects/Component.h"
 #include "Engine/Luau/LuauScript.h"
+#include "Engine/Luau/Lib.h"
 using namespace andromeda;
 
 Entity Scene::CreateEntity(const std::string& name) {
@@ -11,7 +12,7 @@ Entity Scene::CreateEntity(const std::string& name) {
 	auto& name_component = entity.AddComponent<NameComponent>();
 	name_component.name = name;
 
-	auto& relationship = entity.AddComponent<EntityRelationship>();
+	auto& relationship = entity.AddComponent<EntityRelationships>();
 	return entity;
 }
 
@@ -24,6 +25,7 @@ void Scene::Update(float dt) {
 	for (auto [entity, component] : scriptView.each()) {
 		// Awake a script if possible
 		if (!component.IsAwake() && !component.HasError() && component.m_script != nullptr) {
+			component.m_entity = Entity(this, entity);
 			component.Awake();
 		}
 	}

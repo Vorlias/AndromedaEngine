@@ -2,18 +2,16 @@
 #include "Engine/Objects/Component.h"
 using namespace andromeda;
 
-
-
 void Entity::SetParent(const Entity& parent) {
-    auto& childRel = GetComponent<EntityRelationship>();
+    auto& childRel = GetComponent<EntityRelationships>();
     childRel.parent = parent.m_entity;
     
-    auto& parentRel = parent.GetComponent<EntityRelationship>();
+    auto& parentRel = parent.GetComponent<EntityRelationships>();
     parentRel.AddChild(m_scene->m_registry, m_entity);
 }
 
 Entity Entity::GetParent() const {
-    auto& childRel = GetComponent<EntityRelationship>();
+    auto& childRel = GetComponent<EntityRelationships>();
     if (childRel.parent != entt::null) {
         return Entity(m_scene, childRel.parent);
     }
@@ -21,16 +19,16 @@ Entity Entity::GetParent() const {
     return Entity();
 }
 
-std::vector<Entity> Entity::GetChildren() const {
-    auto& rel = m_scene->m_registry.get<EntityRelationship>(m_entity);
+const std::vector<Entity> Entity::GetChildren() const {
+    auto& rel = m_scene->m_registry.get<EntityRelationships>(m_entity);
 
     std::vector<Entity> children;
-    children.resize(rel.children);
+    children.resize(rel.childCount);
 
-    auto curr = rel.first;
-    for (std::size_t i{}; i < rel.children; ++i) {
+    auto curr = rel.firstChild;
+    for (std::size_t i{}; i < rel.childCount; ++i) {
         children[i] = Entity(m_scene, curr);
-        curr = m_scene->m_registry.get<EntityRelationship>(curr).next;
+        curr = m_scene->m_registry.get<EntityRelationships>(curr).nextSibling;
     }
 
     return children;

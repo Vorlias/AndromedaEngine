@@ -93,7 +93,6 @@ static const luaL_Reg vector2Lib[] = {
 void andromeda::registerVector2Lib(lua_State* L) {
 	int _Top = lua_gettop(L);
 
-	lua_pushvector(L, 0, 0, 0);
 	luaL_newmetatable(L, kVector2);
 
 	lua_pushcfunction(L, Vector2_namecall, "Vector2_namecall");
@@ -153,6 +152,5 @@ void andromeda::registerVector2Lib(lua_State* L) {
 	}
 
 	lua_setreadonly(L, -1, true);
-	lua_pop(L, 1);
 	ANDROMEDA_ASSERT(lua_gettop(L) == _Top);
 }

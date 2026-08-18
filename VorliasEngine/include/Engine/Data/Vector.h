@@ -76,7 +76,7 @@ namespace andromeda {
 		CXX,
 	};
 
-	inline std::string_view to_string(const Vector2& vec, VectorFormatStyle format = VectorFormatStyle::CXX) {
+	inline std::string to_string(const Vector2& vec, VectorFormatStyle format = VectorFormatStyle::CXX) {
 		switch (format) {
 			case VectorFormatStyle::Luau:
 				char result[LUA_BUFFERSIZE];
@@ -87,7 +87,7 @@ namespace andromeda {
 		}
 	}
 
-	inline std::string_view to_string(const Vector3& vec, VectorFormatStyle format = VectorFormatStyle::CXX) {
+	inline std::string to_string(const Vector3& vec, VectorFormatStyle format = VectorFormatStyle::CXX) {
 		switch (format) {
 			case VectorFormatStyle::Luau:
 				char result[LUA_BUFFERSIZE];

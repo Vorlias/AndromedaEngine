@@ -9,6 +9,7 @@
 #include "Engine/Luau/PrettyPrint.h"
 #include "Engine/Data/Vector.h"
 #include "Engine/Luau/AtomsDef.h"
+#include "Engine/Objects/Object.h"
 
 using namespace andromeda;
 
@@ -135,6 +136,7 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 	
 	registerVector2Lib(L);
 	registerVector3Lib(L);
+	// registerObjectLib(L);
 
 	// Protect core libraries and metatables from modification
 	luaL_sandbox(L);

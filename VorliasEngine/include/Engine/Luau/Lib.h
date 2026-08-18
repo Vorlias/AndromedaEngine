@@ -2,6 +2,7 @@
 #include "lualib.h"
 
 constexpr int kVector2Tag = 127;
+constexpr int kEntityTag = 126;
 
 namespace andromeda_luau {
 	void luaL_registerlibrary(lua_State* L, const char* libName, const luaL_Reg* lib, bool readonly);
