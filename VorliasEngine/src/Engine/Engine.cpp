@@ -103,6 +103,11 @@ bool Engine::Initialize() {
 					m_renderer = CreateScopeRef<graphics::OpenGLRenderer>();
 					break;
 #endif
+#if ANDROMEDA_WGPU
+				case graphics::API::WGPU:
+					andromeda::warn("TODO: Implement WebGPU");
+					break;
+#endif
 			}
 
 			if (!m_app->Initialize())

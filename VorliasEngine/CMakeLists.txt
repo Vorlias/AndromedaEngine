@@ -19,6 +19,10 @@ if(OPENGL_RENDERER)
     add_compile_definitions(ANDROMEDA_OPENGL=1)
 endif()
 
+if (WEBGPU_RENDERER)
+    add_compile_definitions(ANDROMEDA_WGPU=1)
+endif()
+
 
 
 # include vk-bootstrap
@@ -150,6 +154,11 @@ if(OPENGL_RENDERER)
         OpenGL::OpenGL # Open GL Libs
         glad
     )
+endif()
+
+if (WEBGPU_RENDERER)
+    target_link_libraries(AndromedaEngine PRIVATE webgpu)
+    target_copy_webgpu_binaries(AndromedaEngine)
 endif()
 
 # Include the SPIRV tools

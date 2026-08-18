@@ -9,14 +9,17 @@ namespace andromeda::graphics {
 		None = 0,
 		// Experimental Vulkan Support
 		Vulkan = 1,
+#ifdef ANDROMEDA_WGPU
+		WGPU = 2,
+#endif
 #ifdef ANDROMEDA_OPENGL
-		OpenGL = 2,
+		OpenGL = 3,
 #endif
 #ifdef ANDROMEDA_MAC
-		Metal = 3,
+		Metal = 4,
 #endif
 #ifdef ANDROMEDA_WIN
-		DirectX = 4,
+		DirectX = 5,
 #endif
 	};
 

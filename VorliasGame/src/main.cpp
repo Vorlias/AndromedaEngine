@@ -1,6 +1,7 @@
 
 // #define ANDROMEDA_INTERNAL 1
 #define ANDROMEDA_OPENGL 1
+
 #include "Engine/Main.h"
 #include "Engine/ObjectPool.h"
 #include "Engine/Window.h"
@@ -79,6 +80,10 @@ Application* ApplicationMain(const ApplicationInit& init) {
 		init.renderer = graphics::API::Vulkan;
 	} else if (contains(init.args, "-headless")) {
 		init.renderer = graphics::API::None;
+	} else if (contains(init.args, "-wgpu")) {
+#if ANDROMEDA_WGPU
+		init.renderer = graphics::API::WGPU;
+#endif
 	}
 
 	return new TestApplication();

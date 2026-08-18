@@ -18,6 +18,8 @@ else()
 endif()
 
 option(OPENGL_RENDERER "Include OpenGL" ON)
+option(WEBGPU_RENDERER "Include WebGPU" ON)
+
 option(BUILTIN_SHADER_COMPILER "Build with shader compilation" ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
@@ -30,6 +32,7 @@ add_subdirectory(External/spdlog)
 add_subdirectory(External/entt)
 add_subdirectory(External/SDL)
 add_subdirectory(External/glad)
+add_subdirectory(External/wgpu)
 
 add_subdirectory(Tools/Lute)
 # add_subdirectory(External/cpptrace)
