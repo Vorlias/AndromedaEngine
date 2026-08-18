@@ -4,6 +4,7 @@
 #include "Engine/Log.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/OpenGL/OpenGLRenderer.h"
+#include "Engine/Graphics/WebGPU/WebGPURenderer.h"
 
 USING_ENGINE;
 
@@ -105,7 +106,7 @@ bool Engine::Initialize() {
 #endif
 #if ANDROMEDA_WGPU
 				case graphics::API::WGPU:
-					andromeda::warn("TODO: Implement WebGPU");
+					m_renderer = CreateScopeRef<graphics::WGPURenderer>();
 					break;
 #endif
 			}

@@ -59,6 +59,7 @@ public:
 		
 		andromeda::print("Parent of test2 is {}", testChild2.GetParent().GetName());
 
+		CreateWindow(WindowOptions());
 		return true;
 	}
 

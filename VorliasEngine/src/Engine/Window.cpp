@@ -54,7 +54,9 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	if (renderer != nullptr) {
 		renderer->Initialize();
 		m_graphics_context = renderer->CreateWindowGraphicsContext(m_window);
-		m_graphics_context->Initialize();
+		
+		if (m_graphics_context != nullptr)
+			m_graphics_context->Initialize();
 	}
 
 	andromeda::trace("Created window " + std::to_string(m_window_id));
@@ -128,7 +130,7 @@ void andromeda::Window::Close() {
 }
 
 void andromeda::Window::Shutdown() {
-	if (m_window != nullptr) {
+	if (m_window != nullptr && m_graphics_context != nullptr) {
 		m_graphics_context->Shutdown();
 		andromeda::trace("Cleaned up window " + std::to_string(m_window_id));
 		SDL_DestroyWindow(m_window);

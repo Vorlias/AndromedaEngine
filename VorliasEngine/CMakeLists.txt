@@ -92,6 +92,7 @@ target_sources(
     src/Engine/Luau/AtomsDef.cpp
     src/Engine/Data/Vector2.luau.cpp
     src/Engine/Objects/Object.luau.cpp
+    src/Engine/Graphics/WebGPU/WebGPURenderer.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -134,6 +135,8 @@ target_sources(
     include/Engine/Math.h
     include/Engine/Luau/AtomsDef.h
     include/Engine/Objects/Component.h
+    include/Engine/Graphics/WebGPU/WebGPURenderer.h
+    include/Engine/Graphics/WebGPU/WebGPUWindowContext.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
@@ -157,7 +160,7 @@ if(OPENGL_RENDERER)
 endif()
 
 if (WEBGPU_RENDERER)
-    target_link_libraries(AndromedaEngine PRIVATE webgpu)
+    target_link_libraries(AndromedaEngine PRIVATE webgpu sdl3webgpu)
     target_copy_webgpu_binaries(AndromedaEngine)
 endif()
 

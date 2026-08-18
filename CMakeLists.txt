@@ -32,10 +32,10 @@ add_subdirectory(External/spdlog)
 add_subdirectory(External/entt)
 add_subdirectory(External/SDL)
 add_subdirectory(External/glad)
-add_subdirectory(External/wgpu)
+add_subdirectory(External/webgpu)
+add_subdirectory(External/sdl3webgpu)
 
 add_subdirectory(Tools/Lute)
-# add_subdirectory(External/cpptrace)
 
 add_compile_definitions(ANDROMEDA_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})
 add_compile_definitions(LUAU_VERSION=732)
@@ -45,7 +45,6 @@ add_compile_definitions(ANDROMEDA_VERSION_STRING="Andromeda ${PROJECT_VERSION_MA
 if (ANDROMEDA_INTERNAL)
     add_compile_definitions(ANDROMEDA_INTERNAL=1)
 endif()
-
 
 add_compile_definitions(ANDROMEDA_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
