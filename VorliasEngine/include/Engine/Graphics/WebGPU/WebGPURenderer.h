@@ -53,16 +53,33 @@ namespace andromeda::graphics {
 		}
 
 		GraphicsContext* CreateWindowGraphicsContext(SDL_Window* window) override {
-			return new WGPUWindowContext(m_instance, window);
+			return new WGPUWindowContext(this, window);
 		}
 		ScopeRef<GraphicsContext> CreateGraphicsContext(SDL_Window* window) {}
 
+		constexpr WGPUInstance GetInstance() const {
+			return m_instance;
+		}
+
+		constexpr WGPUAdapter GetAdapter() const {
+			return m_adapter;
+		}
+
+		constexpr WGPUQueue GetQueue() const {
+			return m_queue;
+		}
+
+		constexpr WGPUDevice GetDevice() const {
+			return m_device;
+		}
+
 		~WGPURenderer() override {}
+
 	private:
 		WGPUInstance m_instance;
 		WGPUAdapter m_adapter;
-        WGPUDevice m_device;
-        WGPUQueue m_queue;
+		WGPUDevice m_device;
+		WGPUQueue m_queue;
 	};
 } // namespace andromeda::graphics
 #endif

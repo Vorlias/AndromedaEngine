@@ -1,4 +1,6 @@
 #pragma once
+#include "Engine/Data/Color.h"
+
 namespace andromeda::graphics {
 	class GraphicsContext {
 	public:
@@ -6,5 +8,11 @@ namespace andromeda::graphics {
 		virtual void Shutdown() = 0;
 
 		virtual void Resized(int width, int height) = 0;
+
+		virtual void Prepare() {}
+		virtual void Render() {}
+		virtual void Present() {}
+
+		virtual void SetClearColor(Color color) {}
 	};
 } // namespace andromeda::graphics

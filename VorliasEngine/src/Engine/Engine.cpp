@@ -160,10 +160,13 @@ void Engine::FixedUpdate() {
 }
 
 void Engine::Render() {
-#if ANDROMEDA_INTERNAL
-	m_app->RawRender(*m_renderer);
-#endif
-	// m_app->Render();
+	auto mainWindow = m_app->GetMainWindow();
+	if (mainWindow == nullptr) return;
+
+	auto graphics = mainWindow->GetGraphicsContext();
+	graphics->Prepare();
+	graphics->Render();
+	graphics->Present();
 }
 
 void Engine::Shutdown() {

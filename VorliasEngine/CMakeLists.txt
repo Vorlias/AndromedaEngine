@@ -93,6 +93,7 @@ target_sources(
     src/Engine/Data/Vector2.luau.cpp
     src/Engine/Objects/Object.luau.cpp
     src/Engine/Graphics/WebGPU/WebGPURenderer.cpp
+    src/Engine/Graphics/WebGPU/WebGPUWindowContext.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
