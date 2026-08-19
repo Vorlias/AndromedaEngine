@@ -1,6 +1,7 @@
 
 // #define ANDROMEDA_INTERNAL 1
 #define ANDROMEDA_OPENGL 1
+#define ANDROMEDA_EDITOR 0
 
 #include "Engine/Main.h"
 #include "Engine/ObjectPool.h"
@@ -23,8 +24,10 @@
 
 #include "Engine/Scene/Scene.h"
 #include "Engine/Objects/Object.h"
+#include "Engine/Asset.h"
 
 #include <thread>
+#include <print>
 #include <chrono>
 
 using namespace std::string_literals;
@@ -42,23 +45,8 @@ public:
 	}
 
 	bool Initialize() override {
-		auto testScript = luau.LoadScriptFromFile(GetDataPath() / "scripts" / "test.luau");
-
-		auto testParent = scene.CreateEntity("TestParent");
-
-		auto testEntity = scene.CreateEntity("Test Script");
-		LuauScriptComponent& script = testEntity.AddComponent<LuauScriptComponent>(testScript); // kick-starts a script here :-)
-		testEntity.SetParent(testParent);
-
-		auto testChild2 = scene.CreateEntity("Testchild2");
-		testChild2.SetParent(testParent);
-
-		for (auto& child : testParent.GetChildren()) {
-			andromeda::print("Got child {}", child.GetName());
-		}
-		
-		andromeda::print("Parent of test2 is {}", testChild2.GetParent().GetName());
-
+		// auto testScript = luau.LoadScriptFromFile(GetDataPath() / "scripts" / "test.luau");
+	
 		CreateWindow(WindowOptions());
 		return true;
 	}
@@ -71,6 +59,7 @@ public:
 private:
 	LuauRuntime luau;
 	Scene scene;
+	AssetLibrary assets;
 };
 
 

@@ -10,22 +10,27 @@ andromeda::graphics::WGPUWindowContext::WGPUWindowContext(const WGPURenderer* re
 		return;
 	}
 
+	int width, height;
+	SDL_GetWindowSize(window, &width, &height);
+    Resized(width, height);
+}
+
+void andromeda::graphics::WGPUWindowContext::Resized(int width, int height) {
 	WGPUSurfaceConfiguration config = {};
 	config.nextInChain = nullptr;
-	config.device = renderer->GetDevice();
+	config.device = m_renderer->GetDevice();
 	config.format = WGPUTextureFormat_Undefined;
 	config.usage = WGPUTextureUsage_RenderAttachment;
 
-	// We initialize an empty capability struct:
-	WGPUSurfaceCapabilities capabilities = {};
-
 	// We get the capabilities for a pair of (surface, adapter).
 	// If it works, this populates the `capabilities` structure
-	WGPUStatus status = wgpuSurfaceGetCapabilities(m_surface, renderer->GetAdapter(), &capabilities);
+	WGPUSurfaceCapabilities capabilities = {};
+	WGPUStatus status = wgpuSurfaceGetCapabilities(m_surface, m_renderer->GetAdapter(), &capabilities);
 	if (status != WGPUStatus_Success) {
 		andromeda::error("Failed to get surface caps");
 		return;
 	}
+
 	// From the capabilities, we get the preferred format: it is always the first one !
 	// (NB: There is always at least 1 format if the GetCapabilities was successful)
 	config.format = capabilities.formats[0];
@@ -33,20 +38,14 @@ andromeda::graphics::WGPUWindowContext::WGPUWindowContext(const WGPURenderer* re
 	// We no longer need to access the capabilities, so we release their memory.
 	wgpuSurfaceCapabilitiesFreeMembers(capabilities);
 
-	int width, height;
-	SDL_GetWindowSize(window, &width, &height);
-
 	config.width = width;
 	config.height = height;
+    std::cout << "resized " << width << " x " << height << std::endl;
 
-	// // And we do not need any particular view format:
 	config.viewFormatCount = 0;
 	config.viewFormats = nullptr;
 	config.alphaMode = WGPUCompositeAlphaMode_Auto;
 	config.presentMode = WGPUPresentMode_Fifo;
-
-	// WGPUSurfaceCapabilities surfaceCapabilities;
-	// wgpuSurfaceGetCapabilities(m_surface, renderer->GetAdapter(), &surfaceCapabilities);
 
 	wgpuSurfaceConfigure(m_surface, &config);
 }
@@ -57,7 +56,9 @@ WGPUTextureView andromeda::graphics::WGPUWindowContext::GetNextSurfaceView() {
 		.texture = nullptr,
 		.status = (WGPUSurfaceGetCurrentTextureStatus)0,
 	};
+
 	wgpuSurfaceGetCurrentTexture(m_surface, &surfaceTexture);
+
 	if (surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessOptimal &&
 	    surfaceTexture.status != WGPUSurfaceGetCurrentTextureStatus_SuccessSuboptimal) {
 		return nullptr;
@@ -87,28 +88,6 @@ void andromeda::graphics::WGPUWindowContext::Prepare() {
 		return;
 	}
 }
-
-WGPUColor toWGPUColor(andromeda::Color color) {
-	return WGPUColor{static_cast<double>(color.r), static_cast<double>(color.g), static_cast<double>(color.b), static_cast<double>(color.a)};
-}
-
-static struct {
-	WGPURenderPassColorAttachment color_attachment;
-	WGPURenderPassDescriptor render_pass_descriptor;
-	WGPUBool initialized;
-} s_renderState = {
-	.color_attachment =
-		{
-			.loadOp = WGPULoadOp_Clear,
-			.storeOp = WGPUStoreOp_Store,
-			.clearValue = {1.0, 1.0, 1.0, 1.0},
-			.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
-		},
-	.render_pass_descriptor = {
-		.colorAttachmentCount = 1,
-		.colorAttachments = &s_renderState.color_attachment,
-	},
-};
 
 void andromeda::graphics::WGPUWindowContext::Render() {
 	WGPUCommandEncoderDescriptor cmdEncoderDesc{};

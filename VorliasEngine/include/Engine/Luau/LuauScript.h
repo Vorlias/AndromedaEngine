@@ -3,6 +3,7 @@
 #include "lua.h"
 #include "LuauState.h"
 #include "Engine/Memory.h"
+#include "Engine/Asset.h"
 #include "Engine/Objects/Object.h"
 #include <memory.h>
 
@@ -23,12 +24,12 @@ namespace andromeda {
 		bytecode_t data;
 	};
 
-	class LuauScript : public RefCounted {
+	class LuauScript : public Asset {
 		bool CompileSource(const char* source, int source_len, const char* file_name, int file_name_len, int optimization_level);
 
 	public:
 		bool Compile(std::string_view source, const std::string& fileName = "chunk") {
-			m_fileName = fileName;
+			SetFilePath(fileName);
 			return CompileSource(source.data(), source.length(), fileName.data(), fileName.length(), 2);
 		}
 
@@ -38,7 +39,7 @@ namespace andromeda {
 			}
 
 			memcpy(m_bytecode, (char*)bytecode.data, bytecode.size);
-			m_fileName = fileName;
+			SetFilePath(fileName);
 		}
 
 		constexpr bool HasErrored() const {
@@ -46,10 +47,6 @@ namespace andromeda {
 		}
 		constexpr bool IsCompiled() const {
 			return m_bytecodeSize > 0;
-		}
-
-		constexpr std::string GetFileName() const {
-			return m_fileName;
 		}
 
 		constexpr std::string GetError() const {

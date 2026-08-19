@@ -18,7 +18,8 @@ namespace andromeda::graphics {
 		void Shutdown() override {
 			wgpuSurfaceUnconfigure(m_surface);
 		}
-		void Resized(int width, int height) override {}
+
+		void Resized(int width, int height) override;
 
 		constexpr WGPUSurface GetSurface() const {
 			return m_surface;
@@ -36,7 +37,7 @@ namespace andromeda::graphics {
 	private:
 		const WGPURenderer* m_renderer;
 
-		WGPUColor m_clearColor{1.0, 0.8, 0.55, 1.0};
+		WGPUColor m_clearColor{1.0, 0.2, 1.0, 1.0};
 
 		WGPUTextureView GetNextSurfaceView();
 

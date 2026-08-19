@@ -94,6 +94,7 @@ target_sources(
     src/Engine/Objects/Object.luau.cpp
     src/Engine/Graphics/WebGPU/WebGPURenderer.cpp
     src/Engine/Graphics/WebGPU/WebGPUWindowContext.cpp
+    src/Engine/Asset.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -138,6 +139,9 @@ target_sources(
     include/Engine/Objects/Component.h
     include/Engine/Graphics/WebGPU/WebGPURenderer.h
     include/Engine/Graphics/WebGPU/WebGPUWindowContext.h
+    include/Engine/Graphics/RenderCommand.h
+    include/Engine/Asset.h
+    include/Engine/STL.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

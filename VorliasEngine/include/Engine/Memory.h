@@ -4,6 +4,11 @@
 namespace andromeda {
 	class RefCounted;
 
+	template<class U, class T>
+	struct is_explicitly_convertible {
+		enum { value = std::is_constructible<T, U>::value && !std::is_convertible<U, T>::value };
+	};
+
 	// A reference to a ref counted object
 	template<typename T>
 	class Ref {
@@ -15,7 +20,7 @@ namespace andromeda {
 			Increment();
 		}
 
-		constexpr Ref<T>& operator=(const Ref<T>& lhs){
+		constexpr Ref<T>& operator=(const Ref<T>& lhs) {
 			this->ptr = lhs.ptr;
 			Increment();
 			return *this;
@@ -26,8 +31,7 @@ namespace andromeda {
 			return *this;
 		}
 
-		Ref(const Ref<T>& other)
-			: ptr(other.ptr) {
+		Ref(const Ref<T>& other) : ptr(other.ptr) {
 			Increment();
 		}
 
@@ -64,7 +68,12 @@ namespace andromeda {
 			return newRef;
 		}
 
-		T* operator->() {
+		template<typename T2>
+		bool IsCastable() const {
+			return is_explicitly_convertible<T, T2>::value;
+		}
+
+		T* operator-> () {
 			return ptr;
 		}
 

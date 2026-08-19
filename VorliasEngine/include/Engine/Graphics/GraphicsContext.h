@@ -14,5 +14,7 @@ namespace andromeda::graphics {
 		virtual void Present() {}
 
 		virtual void SetClearColor(Color color) {}
+
+		friend class RenderCommand;
 	};
 } // namespace andromeda::graphics
