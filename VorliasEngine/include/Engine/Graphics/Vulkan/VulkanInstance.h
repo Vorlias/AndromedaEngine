@@ -66,6 +66,10 @@ namespace andromeda::graphics {
 			return m_allocator;
 		}
 
+		[[nodiscard]] constexpr VkQueue GetGraphicsQueue() const {
+			return m_graphicsQueue;
+		}
+
 	protected:
 		friend class VulkanWindowContext;
 	private:

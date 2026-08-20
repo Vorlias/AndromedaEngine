@@ -29,7 +29,7 @@ namespace andromeda::graphics {
 		if (!CreateShaders())
 			return;
 
-		if (!CreateGraphicsPipeline())
+		if (m_pipeline = CreateGraphicsPipeline(); !pipeline)
 			return;
 	}
 
@@ -82,6 +82,8 @@ namespace andromeda::graphics {
 			requestedImageCount = std::min(requestedImageCount, surfaceCaps.maxImageCount);
 		}
 
+		m_minImageCount = surfaceCaps.minImageCount;
+
 		VkSwapchainCreateInfoKHR swapchainCreateInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = surface,
@@ -109,6 +111,7 @@ namespace andromeda::graphics {
 		swapchainImageViews.resize(imageCount);
 
 		andromeda::trace("Created swapchain images count=" + std::to_string(imageCount));
+		m_imageCount = imageCount;
 
 		for (size_t i = 0; i < swapchainImages.size(); i++) {
 			VkImageViewCreateInfo imgViewInfo{
@@ -218,14 +221,14 @@ namespace andromeda::graphics {
 		return true;
 	}
 
-	bool VulkanWindowContext::CreateGraphicsPipeline() {
+	VkPipeline VulkanWindowContext::CreateGraphicsPipeline() {
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 			.setLayoutCount = 0,
 			.pushConstantRangeCount = 0,
 		};
 
-		VK_CHECK_ELSE_RETURN(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout), false);
+		VK_CHECK_ELSE_RETURN(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout), nullptr);
 
 		auto shader = static_cast<VulkanShader*>(m_shader.AsPtr());
 		auto mods = shader->GetShaderModules();
@@ -267,7 +270,7 @@ namespace andromeda::graphics {
 			.pScissors = nullptr,
 		};
 
-		return true;
+		return nullptr;
 	}
 
 	void VulkanWindowContext::SetupIMGUI(ImGui_ImplVulkanH_Window* wd) {

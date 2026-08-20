@@ -164,7 +164,7 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 	cb->useratom = handleAtom;
 
 	m_timeoutHandler = new LuauTimeoutHandler(L);
-	m_timeoutHandler->Start();
+	// m_timeoutHandler->Start(); // TODO: Fix this
 }
 
 LuauState* LuauState::GetLuauState(lua_State* L) {

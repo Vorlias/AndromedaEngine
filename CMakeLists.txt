@@ -10,6 +10,8 @@ set(BUILD_SHARED_LIBS OFF)
 
 message(STATUS "SYSTEM_NAME" ${CMAKE_SYSTEM_NAME})
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # add_compile_options(-Werror=return-type)
+
     set(SDL_STATIC ON)
     set(SDL_SHARED OFF)
 else()

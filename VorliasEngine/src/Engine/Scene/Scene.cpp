@@ -6,6 +6,10 @@
 #include "Engine/Luau/Lib.h"
 using namespace andromeda;
 
+Scene::Scene() {
+	// m_registry.on_construct<LuauScriptComponent>().connect<&freefun>();
+}
+
 Entity Scene::CreateEntity(const std::string& name) {
 	Entity entity = {this, m_registry.create()};
 
@@ -22,12 +26,18 @@ Entity Scene::CreateEntity() {
 
 void Scene::Update(float dt) {
 	auto scriptView = m_registry.view<LuauScriptComponent>();
+
 	for (auto [entity, component] : scriptView.each()) {
 		// Awake a script if possible
 		if (!component.IsAwake() && !component.HasError() && component.m_script != nullptr) {
 			component.m_entity = Entity(this, entity);
 			component.Awake();
 		}
+	}
+
+	auto scriptUpdate = m_registry.view<const LuauScriptComponent, LuauScriptComponent::UpdateLifecycle>();
+	for (auto [_, component] : scriptUpdate.each()) {
+		component.Update(dt);
 	}
 }
 
@@ -42,4 +52,8 @@ void Scene::OnComponentAdded<NameComponent>(Entity entity, NameComponent& compon
 template<>
 void Scene::OnComponentAdded<LuauScriptComponent>(Entity entity, LuauScriptComponent& component) {
 	component.m_entity = entity;
+}
+
+Scene::~Scene() {
+
 }

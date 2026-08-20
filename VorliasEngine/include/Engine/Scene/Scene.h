@@ -4,6 +4,8 @@ namespace andromeda {
 	class Entity;
 	class Scene {
 	public:
+		Scene();
+
 		std::string_view GetName() const {
 			return m_name;
 		}
@@ -24,6 +26,7 @@ namespace andromeda {
 
 		void Update(float dt);
 
+		~Scene();
 	private:
 		std::string m_name = "Scene";
 		entt::registry m_registry;

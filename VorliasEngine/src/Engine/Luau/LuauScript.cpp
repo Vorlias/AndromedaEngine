@@ -2,6 +2,7 @@
 #include "Engine/Luau/LuauState.h"
 #include "Engine/Luau/PrettyPrint.h"
 #include "Engine/Log.h"
+#include "Engine/Luau/Lib.h"
 #include <luacode.h>
 #include <memory>
 #include <cstring>
@@ -72,7 +73,7 @@ bool LuauScript::CompileSource(const char* source, int source_len, const char* f
 	return res == 0;
 }
 
-LuauScript::LuauScript(): andromeda::Asset(AssetType::LuauScript, UUID{}, "") {}
+LuauScript::LuauScript() : andromeda::Asset(AssetType::LuauScript, UUID{}, "") {}
 
 bool LuauScriptThread::Create() {
 	if (m_thread != nullptr)
@@ -104,6 +105,7 @@ bool LuauScriptThread::Create() {
 		return false;
 	}
 
+
 	lua_pushstring(M, kThreads); // [-0, +1, -: 2]
 	lua_gettable(M, LUA_REGISTRYINDEX); // [-1, +1, -: 2]
 
@@ -111,7 +113,7 @@ bool LuauScriptThread::Create() {
 	lua_pushvalue(M, -1); // [+1, 4]
 	lua_settable(M, -3); // [-2, 2]
 
-	lua_pop(M, 2); // [-2, 0]
+	lua_pop(M, 1); // [-2, 0]
 
 	return true;
 }
@@ -137,6 +139,7 @@ bool LuauScriptThread::Run() {
 	}
 
 	int status = lua_resume(m_thread, nullptr, 0);
+	andromeda_luau::luaL_debugstack(m_thread);
 
 	if (status == LUA_OK || status == LUA_YIELD)
 		return true;
@@ -159,7 +162,7 @@ bool LuauScriptThread::Run() {
 
 LuauThreadStatus LuauScriptThread::GetThreadStatus() const {
 	int status = lua_costatus(lua_mainthread(m_thread), m_thread);
-	return (LuauThreadStatus) status;
+	return (LuauThreadStatus)status;
 }
 
 void LuauScriptThread::Reset() {
@@ -175,17 +178,36 @@ void LuauScriptComponent::SetScript(Ref<andromeda::LuauScript> script) {
 	m_script = script;
 }
 
-void LuauScriptComponent::SetEnabled(bool enabled) {
+void LuauScriptComponent::SetEnabled(bool enabled) {}
 
+
+constexpr const char* kAwake = "_init";
+constexpr const char* kUpdate = "_update";
+void LuauScriptComponent::Update(float dt) const {
+	lua_State* L = m_thread->GetLuauState();
+	int top = lua_gettop(L);
+	luaL_checktype(L, -1, LUA_TTABLE);
+	lua_getfield(L, -1, kUpdate);
+
+	if (lua_isfunction(L, -1)) {
+		lua_pushvalue(L, -2);
+		lua_pushnumber(L, dt);
+		lua_call(L, 2, 0);
+	} else {
+		lua_pop(L, 1);
+	}
+
+	ANDROMEDA_ASSERT(lua_gettop(L) == top); // ensure top matches at end
 }
 
 void LuauScriptComponent::Awake() {
-	if (m_awake) return;
-	if (m_script == nullptr) return;
-	
+	if (m_awake)
+		return;
+	if (m_script == nullptr)
+		return;
+
 	std::unique_ptr<andromeda::LuauScriptThread, andromeda::LuauScriptThread::Cleanup> thread(
-		new LuauScriptThread(m_script),
-		andromeda::LuauScriptThread::Cleanup()
+		new LuauScriptThread(m_script), andromeda::LuauScriptThread::Cleanup()
 	);
 
 	// Set any component-specific stuff here
@@ -202,7 +224,7 @@ void LuauScriptComponent::Awake() {
 		// 	lua_setglobal(L, "entity");
 		// }
 
-		// TODO: Set appropriate globals here? 
+		// TODO: Set appropriate globals here?
 
 		ANDROMEDA_ASSERT(lua_gettop(L) == top); // ensure top matches at end
 	}
@@ -211,6 +233,36 @@ void LuauScriptComponent::Awake() {
 		thread.reset();
 		m_err = true;
 		return;
+	}
+
+
+	// we can awake once the script's ran
+	{
+		lua_State* L = thread->m_thread;
+		int top = lua_gettop(L);
+
+		if (lua_istable(L, -1)) {
+			lua_getfield(L, -1, kAwake);
+
+			if (lua_isfunction(L, -1)) { // if func
+				lua_pushvalue(L, -2);
+				lua_call(L, 1, 0);
+			} else {
+				lua_pop(L, 1); // pop value
+			}
+
+			// check for _update
+			lua_getfield(L, -1, kUpdate);
+			if (lua_isfunction(L, -1)) {
+				m_entity.AddComponent<andromeda::LuauScriptComponent::UpdateLifecycle>(); // tag this as updateable
+			}
+
+			lua_pop(L, 1);
+		} else {
+			andromeda::error("Return value expected table got {}", luaL_typename(L, -1));
+		}
+
+		ANDROMEDA_ASSERT(lua_gettop(L) == top); // ensure top matches at end
 	}
 
 	m_thread = std::move(thread);

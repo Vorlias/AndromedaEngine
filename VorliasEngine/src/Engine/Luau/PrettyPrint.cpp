@@ -152,8 +152,11 @@ static void value_to_string(lua_State* L, luaL_Strbuf* string_buf, int idx, int 
 }
 
 void andromeda_luau::luaL_debugstack(lua_State* L) {
+	
+
 	int top = lua_gettop(L);
 
+	std::cout << "=== STACK " << L << " sizeof(" << top << ") ===" << std::endl; 
     for (int i = top; i >= 1; i--) {
         int type = lua_type(L, i);
         const char* typeName = luaL_typename(L, i);

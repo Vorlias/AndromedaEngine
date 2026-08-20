@@ -54,4 +54,6 @@ namespace andromeda {
 			return false; \
 		} \
 	}
+
+#define ANDROMEDA_VK_ASSERT(cond, ...) ANDROMEDA_ASSERTM(cond == VK_SUCCESS, __VA_ARGS__)
 #endif

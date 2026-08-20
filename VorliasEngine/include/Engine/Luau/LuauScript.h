@@ -108,6 +108,7 @@ namespace andromeda {
 
 	private:
 		bool Create();
+
 	public:
 		LuauScriptThread(Ref<LuauScript> script) : m_script(script) {
 			Create();
@@ -125,21 +126,26 @@ namespace andromeda {
 
 		~LuauScriptThread();
 
-		constexpr lua_State* GetLuauState() const { 
+		constexpr lua_State* GetLuauState() const {
 			return m_thread;
 		}
-	
+
 		operator lua_State*() const {
 			return m_thread;
 		}
+
 	private:
 		Ref<LuauScript> m_script;
 		lua_State* m_thread = nullptr;
 		friend class LuauScriptComponent;
 	};
 
-	class LuauScriptComponent {
-	public:
+	struct LuauScriptComponent {
+		TAG_COMPONENT(UpdateLifecycle)
+
+		TAG_COMPONENT(EnableLifecycle)
+		TAG_COMPONENT(DisableLifecycle)
+
 		LuauScriptComponent() : m_script(nullptr), m_entity() {}
 		LuauScriptComponent(Ref<LuauScript> script) : m_script(script), m_entity() {}
 
@@ -147,6 +153,7 @@ namespace andromeda {
 		void SetEnabled(bool enabled);
 
 		void Awake();
+		void Update(float dt) const;
 
 		constexpr bool IsEnabled() const {
 			return m_enabled;

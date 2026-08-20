@@ -13,6 +13,9 @@ target_sources(
     VorliasGame
     PRIVATE
     src/main.cpp
+    src/VulkanPlayground.h
+    src/VulkanPlayground.cpp
+    src/LuauTesting.h
 )
 
 # Include Luau pls

@@ -47,14 +47,15 @@ namespace andromeda {
 	void trace(const std::string& message) {
 		if (logger)
 			logger->trace(message);
+		else
+			std::cout << COLOR_GRAY << "[VRB] " <<  message << COLOR_RESET << std::endl;
 	}
 
 	void print(const std::string& message) {
 		if (logger)
 			logger->info(message);
 		else {
-			const std::string& expr = COLOR_GREEN + message + COLOR_RESET;
-			std::println("{}", expr);
+			std::cout << COLOR_GREEN << "[INF] " <<  message << COLOR_RESET << std::endl;
 		}
 	}
 
@@ -62,8 +63,7 @@ namespace andromeda {
 		if (logger)
 			logger->warn(message);
 		else {
-			const std::string& expr = COLOR_YELLOW + message + COLOR_RESET;
-			std::println("{}", expr);
+			std::cout << COLOR_YELLOW << "[WRN] " <<  message << COLOR_RESET << std::endl;
 		}
 	}
 
@@ -71,8 +71,7 @@ namespace andromeda {
 		if (logger)
 			logger->error(message);
 		else {
-			const std::string& expr = COLOR_RED + message + COLOR_RESET;
-			std::println("{}", expr);
+			std::cout << COLOR_RED << "[ERR] " <<  message << COLOR_RESET << std::endl;
 		}
 	}
 } // namespace andromeda

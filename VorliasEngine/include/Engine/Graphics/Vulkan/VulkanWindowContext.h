@@ -17,22 +17,37 @@ namespace andromeda::graphics {
 	public:
 		constexpr static VkFormat swapchainFormat{VK_FORMAT_B8G8R8A8_SRGB};
 		constexpr static VkFormat depthFormat{VK_FORMAT_D32_SFLOAT}; // represents a depth buffer of 32 bit floats
-
+	public:
 		VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window);
+
 		void Initialize() override;
 		void Shutdown() override;
 		void Resized(int width, int height) override;
 
-		[[nodiscard]] constexpr VkDevice GetDevice() const { return device; }
-		[[nodiscard]] constexpr VkSurfaceKHR GetSurface() const { return surface; }
-		[[nodiscard]] constexpr VkSwapchainKHR GetSwapchain() const { return swapchain; }
-		[[nodiscard]] constexpr VkQueue GetGraphicsQueue() const { return graphicsQueue; }
+		ANDROMEDA_GETCONST VkDevice GetDevice() const { return device; }
+		ANDROMEDA_GETCONST VkSurfaceKHR GetSurface() const { return surface; }
+		ANDROMEDA_GETCONST VkSwapchainKHR GetSwapchain() const { return swapchain; }
+		ANDROMEDA_GETCONST VkQueue GetGraphicsQueue() const { return graphicsQueue; }
+		ANDROMEDA_GETCONST int GetSwapchainHeight() const { return swapchainHeight; }
+		ANDROMEDA_GETCONST int GetSwapchainWidth() const { return swapchainWidth; }
+
+		ANDROMEDA_GETCONST uint32_t GetMinImageCount() const { return m_minImageCount; }
+		ANDROMEDA_GETCONST uint32_t GetImageCount() const { return m_imageCount; }
+
+		ANDROMEDA_GETCONST size_t GetSemaphoreCount() const { return renderCompleteSemaphores.size(); }
+		ANDROMEDA_GETCONST const std::vector<VkImage>& GetSwapchainImages() const { return swapchainImages; }
+		ANDROMEDA_GETCONST VkImage GetImage(size_t index) const { return swapchainImages[index]; }
+		ANDROMEDA_GETCONST VkImageView GetImageView(size_t index) const { return swapchainImageViews[index]; }
+
+		void CreateCommandBuffers(uint32_t imageCount, VkCommandBuffer* buffers) {
+			// TODO:
+		}
 
 		void SetupIMGUI(ImGui_ImplVulkanH_Window* wd);
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();
-		[[nodiscard]] bool CreateGraphicsPipeline();
+		[[nodiscard]] VkPipeline CreateGraphicsPipeline();
 
 		[[nodiscard]] bool CreateSwapchain(int width, int height);
 		void DestroySwapchain();
@@ -56,9 +71,13 @@ namespace andromeda::graphics {
 		std::vector<VkImage> swapchainImages;
 		std::vector<VkImageView> swapchainImageViews;
 		std::vector<VkSemaphore> renderCompleteSemaphores;
-		bool requireSwapchainRecreate = false;
+
 		uint32_t swapchainWidth, swapchainHeight;
 
 		Ref<Shader> m_shader;
+
+		VkPipeline m_pipeline = VK_NULL_HANDLE;
+
+		uint32_t m_minImageCount = 0, m_imageCount = 0;
 	};
 } // namespace andromeda::graphics

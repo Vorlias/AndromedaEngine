@@ -33,7 +33,23 @@ namespace andromeda {
 		Entity(Scene* scene, entt::entity entity) : m_scene(scene), m_entity(entity) {}
 		Entity(const Entity& other) = default;
 
+		// Adds a tag component to this entity
+		template<typename T>
+			requires(std::is_empty<T>::value && std::is_default_constructible<T>::value)
+		void AddComponent() {
+			return m_scene->m_registry.emplace<T>(m_entity);
+		}
+
+		// // Adds a tag component to this entity
+		// template<typename T, typename... Args>
+		// 	requires(std::is_empty<T>::value)
+		// decltype(auto) AddComponent(Args&&... args) {
+		// 	return m_scene->m_registry.emplace<T>(m_entity, std::forward<Args>(args)...);
+		// }
+
+		// Adds a value component to this entity
 		template<typename T, typename... Args>
+			requires(!std::is_empty<T>::value)
 		T& AddComponent(Args&&... args) {
 			T& component = m_scene->m_registry.emplace<T>(m_entity, std::forward<Args>(args)...);
 			m_scene->OnComponentAdded<T>(*this, component);
@@ -88,3 +104,5 @@ namespace andromeda {
 
 template<typename T>
 void andromeda::Scene::OnComponentAdded(Entity entity, T& component) {} // annoyingly has to be here ?
+
+#define TAG_COMPONENT(_Ty) struct _Ty final {};

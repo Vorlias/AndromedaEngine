@@ -142,6 +142,8 @@ target_sources(
     include/Engine/Graphics/RenderCommand.h
     include/Engine/Asset.h
     include/Engine/STL.h
+    include/Engine/Graphics/Vulkan/VulkanIMGUI.h
+    src/Engine/Graphics/Vulkan/VulkanIMGUI.cpp
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
