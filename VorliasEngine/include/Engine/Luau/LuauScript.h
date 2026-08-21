@@ -116,8 +116,13 @@ namespace andromeda {
 		[[nodiscard]] constexpr Ref<LuauScript> GetScript() {
 			return m_script;
 		}
+
+		// Runs the thread
 		bool Run();
-		void Reset();
+
+		// Closes this thread and all attached sub-threads
+		void Close();
+
 		[[nodiscard]] LuauThreadStatus GetThreadStatus() const;
 		[[nodiscard]] constexpr bool IsRunning() const {
 			auto status = GetThreadStatus();
@@ -127,20 +132,85 @@ namespace andromeda {
 		~LuauScriptThread();
 
 		constexpr lua_State* GetLuauState() const {
+			ANDROMEDA_ASSERT(this != nullptr);
 			return m_thread;
 		}
 
 		operator lua_State*() const {
+			ANDROMEDA_ASSERT(this != nullptr);
+			ANDROMEDA_ASSERT(m_thread != nullptr);
 			return m_thread;
 		}
-
 	private:
 		Ref<LuauScript> m_script;
 		lua_State* m_thread = nullptr;
+		bool m_running;
 		friend class LuauScriptComponent;
 	};
 
-	struct LuauScriptComponent {
+	struct LuauValue {
+		enum LuauValueType {
+			String,
+			Int32,
+			Float,
+			Double,
+			Bool,
+		};
+
+		union {
+			const char* s;
+			int i;
+			float f;
+			double d;
+			void* p;
+		} data;
+
+		int size{};
+		LuauValueType type;
+
+		static const LuauValue& string(std::string_view str) {
+			LuauValue value;
+			value.type = String;
+			value.data.s = str.data();
+			value.size = str.size();
+
+			return value;
+		}
+
+		static const LuauValue number(float f) {
+			LuauValue value;
+			value.type = Float;
+			value.data.f = f;
+			return value;
+		}
+
+		static const LuauValue boolean(bool b) {
+			LuauValue value;
+			value.type = Bool;
+			value.data.i = !!b;
+			return value;
+		}
+
+	private:
+		LuauValue() {}
+	};
+
+	class LuauScriptComponent {
+	public:
+		enum State {
+			// Hasn't yet awoken
+			STATE_ASLEEP,
+			
+			// Has awoken
+			STATE_AWAKE,
+
+			// Has started
+			STATE_STARTED,
+
+			// Has closed
+			STATE_CLOSED,
+		};
+
 		TAG_COMPONENT(UpdateLifecycle)
 
 		TAG_COMPONENT(EnableLifecycle)
@@ -153,17 +223,32 @@ namespace andromeda {
 		void SetEnabled(bool enabled);
 
 		void Awake();
+		void Start();
 		void Update(float dt) const;
+		void Shutdown();
+
+		void Reset();
+
+		void SetProperty(std::string_view property, LuauValue value);
 
 		constexpr bool IsEnabled() const {
 			return m_enabled;
 		}
+
 		constexpr bool IsAwake() const {
 			return m_awake;
 		}
 
+		constexpr bool HasStarted() const {
+			return m_start;
+		}
+
 		constexpr bool HasError() const {
 			return m_err;
+		}
+
+		constexpr State GetState() const {
+			return m_state;
 		}
 
 	private:
@@ -171,8 +256,12 @@ namespace andromeda {
 		std::unique_ptr<LuauScriptThread, LuauScriptThread::Cleanup> m_thread{};
 
 		Entity m_entity;
-		bool m_enabled;
+		State m_state = STATE_ASLEEP;
+
+		bool m_enabled = true;
 		bool m_awake;
+		bool m_start;
+
 		bool m_err;
 		friend class Scene;
 	};

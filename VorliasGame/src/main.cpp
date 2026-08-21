@@ -15,7 +15,14 @@ using namespace andromeda;
 #include "VulkanPlayground.h"
 #include "LuauTesting.h"
 
+int import(lua_State* L, std::string_view path) {
+	lua_newtable(L);
+	return 1;
+}
+
 int main() {
+	// LuauState::requireHandler = import;
+
 	LuauApplication* app = new LuauApplication();
 	auto& engine = Engine::GetInstance();
 	engine.Run(app);

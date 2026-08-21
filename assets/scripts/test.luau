@@ -1,19 +1,38 @@
+-- local x = require("y")
+-- print(x)
+
 const Test = {
     elapsed = 0,
     lastTick = 0,
 }
 
-function Test:_init()
-    print("hello, init!", self)
+type Test = typeof(Test)
+
+function Test._init(self: Test)
+    print("Entity is initialized")
+
+    task.spawn(function()
+        while true do
+            print("second")
+            task.wait(1)
+        end
+    end)
 end
 
-function Test:_update(dt: number)
+function Test._ready(self: Test)
+    print("Entity is ready :D")
+end
+
+function Test._update(self: Test, dt: number)
     self.elapsed += dt
-    
-    if self.elapsed >= self.lastTick + 5 then
+    if self.lastTick + 5 < self.elapsed then
         self.lastTick = self.elapsed
-        print("5 seconds elpased lol", self.elapsed)
+        print("Waited 5 seconds", self.test)
     end
+end
+
+function Test._exit(self: Test)
+    print("Entity go bye-bye!")
 end
 
 return Test

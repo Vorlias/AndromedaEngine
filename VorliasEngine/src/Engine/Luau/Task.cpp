@@ -49,7 +49,7 @@ lua_State* luaL_spawnthread(lua_State* L, int idx, int* argc) {
 	return T;
 }
 
-static int luaL_runthread(lua_State* L, lua_State* T, int narg) {
+int luaL_runthread(lua_State* L, lua_State* T, int narg) {
 	bool alive = true;
 
 	void* threadDataPtr = lua_getthreaddata(T);
@@ -64,8 +64,8 @@ static int luaL_runthread(lua_State* L, lua_State* T, int narg) {
 
 	lua_pushthread(T);
 	lua_xmove(T, L, 1);
-
 	int threadIdx = lua_gettop(L);
+
 	int status = lua_resume(T, L, narg);
 
 	if (status == LUA_OK || status == LUA_YIELD) {
@@ -83,6 +83,53 @@ static int luaL_runthread(lua_State* L, lua_State* T, int narg) {
 	lua_remove(L, threadIdx);
 	andromeda::error(error);
 	return status;
+}
+
+void luaL_closethread(lua_State* L) {
+	lua_rawgetfield(L, LUA_REGISTRYINDEX, kScheduledThreads);
+
+	int i;
+	int n = lua_objlen(L, -1);
+	for (i = 1; i <= n; i++) {
+		lua_rawgeti(L, -1, i); // item = SCHEDULED_THREADS[i]
+
+		LuauScheduledData* sd = static_cast<LuauScheduledData*>(lua_tolightuserdata(L, -1));
+		if (sd == nullptr)
+			continue;
+
+		auto threadRef = lua_getref(L, sd->threadRef);
+		if (lua_isthread(L, -1)) {
+			lua_State* T = lua_tothread(L, -1);
+			// luaL_closethread(T);
+			lua_resetthread(T);
+			// lua_unref(L, threadRef);
+
+			lua_pop(L, 2); // thread ?
+		}
+
+
+		// table.remove
+		{
+			lua_getglobal(L, "table"); // + 1
+			lua_getfield(L, -1, "remove"); // + 1
+			lua_pushvalue(L, -3);
+			lua_pushinteger(L, 1);
+			lua_call(L, 2, 0);
+
+			lua_pop(L, 1);
+		}
+
+		// lua_getglobal(L, "table");
+		// lua_getfield(L, -1, "remove");
+		// lua_pushvalue(L, -2);
+		// lua_pushnumber(L, 1);
+		// lua_call(L, 2, 0);
+
+		lua_pop(L, 1); // pop ref, item
+	}
+
+	lua_pop(L, 1); // pop SCHEDULED_THREADS
+	lua_resetthread(L);
 }
 
 static LuauScheduledData* schedulethread(lua_State* L, lua_State* T, int argc, float resumeTime) {

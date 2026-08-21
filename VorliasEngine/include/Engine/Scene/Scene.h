@@ -24,10 +24,25 @@ namespace andromeda {
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
 
+		// Initialize the scene
+		void Initialize();
+
+		// Update the scene
 		void Update(float dt);
+		
+		// Shutdown the scene
+		void Shutdown();
 
 		~Scene();
+
+		ANDROMEDA_GETCONST bool IsActive() { return m_active; }
+
 	private:
+		void Awake();
+		void Start();
+
+	private:
+		bool m_active;
 		std::string m_name = "Scene";
 		entt::registry m_registry;
 
@@ -36,4 +51,3 @@ namespace andromeda {
 
 
 } // namespace andromeda
-

@@ -24,20 +24,78 @@ Entity Scene::CreateEntity() {
 	return CreateEntity("Entity");
 }
 
-void Scene::Update(float dt) {
+void Scene::Initialize() {
+	Awake();
+	// TODO: Iterate scripts, inject any referent properties
+	Start();
+}
+
+void Scene::Shutdown() {
+	m_active = false;
+	auto scriptView = m_registry.view<LuauScriptComponent>();
+
+	for (auto [entity, component] : scriptView.each()) {
+		if (component.HasError() || component.m_script == nullptr)
+			continue;
+
+		component.Shutdown();
+	}
+}
+
+void Scene::Awake() {
 	auto scriptView = m_registry.view<LuauScriptComponent>();
 
 	for (auto [entity, component] : scriptView.each()) {
 		// Awake a script if possible
-		if (!component.IsAwake() && !component.HasError() && component.m_script != nullptr) {
+		if (component.HasError() || component.m_script == nullptr)
+			continue;
+
+		if (component.GetState() == LuauScriptComponent::STATE_ASLEEP && component.IsEnabled()) {
 			component.m_entity = Entity(this, entity);
+			component.Awake();
+		}
+	}
+}
+
+void Scene::Start() {
+	auto scriptView = m_registry.view<LuauScriptComponent>();
+
+	for (auto [entity, component] : scriptView.each()) {
+		// Awake a script if possible
+		if (component.HasError() || component.m_script == nullptr)
+			continue;
+
+		if (component.GetState() == LuauScriptComponent::STATE_AWAKE && component.IsEnabled()) {
+			component.Start();
+		}
+	}
+
+	m_active = true;
+}
+
+void Scene::Update(float dt) {
+	if (!m_active) {
+		andromeda::warn("Scene '{}' is inactive", m_name);
+		return;
+	}
+
+	auto scriptView = m_registry.view<LuauScriptComponent>();
+	for (auto [entity, component] : scriptView.each()) {
+		// Awake a script if possible
+		if (component.HasError() || component.m_script == nullptr)
+			continue;
+
+		if (component.GetState() == LuauScriptComponent::STATE_ASLEEP && component.IsEnabled()) {
 			component.Awake();
 		}
 	}
 
 	auto scriptUpdate = m_registry.view<const LuauScriptComponent, LuauScriptComponent::UpdateLifecycle>();
 	for (auto [_, component] : scriptUpdate.each()) {
-		component.Update(dt);
+		if (component.GetState() != LuauScriptComponent::STATE_CLOSED)
+			component.Update(dt);
+		else
+			andromeda::warn("State is still part of update lifecycle but has closed");
 	}
 }
 
@@ -55,5 +113,5 @@ void Scene::OnComponentAdded<LuauScriptComponent>(Entity entity, LuauScriptCompo
 }
 
 Scene::~Scene() {
-
+	if (m_active) Shutdown();
 }

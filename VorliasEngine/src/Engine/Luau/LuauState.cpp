@@ -32,7 +32,7 @@ static std::string lua_stack_tostring(lua_State* L) {
 		} else {
 			s = luaL_tolstring(L, i, &l);
 		}
-		
+
 
 		result += std::string(s, l);
 
@@ -58,6 +58,30 @@ int luau_warn(lua_State* L) {
 
 	andromeda::warn(lua_stack_tostring(L));
 	return 0;
+}
+
+// andromeda::LuauRequireHandler andromeda::LuauState::requireHandler = nullptr;
+int luau_require(lua_State* L){
+	auto context = LuauState::GetContextFromState(L);
+	auto mainState = LuauState::GetMainThread(context);
+	auto require = mainState->GetRequireHandler();
+
+	if (require == nullptr) {
+		luaL_error(L, "Cannot call require here");
+		return 0;
+	}
+
+
+	int top = lua_gettop(L);
+	luaL_checktype(L, 1, LUA_TSTRING);
+
+	size_t len;
+	const char* path = lua_tolstring(L, 1, &len);
+
+	int ret = require(L, std::string_view(path, len));
+
+	ANDROMEDA_ASSERT(top + ret == lua_gettop(L));
+	return ret;
 }
 
 int luau_error(lua_State* L) {
@@ -92,10 +116,11 @@ static const luaL_Reg lua_globals[] = {
 	{nullptr, nullptr},
 };
 
+#include <debugging>
 static void handleNewOrDestroyedThread(lua_State* parentThread, lua_State* thread) {
 	using namespace andromeda_luau;
 
-	if (thread == nullptr) {
+	if (parentThread == nullptr) {
 		// thread destroyed
 		LuauThreadData* td = static_cast<LuauThreadData*>(lua_getthreaddata(thread));
 		return;
@@ -129,11 +154,14 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 	using namespace andromeda_luau;
 
 	L = luaL_newstate();
+	// Attach context to state
+	lua_pushinteger(L, static_cast<int>(context));
+	lua_setfield(L, LUA_REGISTRYINDEX, kContextId);
 
 	// Open libraries
 	luaL_openlibs(L);
 	openTaskLib(L);
-	
+
 	registerVector2Lib(L);
 	registerVector3Lib(L);
 	// registerObjectLib(L);
@@ -148,6 +176,9 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 	lua_pushvalue(L, LUA_GLOBALSINDEX);
 	luaL_register(L, nullptr, lua_globals);
 	lua_pop(L, 1);
+
+	lua_pushcfunction(L, luau_require, "luau_require");
+	lua_setglobal(L, "require");
 
 	// add threads
 	lua_pushstring(L, kThreads);
@@ -176,6 +207,15 @@ LuauState* LuauState::GetLuauState(lua_State* L) {
 	LuauState* state = static_cast<LuauState*>(lua_tolightuserdata(L, -1));
 	lua_pop(L, -1);
 	return state;
+}
+
+LuauStateContext LuauState::GetContextFromState(lua_State* L) {
+	lua_checkstack(L, 1);
+	lua_rawgetfield(L, LUA_REGISTRYINDEX, kContextId);
+	int contextNum = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+
+	return static_cast<LuauStateContext>(contextNum);
 }
 
 std::unordered_map<LuauStateContext, LuauState*> LuauState::s_states;

@@ -40,6 +40,16 @@ namespace andromeda {
 			return m_scene->m_registry.emplace<T>(m_entity);
 		}
 
+		template<typename T>
+		bool HasComponent() {
+			return m_scene->m_registry.any_of<T>(m_entity);
+		}
+
+		template<typename T>
+		void RemoveComponent() {
+			m_scene->m_registry.remove<T>(m_entity);
+		}
+
 		// // Adds a tag component to this entity
 		// template<typename T, typename... Args>
 		// 	requires(std::is_empty<T>::value)
@@ -105,4 +115,5 @@ namespace andromeda {
 template<typename T>
 void andromeda::Scene::OnComponentAdded(Entity entity, T& component) {} // annoyingly has to be here ?
 
-#define TAG_COMPONENT(_Ty) struct _Ty final {};
+#define TAG_COMPONENT(_Ty) \
+	struct _Ty final {};
