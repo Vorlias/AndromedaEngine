@@ -22,48 +22,59 @@ namespace andromeda_luau {
 		static int LuauComponentIndex(lua_State* L) {
 			LuauComponent<T>* userdata = touserdata<LuauComponent<T>>(L, 1);
 			LuauUserdataType<T>* userdataType = userdata->typedata;
-            ANDROMEDA_ASSERT(userdataType != nullptr);
+			ANDROMEDA_ASSERT(userdataType != nullptr);
 
 			size_t property_name_len;
 			int atom;
 			const char* property_name = lua_tolstringatom(L, 2, &property_name_len, &atom);
 			LuauProperty<T>* prop = userdataType->FindProperty(property_name);
+			if (prop == nullptr) {
+				luaL_errorL(L, "Attempt to index %s with invalid property '%s'", userdataType->GetName(), property_name);
+				return 0;
+			}
+
 			if (prop->get != nullptr) {
 				T* component = userdata->registry->try_get<T>(userdata->entity);
-                if (component == nullptr) {
-                    luaL_error(L, "%s was destroyed", userdataType->GetName());
-                    return 0;
-                }
-                    
+				if (component == nullptr) {
+					luaL_error(L, "%s was destroyed", userdataType->GetName());
+					return 0;
+				}
+
 				int ret = prop->get(L, component);
 				if (ret >= 0)
 					return ret;
 			}
 
+			luaL_errorL(L, "%s.%s is not a readable property", userdataType->GetName(), property_name);
 			return 0;
 		};
 
 		static int LuauComponentNewIndex(lua_State* L) {
 			LuauComponent<T>* userdata = touserdata<LuauComponent<T>>(L, 1);
 			LuauUserdataType<T>* userdataType = userdata->typedata;
-            ANDROMEDA_ASSERT(userdataType != nullptr);
+			ANDROMEDA_ASSERT(userdataType != nullptr);
 
 			size_t property_name_len;
 			int atom;
 			const char* property_name = lua_tolstringatom(L, 2, &property_name_len, &atom);
 			LuauProperty<T>* prop = userdataType->FindProperty(property_name);
+			if (prop == nullptr) {
+				return 0;
+			}
+
 			if (prop->set != nullptr) {
 				T* component = userdata->registry->try_get<T>(userdata->entity);
-                if (component == nullptr) {
-                    luaL_error(L, "%s was destroyed", userdataType->GetName());
-                    return 0;
-                }
+				if (component == nullptr) {
+					luaL_error(L, "%s was destroyed", userdataType->GetName());
+					return 0;
+				}
 
 				int ret = prop->set(L, component);
 				if (ret >= 0)
 					return ret;
 			}
 
+			luaL_errorL(L, "%s.%s is not a writable property", userdataType->GetName(), property_name);
 			return 0;
 		}
 
@@ -114,27 +125,31 @@ namespace andromeda_luau {
 		}
 
 		static LuauComponent<T>* Push(lua_State* L, entt::registry* registry, entt::entity entity) {
+			if (registry->try_get<T>(entity) == nullptr) {
+				lua_pushnil(L);
+				return nullptr;
+			}
+
 			lua_getfield(L, LUA_REGISTRYINDEX, kComponentTypes);
-            if (lua_isnil(L, -1)) {
-                luaL_error(L, "Component registry does not exit");
-                return nullptr;
-            }
+			if (lua_isnil(L, -1)) {
+				luaL_error(L, "Component registry does not exist");
+				return nullptr;
+			}
 
 			lua_getfield(L, -1, typeid(T).name());
 			if (lua_isnil(L, -1)) {
 				lua_pop(L, 2);
-                luaL_error(L, "Type %s was not registered", typeid(T).name());
+				luaL_error(L, "Type %s was not registered", typeid(T).name());
 				return nullptr;
 			}
 
 			LuauUserdataType<T>* typedata = static_cast<LuauUserdataType<T>*>(lua_touserdata(L, -1));
 			lua_pop(L, 2);
 
-			if (typedata == nullptr)
-			{
-                luaL_error(L, "Typedata of %s is missing", typeid(T).name());
-                return nullptr;
-            }
+			if (typedata == nullptr) {
+				luaL_error(L, "Typedata of %s is missing", typeid(T).name());
+				return nullptr;
+			}
 
 			int tag = typedata->GetTag();
 			LuauComponent<T>* ud;
@@ -152,6 +167,7 @@ namespace andromeda_luau {
 			ud->typedata = typedata;
 			return ud;
 		}
+
 	private:
 		LuauUserdataType<T>* typedata;
 	};

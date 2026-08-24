@@ -14,17 +14,22 @@ end
 
 function Test._ready(self: Test)
     print("Entity is ready :D")
+    
+    task.wait(2)
+    entity.script.enabled = false
 end
 
--- function Test._update(self: Test, dt: number)
---     print("update", dt)
+function Test._enabled(self: Test)
+    print("Was enabled")
+end
 
---     self.elapsed += dt
---     if self.lastTick + 5 < self.elapsed then
---         self.lastTick = self.elapsed
---         print("Updated in 5 seconds")
---     end
--- end
+function Test._disabled(self: Test)
+    print("Entity was disabled lmfao")
+end
+
+function Test._update(self: Test, dt: number)
+
+end
 
 function Test._exit(self: Test)
     print("Entity go bye-bye!")

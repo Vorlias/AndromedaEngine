@@ -11,6 +11,10 @@
 #include "Engine/Luau/AtomsDef.h"
 #include "Engine/Objects/Object.h"
 
+#include "Engine/Luau/Userdata.h"
+#include "Engine/Luau/ComponentUserdata.h"
+#include "Engine/Objects/Component.h"
+
 using namespace andromeda;
 
 static std::string lua_stack_tostring(lua_State* L) {
@@ -165,6 +169,7 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 	registerVector2Lib(L);
 	registerVector3Lib(L);
 	registerObjectLib(L);
+	RegisterComponents(L);
 
 	// Protect core libraries and metatables from modification
 	luaL_sandbox(L);

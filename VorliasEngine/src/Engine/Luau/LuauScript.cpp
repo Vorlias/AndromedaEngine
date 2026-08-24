@@ -10,6 +10,15 @@
 #include <string>
 #include <lualib.h>
 #include <Luau/Bytecode.h>
+constexpr const char* kComponent = "LuauScriptComponent";
+constexpr const char* kUpdateErr = "UpdateError";
+
+constexpr const char* kAwake = "_init";
+constexpr const char* kReady = "_ready";
+constexpr const char* kUpdate = "_update";
+constexpr const char* kEnabled = "_enabled";
+constexpr const char* kDisabled = "_disabled";
+constexpr const char* kDestroy = "_exit";
 
 typedef unsigned char byte;
 
@@ -122,7 +131,10 @@ bool LuauScriptThread::Create() {
 bool LuauScriptThread::Run() {
 	using namespace andromeda;
 	using namespace andromeda_luau;
-	if (m_running) return false;
+	if (m_running) {
+		error("Already running?");
+		return false;
+	}
 
 	if (m_thread == nullptr) {
 		if (m_script->HasErrored()) {
@@ -142,8 +154,7 @@ bool LuauScriptThread::Run() {
 
 	int status = lua_resume(m_thread, nullptr, 0);
 
-	if (status == LUA_OK || status == LUA_YIELD)
-	{
+	if (status == LUA_OK || status == LUA_YIELD) {
 		m_running = true;
 		return true;
 	}
@@ -170,7 +181,8 @@ LuauThreadStatus LuauScriptThread::GetThreadStatus() const {
 }
 
 void LuauScriptThread::Close() {
-	if (m_thread != nullptr && m_running) luaL_closethread(m_thread);
+	if (m_thread != nullptr && m_running)
+		luaL_closethread(m_thread);
 }
 
 LuauScript::~LuauScript() {}
@@ -205,16 +217,35 @@ void LuauScriptComponent::SetProperty(std::string_view property, LuauValue value
 	ANDROMEDA_ASSERT(lua_gettop(L) == top); // ensure top matches at end
 }
 
-void LuauScriptComponent::SetEnabled(bool enabled) {}
+int callMethodOnThread(lua_State* L, const char* methodName) {
+	int top = lua_gettop(L);
+	int status = LUA_OK;
+
+	luaL_checktype(L, 1, LUA_TTABLE);
+	lua_getfield(L, 1, methodName);
+	if (lua_isfunction(L, -1)) {
+		lua_State* T = lua_newthread(L);
+		lua_xpush(L, T, -2); // function
+		lua_xpush(L, T, 1); // table
+
+		lua_pop(L, 1); // pop thread
+		status = luaL_runthread(L, T, 1);
+	}
+
+	lua_pop(L, 1); // pop fn too
 
 
-constexpr const char* kComponent = "LuauScriptComponent";
-constexpr const char* kUpdateErr = "UpdateError";
+	ANDROMEDA_ASSERT(lua_gettop(L) == top); // ensure top matches at end
+	return status;
+}
 
-constexpr const char* kAwake = "_init";
-constexpr const char* kReady = "_ready";
-constexpr const char* kUpdate = "_update";
-constexpr const char* kDestroy = "_exit";
+void LuauScriptComponent::SetEnabled(bool enabled) {
+	lua_State* L = *m_thread;
+	int res = callMethodOnThread(L, enabled ? kEnabled : kDisabled);
+
+	if (res == LUA_OK || res == LUA_YIELD)
+		m_enabled = enabled;
+}
 
 void LuauScriptComponent::Update(float dt) const {
 	if (m_thread == nullptr) {
@@ -276,7 +307,8 @@ void LuauScriptComponent::Reset() {
 	m_awake = false;
 	m_err = false;
 
-	if (m_thread != nullptr) m_thread->Close();
+	if (m_thread != nullptr)
+		m_thread->Close();
 	m_thread.reset();
 	m_state = STATE_ASLEEP;
 }
@@ -395,4 +427,7 @@ void LuauScriptComponent::Awake() {
 	m_thread = std::move(thread);
 	m_awake = true;
 	m_state = STATE_AWAKE;
+
+	if (m_enabled)
+		callMethodOnThread(*m_thread, kEnabled);
 }

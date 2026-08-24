@@ -53,13 +53,26 @@ namespace andromeda_luau {
 			return nullptr;
 		}
 
-		constexpr int GetTag() const { return m_tag; }
-		constexpr const char* GetName() const { return m_name; }
-		const string_map<LuauMethod<T>>& GetMethods() const { return m_methods; }
-		const string_map<LuauProperty<T>>& GetProperties() const { return m_properties; }
+		operator bool() const {
+			return m_name != nullptr;
+		}
+
+		constexpr int GetTag() const {
+			return m_tag;
+		}
+		constexpr const char* GetName() const {
+			return m_name;
+		}
+		const string_map<LuauMethod<T>>& GetMethods() const {
+			return m_methods;
+		}
+		const string_map<LuauProperty<T>>& GetProperties() const {
+			return m_properties;
+		}
+
 	private:
- 		friend class LuauUserdataBuilder<T>;
-		const char* m_name;
+		friend class LuauUserdataBuilder<T>;
+		const char* m_name{};
 		int m_tag{0};
 		string_map<LuauMethod<T>> m_methods{};
 		string_map<LuauProperty<T>> m_properties{};
@@ -84,15 +97,16 @@ namespace andromeda_luau {
 	public:
 		template<typename R>
 		using Getter = R (T::*)() const;
-
 		template<typename V>
 		using Setter = void (T::*)(V);
+
+		using CustomHandler = int (*)(lua_State* L, T* obj);
 
 		template<typename V>
 		using Member = V T::*;
 
-		LuauUserdataBuilder(const char* name): m_name(name) {}
-		LuauUserdataBuilder(const char* name, int tag): m_name(name), m_tag(tag) {}
+		LuauUserdataBuilder(const char* name) : m_name(name) {}
+		LuauUserdataBuilder(const char* name, int tag) : m_name(name), m_tag(tag) {}
 
 		template<typename R>
 		LuauUserdataBuilder& AddGetter(const char* name, Getter<R> getter) {
@@ -102,6 +116,18 @@ namespace andromeda_luau {
 				stack.PushValue<R>((obj->*getter)());
 				return 1;
 			};
+			return *this;
+		}
+
+		LuauUserdataBuilder& AddGetter(const char* name, CustomHandler getter) {
+			LuauProperty<T>& property = GetOrCreateProperty(name);
+			property.get = getter;
+			return *this;
+		}
+
+		LuauUserdataBuilder& AddSetter(const char* name, CustomHandler setter) {
+			LuauProperty<T>& property = GetOrCreateProperty(name);
+			property.set = setter;
 			return *this;
 		}
 

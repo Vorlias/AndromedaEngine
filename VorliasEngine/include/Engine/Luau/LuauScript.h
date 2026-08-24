@@ -146,7 +146,7 @@ namespace andromeda {
 	private:
 		Ref<LuauScript> m_script;
 		lua_State* m_thread = nullptr;
-		bool m_running;
+		bool m_running = false;
 		friend class LuauScriptComponent;
 	};
 
@@ -251,6 +251,10 @@ namespace andromeda {
 
 		constexpr State GetState() const {
 			return m_state;
+		}
+
+		constexpr bool GetEnabled() const {
+			return m_enabled;
 		}
 	private:
 		Ref<LuauScript> m_script = nullptr;

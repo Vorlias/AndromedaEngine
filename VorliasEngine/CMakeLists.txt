@@ -150,6 +150,7 @@ target_sources(
     include/Engine/Perf.h
     include/Engine/Luau/Stack.h
     include/Engine/Luau/ComponentUserdata.h
+    src/Engine/Objects/Component.cpp
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

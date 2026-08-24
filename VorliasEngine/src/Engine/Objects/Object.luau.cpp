@@ -2,6 +2,9 @@
 #include "Engine/Objects/Component.h"
 #include "Engine/Luau/Lib.h"
 
+#include "Engine/Luau/ComponentUserdata.h"
+#include "Engine/Luau/LuauScript.h"
+
 #include "lualib.h"
 
 andromeda_luau::EntityHandle* andromeda_luau::pushEntityHandle(lua_State* L, andromeda::Scene* scene, entt::entity entity) {
@@ -35,9 +38,13 @@ int Entity_index(lua_State* L) {
 		return 1;
 	}
 
+	if (strcmp(property_name, "transform") == 0) {
+		andromeda_luau::LuauComponent<andromeda::TransformComponent>::Push(L, *entt->scene, entt->entity);
+		return 1;
+	}
+
 	if (strcmp(property_name, "script") == 0) {
-		// Not sure what do yet
-		lua_pushnil(L);
+		andromeda_luau::LuauComponent<andromeda::LuauScriptComponent>::Push(L, *entt->scene, entt->entity);
 		return 1;
 	}
 

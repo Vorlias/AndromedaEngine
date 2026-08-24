@@ -1,5 +1,5 @@
 #include <entt/entt.hpp>
-
+struct lua_State;
 
 namespace andromeda {
 	struct EntityRelationships {
@@ -41,4 +41,14 @@ namespace andromeda {
 			if (childCount == 0) return; // if no children, just skip this lol
 		}
 	};
+
+	enum struct LuauComponentType {
+		Null = -1,
+		Transform = 0,
+		LuauScript = 1,
+	};
+
+	LuauComponentType GetComponentTypeFromString(std::string_view str);
+
+	void RegisterComponents(lua_State* L);
 } // namespace andromeda

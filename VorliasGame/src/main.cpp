@@ -45,44 +45,9 @@ int main() {
 
 	lua_State* L = luaL_newstate();
 
-	LuauUserdataBuilder<TestStruct> test("TestStruct");
-	LuauUserdataType<TestStruct> ty = test.AddGetter("test", &TestStruct::GetMemberValue).Build();
-
-	LuauComponent<TestStruct>::RegisterType(L, &ty);
-
-	entt::registry reg;
-	auto entity = reg.create();
-	auto component = reg.emplace<TestStruct>(entity);
-
-	auto value = LuauComponent<TestStruct>::Push(L, &reg, entity);
-	std::cout << value << std::endl;
-
-	lua_getfield(L, -1, "test");
-	float value2 = lua_tonumber(L, -1);
-	std::cout << value2 << std::endl;
-
-	// LuauStack s(L);
-
-	// TestStruct inst;
-	// inst.member = 100;
-
-	// LuauUserdataBuilder<TestStruct> test("TestStruct");
-	// test.AddGetter("test", &TestStruct::GetMemberValue);
-	// test.AddSetter("test", &TestStruct::SetMemberValue);
-	// auto ud = test.Build();
-	
-	// LuauComponent<LuauScriptComponent> lsc;
-
-	// LuauComponentBuilder<TestStruct> test(L, "TestStruct");
-	// test.AddProperty("test", &TestStruct::member);
-	// test.AddMethod("testMethod", &TestStruct::DoSomething);
-
-	// auto method = test.FindMethod("testMethod");
-	// std::cout << "method is " << method << std::endl;
-
-	// LuauApplication* app = new LuauApplication();
-	// auto& engine = Engine::GetInstance();
-	// engine.Run(app);
+	LuauApplication* app = new LuauApplication();
+	auto& engine = Engine::GetInstance();
+	engine.Run(app);
 
 	// VulkanApplication app;
 	// if (app.Initialize()) {

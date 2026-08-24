@@ -4,7 +4,9 @@
 
 constexpr int kVector2Tag = 127;
 constexpr int kEntityTag = 126;
-constexpr int kComponentTag = 125;
+
+constexpr int kTransformComponent = 125;
+constexpr int kLuauScriptComponent = 124;
 
 namespace andromeda_luau {
 	void luaL_registerlibrary(lua_State* L, const char* libName, const luaL_Reg* lib, bool readonly);

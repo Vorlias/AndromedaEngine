@@ -37,6 +37,10 @@ namespace andromeda {
 
 		ANDROMEDA_GETCONST bool IsActive() { return m_active; }
 
+		operator entt::registry*() {
+			return &m_registry;
+		}
+
 	private:
 		void Awake();
 		void Start();

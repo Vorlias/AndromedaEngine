@@ -1,7 +1,15 @@
+declare extern type Transform with
+end
+declare extern type LuauScriptComponent with
+    enabled: boolean
+end
+
 declare extern type Entity with
     parent: Entity?
     id: number
     name: string
+    transform: Transform?
+    script: LuauScriptComponent
 end
 
 declare entity: Entity

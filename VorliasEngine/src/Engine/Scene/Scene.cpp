@@ -92,9 +92,11 @@ void Scene::Update(float dt) {
 
 	auto scriptUpdate = m_registry.view<const LuauScriptComponent, LuauScriptComponent::UpdateLifecycle>();
 	for (auto [_, component] : scriptUpdate.each()) {
-		if (component.GetState() != LuauScriptComponent::STATE_CLOSED)
-			component.Update(dt);
-		else
+		if (component.GetState() != LuauScriptComponent::STATE_CLOSED) {
+			if (component.IsEnabled()) {
+				component.Update(dt);
+			}
+		} else
 			andromeda::warn("State is still part of update lifecycle but has closed");
 	}
 }
@@ -113,5 +115,6 @@ void Scene::OnComponentAdded<LuauScriptComponent>(Entity entity, LuauScriptCompo
 }
 
 Scene::~Scene() {
-	if (m_active) Shutdown();
+	if (m_active)
+		Shutdown();
 }
