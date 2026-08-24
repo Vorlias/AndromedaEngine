@@ -18,7 +18,7 @@ constexpr const char* kReady = "_ready";
 constexpr const char* kUpdate = "_update";
 constexpr const char* kEnabled = "_enabled";
 constexpr const char* kDisabled = "_disabled";
-constexpr const char* kDestroy = "_exit";
+constexpr const char* kDestroy = "_remove";
 
 typedef unsigned char byte;
 
@@ -313,13 +313,21 @@ void LuauScriptComponent::Reset() {
 	m_state = STATE_ASLEEP;
 }
 
-void LuauScriptComponent::Shutdown() {
+void LuauScriptComponent::Close() {
 	if (m_thread == nullptr)
 		return;
 
 	lua_State* L = *m_thread;
 	if (L == nullptr)
 		return;
+
+	if (m_enabled) {
+		m_enabled = false;
+		int result = callMethodOnThread(L, kDisabled);
+		if (result == LUA_YIELD) {
+			andromeda::warn("{} yielded while script component was being closed", kDisabled);
+		}
+	}
 
 	int top = lua_gettop(L);
 	{
@@ -332,7 +340,11 @@ void LuauScriptComponent::Shutdown() {
 			lua_xpush(L, T, -3); // table
 
 			lua_pop(L, 1); // pop thread
-			(void)luaL_runthread(L, T, 1);
+			int result = luaL_runthread(L, T, 1);
+
+			if (result == LUA_YIELD) {
+				andromeda::warn("{} yielded while script component was being closed", kDestroy);
+			}
 		}
 
 		lua_pop(L, 1); // pop value

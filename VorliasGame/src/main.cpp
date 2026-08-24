@@ -2,6 +2,7 @@
 // #define ANDROMEDA_INTERNAL 1
 #define ANDROMEDA_OPENGL 1
 #define ANDROMEDA_EDITOR 0
+#define DEBUG_LUAU_THREADS 1
 // #define ANDROMEDA_MEMORY_DEBUG 1
 
 #include "SDL3/SDL.h"
@@ -19,6 +20,7 @@ using namespace andromeda;
 #include "Engine/Luau/Userdata.h"
 #include "Engine/Luau/ComponentUserdata.h"
 #include "Engine/Perf.h"
+#include "Engine/Luau/Task.h"
 
 
 struct TestStruct {

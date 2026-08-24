@@ -7,7 +7,6 @@
 using namespace andromeda;
 
 Scene::Scene() {
-	// m_registry.on_construct<LuauScriptComponent>().connect<&freefun>();
 }
 
 Entity Scene::CreateEntity(const std::string& name) {
@@ -38,7 +37,7 @@ void Scene::Shutdown() {
 		if (component.HasError() || component.m_script == nullptr)
 			continue;
 
-		component.Shutdown();
+		component.Close();
 	}
 }
 

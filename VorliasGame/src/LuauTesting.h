@@ -20,11 +20,10 @@ public:
         
         scene.Initialize();
 
-        // killSoon = std::thread([=]() {
-        //     std::this_thread::sleep_for(3s);
-        //     // scene.Shutdown();
-        //     luauEntity.GetComponent<LuauScriptComponent>().Shutdown();
-        // });
+        killSoon = std::thread([=]() {
+            std::this_thread::sleep_for(2s);
+            luauEntity.RemoveComponent<LuauScriptComponent>();
+        });
         
 		return true;
 	}

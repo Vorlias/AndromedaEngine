@@ -1,4 +1,5 @@
 #include <lua.h>
+#define DEBUG_LUAU_THREADS 0
 
 lua_State* luaL_spawnthread(lua_State* L, int idx, int* argc);
 int luaL_runthread(lua_State* L, lua_State* T, int narg);

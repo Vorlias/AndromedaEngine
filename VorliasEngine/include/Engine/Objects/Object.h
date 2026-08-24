@@ -51,13 +51,6 @@ namespace andromeda {
 			m_scene->m_registry.remove<T>(m_entity);
 		}
 
-		// // Adds a tag component to this entity
-		// template<typename T, typename... Args>
-		// 	requires(std::is_empty<T>::value)
-		// decltype(auto) AddComponent(Args&&... args) {
-		// 	return m_scene->m_registry.emplace<T>(m_entity, std::forward<Args>(args)...);
-		// }
-
 		// Adds a value component to this entity
 		template<typename T, typename... Args>
 			requires(!std::is_empty<T>::value)
@@ -96,6 +89,11 @@ namespace andromeda {
 		}
 
 		Entity GetParent() const;
+
+		void Destroy() {
+			this->m_scene->m_registry.destroy(m_entity);
+			m_entity = entt::null;
+		}
 
 		ANDROMEDA_GETCONST Scene* GetScene() const { return m_scene; }
 		ANDROMEDA_GETCONST entt::entity GetHandle() const { return m_entity; }

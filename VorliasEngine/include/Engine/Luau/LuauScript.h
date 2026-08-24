@@ -199,6 +199,13 @@ namespace andromeda {
 
 	class LuauScriptComponent {
 	public:
+		static void on_destroy(entt::registry& registry, entt::entity entity) {
+			// Call the script shutdown seq here.
+			LuauScriptComponent& component = registry.get<LuauScriptComponent>(entity);
+			component.Close();
+		}
+
+	public:
 		enum State {
 			// Hasn't yet awoken
 			STATE_ASLEEP,
@@ -214,7 +221,6 @@ namespace andromeda {
 		};
 
 		TAG_COMPONENT(UpdateLifecycle)
-
 		TAG_COMPONENT(EnableLifecycle)
 		TAG_COMPONENT(DisableLifecycle)
 
@@ -227,7 +233,7 @@ namespace andromeda {
 		void Awake();
 		void Start();
 		void Update(float dt) const;
-		void Shutdown();
+
 
 		void Reset();
 
@@ -256,7 +262,11 @@ namespace andromeda {
 		constexpr bool GetEnabled() const {
 			return m_enabled;
 		}
+
+
 	private:
+		void Close();
+
 		Ref<LuauScript> m_script = nullptr;
 		std::unique_ptr<LuauScriptThread, LuauScriptThread::Cleanup> m_thread{};
 

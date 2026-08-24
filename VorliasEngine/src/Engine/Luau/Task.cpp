@@ -68,6 +68,11 @@ int luaL_runthread(lua_State* L, lua_State* T, int narg) {
 
 	int status = lua_resume(T, L, narg);
 
+#if DEBUG_LUAU_THREADS
+	const char* trace = lua_debugtrace(L);
+	std::cout << COLOR_CYAN << "spawn thread " << T << COLOR_GRAY << " " << trace << COLOR_RESET << std::endl;
+#endif
+
 	if (status == LUA_OK || status == LUA_YIELD) {
 		lua_remove(L, threadIdx);
 		return status;
@@ -100,32 +105,15 @@ void luaL_closethread(lua_State* L) {
 		auto threadRef = lua_getref(L, sd->threadRef);
 		if (lua_isthread(L, -1)) {
 			lua_State* T = lua_tothread(L, -1);
-			// luaL_closethread(T);
-			lua_resetthread(T);
-			// lua_unref(L, threadRef);
 
+#if DEBUG_LUAU_THREADS
+			const char* trace = lua_debugtrace(L);
+			std::cout << COLOR_CYAN << "kill thread " << T << COLOR_GRAY << " " << trace << COLOR_RESET << std::endl;
+#endif
+
+			lua_resetthread(T);
 			lua_pop(L, 2); // thread ?
 		}
-
-
-		// table.remove
-		{
-			lua_getglobal(L, "table"); // + 1
-			lua_getfield(L, -1, "remove"); // + 1
-			lua_pushvalue(L, -3);
-			lua_pushinteger(L, 1);
-			lua_call(L, 2, 0);
-
-			lua_pop(L, 1);
-		}
-
-		// lua_getglobal(L, "table");
-		// lua_getfield(L, -1, "remove");
-		// lua_pushvalue(L, -2);
-		// lua_pushnumber(L, 1);
-		// lua_call(L, 2, 0);
-
-		lua_pop(L, 1); // pop ref, item
 	}
 
 	lua_pop(L, 1); // pop SCHEDULED_THREADS

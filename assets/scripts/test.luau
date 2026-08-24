@@ -7,32 +7,42 @@ const Test = {
 
 type Test = typeof(Test)
 
-function Test._init(self: Test)
-    entity.name = "test"
-    print(entity, entity.name, (entity.parent :: Entity).name, entity.id, (entity.parent ::Entity).id)
-end
+-- function Test._init(self: Test)
+--     print("Entity initialized", entity.name, entity.id)
+-- end
 
 function Test._ready(self: Test)
-    print("Entity is ready :D")
+    -- entity.script.enabled = false
     
-    task.wait(2)
-    entity.script.enabled = false
+    task.spawn(function()
+        task.spawn(function()
+            task.wait(10)
+            print("This still counts thankfully")
+        end)
+
+        task.wait(6)
+        print(entity.name)
+    end)
 end
 
 function Test._enabled(self: Test)
-    print("Was enabled")
+    print("Luau Script was enabled!")
 end
 
 function Test._disabled(self: Test)
-    print("Entity was disabled lmfao")
+    print("Luau Script was disabled!")
 end
 
 function Test._update(self: Test, dt: number)
-
+    self.elapsed += dt
+    if self.lastTick + 2 < self.elapsed then
+        self.lastTick = self.elapsed
+        print("2 seconds passed")
+    end
 end
 
-function Test._exit(self: Test)
-    print("Entity go bye-bye!")
+function Test._remove(self: Test)
+    print("Script removed lol")
 end
 
 return Test
