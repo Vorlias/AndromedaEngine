@@ -24,7 +24,10 @@ void andromeda::RegisterComponents(lua_State* L) {
 
 	if (!s_transformComponentUserdata) {
 		LuauUserdataBuilder<TransformComponent> transformComponent("Transform", kTransformComponent);
-		s_transformComponentUserdata = transformComponent.Build();
+		s_transformComponentUserdata = transformComponent.AddField("position", &TransformComponent::position)
+		                                   .AddField("scale", &TransformComponent::scale)
+		                                   .AddField("rotation", &TransformComponent::rotation)
+		                                   .Build();
 	}
 
 	if (!s_scriptComponentUserdata) {

@@ -30,6 +30,11 @@ int Entity_index(lua_State* L) {
 	int atom;
 	const char* property_name = lua_tolstringatom(L, 2, &property_name_len, &atom);
 
+	if (!*entt) {
+		luaL_errorL(L, "Entity has been destroyed");
+		return 0;
+	}
+
 	if (strcmp(property_name, "name") == 0) {
 		andromeda::Entity entity = entt->GetEntity();
 		std::string_view name = entity.GetName();
@@ -71,6 +76,11 @@ int Entity_newindex(lua_State* L) {
 	size_t property_name_len;
 	int atom;
 	const char* property_name = lua_tolstringatom(L, 2, &property_name_len, &atom);
+
+	if (!*entt) {
+		luaL_errorL(L, "Entity has been destroyed");
+		return 0;
+	}
 
 	if (strcmp(property_name, "name") == 0) {
 		size_t len;

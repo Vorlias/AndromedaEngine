@@ -7,9 +7,9 @@ const Test = {
 
 type Test = typeof(Test)
 
--- function Test._init(self: Test)
---     print("Entity initialized", entity.name, entity.id)
--- end
+function Test._init(self: Test)
+    print("Entity initialized", entity.name, entity.id, entity)
+end
 
 function Test._ready(self: Test)
     -- entity.script.enabled = false

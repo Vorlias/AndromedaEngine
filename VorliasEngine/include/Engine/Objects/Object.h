@@ -117,6 +117,10 @@ namespace andromeda_luau {
 		operator andromeda::Entity() {
 			return andromeda::Entity{ scene, entity };
 		}
+		
+		operator bool() const {
+			return entity != entt::null && scene->GetRegistry().valid(entity);
+		}
 	};
 
 	struct ComponentHandle {

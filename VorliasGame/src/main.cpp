@@ -21,6 +21,7 @@ using namespace andromeda;
 #include "Engine/Luau/ComponentUserdata.h"
 #include "Engine/Perf.h"
 #include "Engine/Luau/Task.h"
+#include "Engine/Luau/PrettyPrint.h"
 
 
 struct TestStruct {
@@ -39,13 +40,21 @@ struct TestStruct {
 		return 1'000'000;
 	}
 };
+ 
+int Test(lua_State* L) {
+	std::cout << "got " << lua_gettop(L) << " args" << std::endl;
 
-void Test() {}
+	andromeda_luau::luaL_debugstack(L);
+	return 1;
+}
 
 int main() {
 	using namespace andromeda_luau;
 
 	lua_State* L = luaL_newstate();
+	LuauStack stack(L);
+	stack.PushArray({ 10, 20, 30 });
+	stack.Clear();
 
 	LuauApplication* app = new LuauApplication();
 	auto& engine = Engine::GetInstance();
