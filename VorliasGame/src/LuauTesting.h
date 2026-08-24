@@ -10,22 +10,22 @@ public:
     bool Initialize() override final {
         luau = LuauRuntime::GetGameRuntime();
 
-        auto testScript = luau->LoadScriptFromFile("assets/scripts/test.luau");
+        auto parent = scene.CreateEntity();
 
+        auto testScript = luau->LoadScriptFromFile("assets/scripts/test.luau");
 
         luauEntity = scene.CreateEntity();
         luauEntity.AddComponent<LuauScriptComponent>(testScript);
+        luauEntity.SetParent(parent);
         
-
-        // auto luaEntity2 = scene.CreateEntity();
-        // luaEntity2.AddComponent<LuauScriptComponent>(testScript);
-
         scene.Initialize();
 
         killSoon = std::thread([=]() {
             std::this_thread::sleep_for(3s);
-            scene.Shutdown();
+            // scene.Shutdown();
+            luauEntity.GetComponent<LuauScriptComponent>().Shutdown();
         });
+        
 		return true;
 	}
 

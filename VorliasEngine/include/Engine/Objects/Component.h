@@ -1,5 +1,6 @@
 #include <entt/entt.hpp>
 
+
 namespace andromeda {
 	struct EntityRelationships {
 		// The parent of this entity

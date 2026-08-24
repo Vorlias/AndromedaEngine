@@ -5,6 +5,7 @@
 #include "entt/entt.hpp"
 #include "Engine/Log.h"
 
+
 using namespace entt::literals;
 
 namespace andromeda {
@@ -96,21 +97,47 @@ namespace andromeda {
 
 		Entity GetParent() const;
 
+		ANDROMEDA_GETCONST Scene* GetScene() const { return m_scene; }
+		ANDROMEDA_GETCONST entt::entity GetHandle() const { return m_entity; }
 	private:
 		friend class LuauScriptComponent;
 
 		Scene* m_scene;
 		entt::entity m_entity{entt::null};
 	};
+} // namespace andromeda
 
+namespace andromeda_luau {
 	struct EntityHandle {
-		Scene* scene;
+		andromeda::Scene* scene;
 		entt::entity entity{entt::null};
+
+		andromeda::Entity GetEntity() const { 
+			return andromeda::Entity{ scene, entity };
+		}
+
+		operator andromeda::Entity() {
+			return andromeda::Entity{ scene, entity };
+		}
 	};
 
-	static void registerObjectLib(lua_State* L);
+	struct ComponentHandle {
+		void* component;
+		enum {
+			TYPE_TRANSFORM,
+			TYPE_LUAUSCRIPT,
+		} type;
+	};
+
+
+	void registerObjectLib(lua_State* L);
+
 	EntityHandle* pushEntityHandle(lua_State* L, andromeda::Scene* scene, entt::entity entity);
-} // namespace andromeda
+	EntityHandle* pushEntity(lua_State* L, const andromeda::Entity& entity);
+
+	template<typename T>
+	T* pushComponent(lua_State* L, andromeda::Scene* scene, entt::entity entity);
+} // namespace Luau
 
 template<typename T>
 void andromeda::Scene::OnComponentAdded(Entity entity, T& component) {} // annoyingly has to be here ?

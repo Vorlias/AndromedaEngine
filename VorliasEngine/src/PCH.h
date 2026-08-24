@@ -154,4 +154,6 @@ using byte = unsigned char;
 #define ANDROMEDA_GETTER(_Ty, _Prop, _Value) ANDROMEDA_GETCONST _Ty Get##_Prop() const { return _Value; }
 #define ANDROMEDA_SETTER(_Ty, _Prop, _Value) ANDROMEDA_SETCONST void Set##_Prop(_Ty value) { _Value = value; }
 
+#define CONSTSTR constexpr const char*
+
 #endif // PCH_H

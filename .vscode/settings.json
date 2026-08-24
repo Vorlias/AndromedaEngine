@@ -1,0 +1,7 @@
+{
+    "luau-lsp.fflags.enableNewSolver": true,
+    "luau-lsp.platform.type": "standard",
+    "luau-lsp.types.definitionFiles": {
+        "test": ".vscode/Andromeda.d.luau"
+    }
+}

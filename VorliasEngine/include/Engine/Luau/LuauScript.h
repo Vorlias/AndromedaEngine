@@ -2,6 +2,7 @@
 #include <string>
 #include "lua.h"
 #include "LuauState.h"
+#include "Userdata.h"
 #include "Engine/Memory.h"
 #include "Engine/Asset.h"
 #include "Engine/Objects/Object.h"
@@ -141,6 +142,7 @@ namespace andromeda {
 			ANDROMEDA_ASSERT(m_thread != nullptr);
 			return m_thread;
 		}
+
 	private:
 		Ref<LuauScript> m_script;
 		lua_State* m_thread = nullptr;
@@ -200,7 +202,7 @@ namespace andromeda {
 		enum State {
 			// Hasn't yet awoken
 			STATE_ASLEEP,
-			
+
 			// Has awoken
 			STATE_AWAKE,
 
@@ -250,7 +252,6 @@ namespace andromeda {
 		constexpr State GetState() const {
 			return m_state;
 		}
-
 	private:
 		Ref<LuauScript> m_script = nullptr;
 		std::unique_ptr<LuauScriptThread, LuauScriptThread::Cleanup> m_thread{};

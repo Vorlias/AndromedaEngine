@@ -329,11 +329,10 @@ void LuauScriptComponent::Awake() {
 		lua_State* L = *thread;
 		int top = lua_gettop(L);
 
-		// Gonna ignore this for now.
-		// if (m_entity) {
-		// 	pushEntityHandle(L, m_entity.m_scene, m_entity.m_entity);
-		// 	lua_setglobal(L, "entity");
-		// }
+		if (m_entity) {
+			andromeda_luau::pushEntityHandle(L, m_entity.m_scene, m_entity.m_entity);
+			lua_setglobal(L, "entity");
+		}
 
 		// TODO: Set appropriate globals here?
 
