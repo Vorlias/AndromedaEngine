@@ -28,10 +28,14 @@ namespace andromeda::graphics {
 		void Shutdown() override;
 		void Resized(int width, int height) override;
 
+		void Prepare() override;
+		void Render() override;
+		void Present() override;
+
 		ANDROMEDA_GETCONST VkDevice GetDevice() const {
 			return device;
 		}
-		
+
 		ANDROMEDA_GETCONST VkSurfaceKHR GetSurface() const {
 			return surface;
 		}
@@ -79,9 +83,10 @@ namespace andromeda::graphics {
 			return m_timelineSemaphore;
 		}
 
-		ANDROMEDA_GETCONST const std::array<FrameResources, MaxFramesInFlight>& GetFrameResources() const { 
+		ANDROMEDA_GETCONST const std::array<FrameResources, MaxFramesInFlight>& GetFrameResources() const {
 			return m_frameResources;
 		}
+
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();
@@ -94,6 +99,7 @@ namespace andromeda::graphics {
 
 		SDL_Window* window;
 		VulkanContext* vulkan;
+		uint32_t width, height;
 
 		VulkanGraphicsPipeline* m_graphicsPipeline = nullptr;
 
@@ -111,7 +117,12 @@ namespace andromeda::graphics {
 		std::vector<VkImageView> swapchainImageViews;
 		std::vector<VkSemaphore> renderCompleteSemaphores;
 
+		bool m_swapchainRequiresRecreate = false;
 		uint32_t swapchainWidth, swapchainHeight;
+
+		uint64_t frameIndex = 0;
+		uint64_t nextSignalValue = MaxFramesInFlight + 1, signalValue = 0;
+		uint32_t frameResIdx = 0, imageIndex = 0;
 
 		Ref<Shader> m_shader;
 
