@@ -23,6 +23,9 @@ declare extern type Entity with
     read transform: Transform
     --- This script
     read script: LuauScriptComponent
+    
+    function GetComponent(self, name: "Transform"): Transform
+    function GetComponent(self, name: "LuauScript"): LuauScriptComponent
 end
 
 --- The entity that this script is attached to

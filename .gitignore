@@ -8,3 +8,4 @@
 /.andromeda
 /Tools/lute*
 *.log
+/imgui.ini

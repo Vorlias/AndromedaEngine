@@ -7,14 +7,18 @@
 #include <vulkan/vulkan.h>
 #include "Engine/Graphics/Vulkan/VulkanBase.h"
 
-// struct VmaAllocator_T;
-// typedef struct VmaAllocator_T* VmaAllocator;
-// struct VmaAllocation_T;
-// typedef struct VmaAllocation_T* VmaAllocation;
+#include "VulkanGraphicsPipeline.h"
 
 namespace andromeda::graphics {
+	struct FrameResources {
+		VkCommandPool commandPool = nullptr;
+		VkCommandBuffer commandBuffer = nullptr;
+		VkSemaphore imageAcquiredSemaphore = nullptr;
+	};
+
 	class VulkanWindowContext : public GraphicsContext {
 	public:
+		constexpr static uint32_t MaxFramesInFlight{2};
 		constexpr static VkFormat swapchainFormat{VK_FORMAT_B8G8R8A8_SRGB};
 		constexpr static VkFormat depthFormat{VK_FORMAT_D32_SFLOAT}; // represents a depth buffer of 32 bit floats
 	public:
@@ -24,30 +28,66 @@ namespace andromeda::graphics {
 		void Shutdown() override;
 		void Resized(int width, int height) override;
 
-		ANDROMEDA_GETCONST VkDevice GetDevice() const { return device; }
-		ANDROMEDA_GETCONST VkSurfaceKHR GetSurface() const { return surface; }
-		ANDROMEDA_GETCONST VkSwapchainKHR GetSwapchain() const { return swapchain; }
-		ANDROMEDA_GETCONST VkQueue GetGraphicsQueue() const { return graphicsQueue; }
-		ANDROMEDA_GETCONST int GetSwapchainHeight() const { return swapchainHeight; }
-		ANDROMEDA_GETCONST int GetSwapchainWidth() const { return swapchainWidth; }
-
-		ANDROMEDA_GETCONST uint32_t GetMinImageCount() const { return m_minImageCount; }
-		ANDROMEDA_GETCONST uint32_t GetImageCount() const { return m_imageCount; }
-
-		ANDROMEDA_GETCONST size_t GetSemaphoreCount() const { return renderCompleteSemaphores.size(); }
-		ANDROMEDA_GETCONST const std::vector<VkImage>& GetSwapchainImages() const { return swapchainImages; }
-		ANDROMEDA_GETCONST VkImage GetImage(size_t index) const { return swapchainImages[index]; }
-		ANDROMEDA_GETCONST VkImageView GetImageView(size_t index) const { return swapchainImageViews[index]; }
-
-		void CreateCommandBuffers(uint32_t imageCount, VkCommandBuffer* buffers) {
-			// TODO:
+		ANDROMEDA_GETCONST VkDevice GetDevice() const {
+			return device;
+		}
+		
+		ANDROMEDA_GETCONST VkSurfaceKHR GetSurface() const {
+			return surface;
 		}
 
-		void SetupIMGUI(ImGui_ImplVulkanH_Window* wd);
+		ANDROMEDA_GETCONST VkSwapchainKHR GetSwapchain() const {
+			return swapchain;
+		}
+
+		ANDROMEDA_GETCONST VkQueue GetGraphicsQueue() const {
+			return graphicsQueue;
+		}
+
+		ANDROMEDA_GETCONST int GetSwapchainHeight() const {
+			return swapchainHeight;
+		}
+
+		ANDROMEDA_GETCONST int GetSwapchainWidth() const {
+			return swapchainWidth;
+		}
+
+		ANDROMEDA_GETCONST uint32_t GetMinImageCount() const {
+			return m_minImageCount;
+		}
+		ANDROMEDA_GETCONST uint32_t GetImageCount() const {
+			return m_imageCount;
+		}
+
+		ANDROMEDA_GETCONST size_t GetSemaphoreCount() const {
+			return renderCompleteSemaphores.size();
+		}
+
+		ANDROMEDA_GETCONST const std::vector<VkImage>& GetSwapchainImages() const {
+			return swapchainImages;
+		}
+
+		ANDROMEDA_GETCONST VkImage GetImage(size_t index) const {
+			return swapchainImages[index];
+		}
+
+		ANDROMEDA_GETCONST VkImageView GetImageView(size_t index) const {
+			return swapchainImageViews[index];
+		}
+
+		ANDROMEDA_GETCONST VkSemaphore GetTimelineSemaphore() const {
+			return m_timelineSemaphore;
+		}
+
+		ANDROMEDA_GETCONST const std::array<FrameResources, MaxFramesInFlight>& GetFrameResources() const { 
+			return m_frameResources;
+		}
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();
-		[[nodiscard]] VkPipeline CreateGraphicsPipeline();
+		// [[nodiscard]] VkPipeline CreateGraphicsPipeline();
+		[[nodiscard]] bool CreateSyncResources();
+		[[nodiscard]] bool CreateCommandBuffers();
 
 		[[nodiscard]] bool CreateSwapchain(int width, int height);
 		void DestroySwapchain();
@@ -55,8 +95,7 @@ namespace andromeda::graphics {
 		SDL_Window* window;
 		VulkanContext* vulkan;
 
-		VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
-		VkPipeline pipeline = VK_NULL_HANDLE;
+		VulkanGraphicsPipeline* m_graphicsPipeline = nullptr;
 
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
 
@@ -76,8 +115,10 @@ namespace andromeda::graphics {
 
 		Ref<Shader> m_shader;
 
-		VkPipeline m_pipeline = VK_NULL_HANDLE;
-
 		uint32_t m_minImageCount = 0, m_imageCount = 0;
+
+		// frame and synchronization resources
+		VkSemaphore m_timelineSemaphore = nullptr;
+		std::array<FrameResources, MaxFramesInFlight> m_frameResources;
 	};
 } // namespace andromeda::graphics

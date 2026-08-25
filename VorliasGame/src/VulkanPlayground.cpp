@@ -1,7 +1,10 @@
+#define USE_IMGUI 0
 #include "VulkanPlayground.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 #include "Engine/Graphics/Vulkan/VulkanIMGUI.h"
+
+#include "Engine/Graphics/Vulkan/VulkanBase.h"
 
 #include "SDL3/SDL.h"
 
@@ -18,9 +21,7 @@ VulkanApplication::VulkanApplication() : window(andromeda::WindowOptions()) {}
 bool VulkanApplication::Initialize() {
 	if (!SDL_Init(SDL_INIT_VIDEO))
 		return false;
-	// andromeda::initializeLogger("./VulkanPlayground.log");
-
-
+	andromeda::initializeLogger("./VulkanPlayground.log");
 
 	if (!s_renderer.Initialize())
 		return false;
@@ -31,6 +32,7 @@ bool VulkanApplication::Initialize() {
 	if (!windowInit)
 		return false;
 
+#if USE_IMGUI
 	{
 		auto vk = s_renderer.GetContext();
 		auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
@@ -38,19 +40,47 @@ bool VulkanApplication::Initialize() {
 		s_imgui = new andromeda::VulkanIMGUI(window.GetHandle(), vk, ctx);
 		s_imgui->Initialize();
 	}
+#endif
 
 	return true;
 }
 
+std::string EventStr(Uint32 eventType) {
+	switch (eventType) {
+		case SDL_EVENT_KEYBOARD_ADDED:
+			return "KeyboardAdded";
+		case SDL_EVENT_MOUSE_ADDED:
+			return "MouseAdded";
+		case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+			return "WindowPixelSizeChanged";
+		case SDL_EVENT_WINDOW_SHOWN:
+			return "WindowShown";
+		case SDL_EVENT_WINDOW_EXPOSED:
+			return "WindowExposed";
+		default:
+			return std::to_string((int)eventType);
+	}
+}
+
 void VulkanApplication::Run() {
+	// SDL_InitSubSystem(SDL_INIT_EVENTS);
+
 	while (!window.HasRequestedExit()) {
 		SDL_Event e;
+#if USE_IMGUI
 		ImGui_ImplSDL3_ProcessEvent(&e);
+#endif
 		while (window.PollSDLEvent(&e)) {
 			switch (e.type) {
 				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 					window.Close();
 					break;
+				case SDL_EVENT_QUIT:
+					andromeda::print("Quitting application as requested by user");
+					window.Close();
+					break;
+				default:
+					std::cout << "got evt " << EventStr(e.type) << std::endl;
 			}
 		}
 
@@ -59,27 +89,28 @@ void VulkanApplication::Run() {
 	}
 }
 
-void VulkanApplication::Update() {
-	
-}
+void VulkanApplication::Update() {}
 
 void VulkanApplication::Render() {
+#if USE_IMGUI
 	s_imgui->NewFrame();
+#endif
 
 	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
 	ctx->Prepare();
 	ctx->Render();
 	ctx->Present();
 
+#if USE_IMGUI
 	ImGui::ShowDemoWindow();
-
 	s_imgui->Render();
+#endif
 }
 
 void VulkanApplication::Shutdown() {
-	// ImGui_ImplVulkan_Shutdown();
-	// ImGui_ImplSDL3_Shutdown();
+#if USE_IMGUI
 	s_imgui->Shutdown();
+#endif
 
 	window.Shutdown();
 	s_renderer.Shutdown();

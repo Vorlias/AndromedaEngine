@@ -29,30 +29,24 @@ namespace andromeda::graphics {
 		if (!CreateShaders())
 			return;
 
-		if (m_pipeline = CreateGraphicsPipeline(); !pipeline)
+		m_graphicsPipeline = new VulkanGraphicsPipeline(vulkan, swapchainFormat, depthFormat, static_cast<VulkanShader*>(m_shader.AsPtr()));
+		if (!m_graphicsPipeline->Create()) {
 			return;
+		}
+
+		if (!CreateSyncResources()) {
+			return;
+		}
+
+		if (!CreateCommandBuffers()) {
+			andromeda::error("Could not create command buffers");
+			return;
+		}
 	}
 
 	void VulkanWindowContext::Resized(int width, int height) {
 		DestroySwapchain();
 		CreateSwapchain(width, height);
-	}
-
-	void VulkanWindowContext::Shutdown() {
-		m_shader->Unload();
-		m_shader.Reset();
-
-		if (pipelineLayout != VK_NULL_HANDLE) {
-			vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-		}
-
-		DestroySwapchain();
-
-		if (surface != VK_NULL_HANDLE) {
-			andromeda::trace("Cleaned up surface");
-			SDL_Vulkan_DestroySurface(vulkan->GetInstance(), surface, nullptr);
-			surface = nullptr;
-		}
 	}
 
 	bool VulkanWindowContext::CreateSurface() {
@@ -221,62 +215,93 @@ namespace andromeda::graphics {
 		return true;
 	}
 
-	VkPipeline VulkanWindowContext::CreateGraphicsPipeline() {
-		VkPipelineLayoutCreateInfo pipelineLayoutInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			.setLayoutCount = 0,
-			.pushConstantRangeCount = 0,
+	bool VulkanWindowContext::CreateSyncResources() {
+		// synchronize frames in flight
+		VkSemaphoreTypeCreateInfo semaphoreTypeInfo{
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
+			.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
+			.initialValue = MaxFramesInFlight,
+		};
+		VkSemaphoreCreateInfo semaphoreInfo{
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+			.pNext = &semaphoreTypeInfo,
 		};
 
-		VK_CHECK_ELSE_RETURN(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout), nullptr);
-
-		auto shader = static_cast<VulkanShader*>(m_shader.AsPtr());
-		auto mods = shader->GetShaderModules();
-
-		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		shaderStages.resize(mods.size());
-		for (int i = 0; i < mods.size(); i++) {
-			auto& mod = mods[i];
-			shaderStages[i] = mod.GetShaderStage();
+		if (vkCreateSemaphore(vulkan->GetDevice(), &semaphoreInfo, nullptr, &m_timelineSemaphore) != VK_SUCCESS) {
+			andromeda::error("Failed to create timeline semaphore");
+			return false;
 		}
 
-		// vertex pulling, don't define vertex input details
-		VkPipelineVertexInputStateCreateInfo vertInputInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		};
 
-		// input assembly, we'll be drawing triangle lists
-		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		};
+		// per frame image acquire semaphores
+		for (FrameResources& res : m_frameResources) {
+			// create the binary semaphores
+			VkSemaphoreCreateInfo semaphoreInfo{.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+			if (vkCreateSemaphore(vulkan->GetDevice(), &semaphoreInfo, nullptr, &res.imageAcquiredSemaphore) != VK_SUCCESS) {
+				andromeda::error("Error creating the per-frame image-acquire semaphore");
+				return false;
+			}
+		}
 
-		// depth/stencil configuration
-		VkPipelineDepthStencilStateCreateInfo depthStencilInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-			.depthTestEnable = VK_TRUE,
-			.depthWriteEnable = VK_TRUE,
-			.depthCompareOp = VK_COMPARE_OP_LESS,
-			.stencilTestEnable = VK_FALSE,
-		};
-
-		// dynamic rendering allows to set this up.. dynamically
-		// wel still need this struct though
-		VkPipelineViewportStateCreateInfo viewportInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-			.viewportCount = 1,
-			.pViewports = nullptr,
-			.scissorCount = 1,
-			.pScissors = nullptr,
-		};
-
-		return nullptr;
+		return true;
 	}
 
-	void VulkanWindowContext::SetupIMGUI(ImGui_ImplVulkanH_Window* wd) {
-		// wd->Surface = surface;
-		// wd->Swapchain = swapchain;
-		// wd->Width = swapchainWidth;
-		// wd->Height = swapchainHeight;
+	bool VulkanWindowContext::CreateCommandBuffers() {
+		for (FrameResources& res : m_frameResources) {
+			// Give ecah frame it's own pool, faster cmd buffer resets this way
+			VkCommandPoolCreateInfo poolInfo{
+				.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+				.queueFamilyIndex = static_cast<uint32_t>(vulkan->GetGraphicsFamilyIndex()),
+			};
+
+			if (vkCreateCommandPool(vulkan->GetDevice(), &poolInfo, nullptr, &res.commandPool) != VK_SUCCESS) {
+				andromeda::error("Failed to create command buffer pool");
+				return false;
+			}
+
+			// Create the command buffer for this frame
+			VkCommandBufferAllocateInfo cmdAllocInfo{
+				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+				.commandPool = res.commandPool,
+				.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+				.commandBufferCount = 1,
+			};
+
+			if (vkAllocateCommandBuffers(vulkan->GetDevice(), &cmdAllocInfo, &res.commandBuffer) != VK_SUCCESS) {
+				andromeda::error("Failed to allocate command buffer");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void VulkanWindowContext::Shutdown() {
+		m_shader->Unload();
+		m_shader.Reset();
+
+		for (FrameResources& res : m_frameResources) {
+			if (res.imageAcquiredSemaphore != nullptr)
+				vkDestroySemaphore(vulkan->GetDevice(), res.imageAcquiredSemaphore, nullptr);
+
+			if (res.commandPool != nullptr)
+				vkDestroyCommandPool(vulkan->GetDevice(), res.commandPool, nullptr);
+		}
+
+		if (m_timelineSemaphore != nullptr) {
+			vkDestroySemaphore(vulkan->GetDevice(), m_timelineSemaphore, nullptr);
+		}
+
+		if (m_graphicsPipeline != nullptr) {
+			delete m_graphicsPipeline;
+		}
+
+		DestroySwapchain();
+
+		if (surface != VK_NULL_HANDLE) {
+			andromeda::trace("Cleaned up surface");
+			SDL_Vulkan_DestroySurface(vulkan->GetInstance(), surface, nullptr);
+			surface = nullptr;
+		}
 	}
 } // namespace andromeda::graphics

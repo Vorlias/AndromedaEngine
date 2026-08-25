@@ -96,6 +96,7 @@ target_sources(
     src/Engine/Graphics/WebGPU/WebGPUWindowContext.cpp
     src/Engine/Asset.cpp
     src/Engine/Luau/Userdata.cpp
+    src/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -155,6 +156,7 @@ target_sources(
     include/Andromeda/System.h
     include/Andromeda/Luau.h
     include/Andromeda/Scene.h
+    include/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
@@ -195,7 +197,7 @@ if (BUILTIN_SHADER_COMPILER AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 # Precompile shaders
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
+#if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/Shaders)
     file(GLOB SHADERS ${SHADER_DIR}/*.vert ${SHADER_DIR}/*.frag)
     foreach(SHADER IN LISTS SHADERS)
@@ -209,4 +211,4 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 
     add_custom_target(shaders ALL DEPENDS ${SPV_SHADERS})
     #message(STATUS "SPV SHADERS: " ${SPV_SHADERS})
-endif()
+#endif()

@@ -1,18 +1,18 @@
 
 // #define ANDROMEDA_INTERNAL 1
-#define ANDROMEDA_OPENGL 1
-#define ANDROMEDA_EDITOR 0
-#define DEBUG_LUAU_THREADS 1
-// #define ANDROMEDA_MEMORY_DEBUG 1
+// #define ANDROMEDA_OPENGL 1
+// #define ANDROMEDA_EDITOR 0
+// #define DEBUG_LUAU_THREADS 1
+// // #define ANDROMEDA_MEMORY_DEBUG 1
 
-#include "SDL3/SDL.h"
+// #include "SDL3/SDL.h"
 
-#include "Engine/Engine.h"
-#include "Engine/Graphics/Vulkan/VulkanInstance.h"
-#include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
+// #include "Engine/Engine.h"
+// #include "Engine/Graphics/Vulkan/VulkanInstance.h"
+// #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 
-#include "Engine/Window.h"
-using namespace andromeda;
+// #include "Engine/Window.h"
+// using namespace andromeda;
 
 #include "VulkanPlayground.h"
 #include "LuauTesting.h"
@@ -20,15 +20,15 @@ using namespace andromeda;
 int main() {
 	using namespace andromeda_luau;
 
-	LuauApplication* app = new LuauApplication();
-	auto& engine = Engine::GetInstance();
-	engine.Run(app);
+	// LuauApplication* app = new LuauApplication();
+	// auto& engine = Engine::GetInstance();
+	// engine.Run(app);
 
-	// VulkanApplication app;
-	// if (app.Initialize()) {
-	// 	app.Run();
-	// }
+	VulkanApplication app;
+	if (app.Initialize()) {
+		app.Run();
+	}
 
-	// app.Shutdown();
+	app.Shutdown();
 	return 0;
 }

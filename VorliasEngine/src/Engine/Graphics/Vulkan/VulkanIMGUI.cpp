@@ -54,7 +54,6 @@ void VulkanIMGUI::Initialize() {
 	ImGui_ImplVulkan_Init(&initInfo);
 
 	m_commandBuffers.resize(m_vkWindow->GetImageCount());
-	m_vkWindow->CreateCommandBuffers(m_vkWindow->GetImageCount(), m_commandBuffers.data());
 }
 
 void VulkanIMGUI::UpdateSwapchain() {

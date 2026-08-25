@@ -1,6 +1,7 @@
 #include <Andromeda.h>
 
 using namespace std::chrono_literals;
+using namespace andromeda;
 
 class LuauApplication : public andromeda::Application {
 public:
