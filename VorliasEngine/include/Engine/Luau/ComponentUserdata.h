@@ -78,6 +78,29 @@ namespace andromeda_luau {
 			return 0;
 		}
 
+		static int LuauComponentNamecall(lua_State* L) {
+			LuauComponent<T>* userdata = touserdata<LuauComponent<T>>(L, 1);
+			LuauUserdataType<T>* userdataType = userdata->typedata;
+			ANDROMEDA_ASSERT(userdataType != nullptr);
+
+			int atom;
+			const char* method_name = lua_namecallatom(L, &atom);
+
+			LuauMethod<T>* method = userdataType->FindMethod(method_name);
+			if (method != nullptr) {
+				T* component = userdata->registry->try_get<T>(userdata->entity);
+				if (component == nullptr) {
+					luaL_error(L, "%s was destroyed", userdataType->GetName());
+					return 0;
+				}
+
+				return method->invoke(L, component);
+			}
+
+			luaL_errorL(L, "%s is not a method of %s", method_name, userdataType->GetName());
+			return 0;
+		}
+
 		static void RegisterType(lua_State* L, LuauUserdataType<T>* userdata) {
 			const char* id = typeid(T).name();
 
@@ -110,7 +133,10 @@ namespace andromeda_luau {
 				lua_setfield(L, -2, "__newindex");
 			}
 
-			if (methods.size() > 0) {}
+			if (methods.size() > 0) {
+				lua_pushcfunction(L, LuauComponentNamecall, "LuauComponentNamecall");
+				lua_setfield(L, -2, "__namecall");
+			}
 
 			lua_pushstring(L, name);
 			lua_setfield(L, -2, "__type");

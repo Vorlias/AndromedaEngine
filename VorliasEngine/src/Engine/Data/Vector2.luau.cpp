@@ -6,18 +6,26 @@
 
 constexpr const char* kVector2 = "Vector2";
 
-andromeda::Vector2* luaL_pushvector2(lua_State* L, float x, float y) {
+andromeda::Vector2* luaL_newVector2(lua_State* L, float x, float y) {
 	auto vec = andromeda_luau::newuserdatamt<andromeda::Vector2>(L, kVector2Tag);
 	vec->x = x;
 	vec->y = y;
     return vec;
 }
 
+void andromeda_luau::luaL_pushVector2(lua_State* L, const andromeda::Vector2& value) {
+	luaL_newVector2(L, value.x, value.y);
+}
+
+andromeda::Vector2* andromeda_luau::luaL_toVector2(lua_State* L, int idx) {
+	return touserdata<andromeda::Vector2>(L, 1, kVector2Tag);
+}
+
 static int Vector2_new(lua_State* L) {
 	float x = static_cast<float>(luaL_optnumber(L, 1, 0));
 	float y = static_cast<float>(luaL_optnumber(L, 2, 0));
 
-    luaL_pushvector2(L, x, y);
+    luaL_newVector2(L, x, y);
 	return 1;
 }
 
@@ -32,9 +40,9 @@ static int Vector2_normalize(lua_State* L) {
 	auto magnitude = vec->GetMagnitude();
 
     if (magnitude > kEpsilon) {
-        luaL_pushvector2(L, vec->x / magnitude, vec->y / magnitude);
+        luaL_newVector2(L, vec->x / magnitude, vec->y / magnitude);
     } else {
-        luaL_pushvector2(L, 0, 0);
+        luaL_newVector2(L, 0, 0);
     }
 	
     return 1;

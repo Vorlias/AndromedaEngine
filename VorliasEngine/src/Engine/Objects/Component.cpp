@@ -1,5 +1,6 @@
-#include "Engine/Objects/Component.h"
 #include "lualib.h"
+
+#include "Engine/Objects/Component.h"
 #include "Engine/Luau/ComponentUserdata.h"
 #include "Engine/Luau/Userdata.h"
 #include "Engine/Objects/Object.h"
@@ -16,24 +17,47 @@ andromeda::LuauComponentType andromeda::GetComponentTypeFromString(std::string_v
 	return LuauComponentType::Null;
 }
 
+int andromeda::PushComponent(lua_State* L, andromeda_luau::EntityHandle* handle, andromeda::LuauComponentType componentType) {
+	switch (componentType) {
+		case andromeda::LuauComponentType::LuauScript: {
+			andromeda_luau::LuauComponent<andromeda::LuauScriptComponent>::Push(L, *handle, *handle);
+			return 1;
+		}
+		case andromeda::LuauComponentType::Transform: {
+			andromeda_luau::LuauComponent<andromeda::TransformComponent>::Push(L, *handle, *handle);
+			return 1;
+		}
+		default:
+			lua_pushnil(L);
+			return 1;
+	}
+}
+
 static andromeda_luau::LuauUserdataType<andromeda::TransformComponent> s_transformComponentUserdata;
 static andromeda_luau::LuauUserdataType<andromeda::LuauScriptComponent> s_scriptComponentUserdata;
+
+int getScriptPath(lua_State* L, andromeda::LuauScriptComponent* component) {
+	auto script = component->GetScript();
+	lua_pushstring(L, script->GetFilePath().c_str());
+	return 1;
+}
 
 void andromeda::RegisterComponents(lua_State* L) {
 	using namespace andromeda_luau;
 
 	if (!s_transformComponentUserdata) {
-		LuauUserdataBuilder<TransformComponent> transformComponent("Transform", kTransformComponent);
-		s_transformComponentUserdata = transformComponent.AddField("position", &TransformComponent::position)
-		                                   .AddField("scale", &TransformComponent::scale)
-		                                   .AddField("rotation", &TransformComponent::rotation)
-		                                   .Build();
+		s_transformComponentUserdata.SetName("Transform")
+			.SetTag(kTransformComponent)
+			.AddField("position", &TransformComponent::position)
+			.AddField("rotation", &TransformComponent::rotation);
 	}
 
 	if (!s_scriptComponentUserdata) {
-		LuauUserdataBuilder<LuauScriptComponent> scriptComponent("LuauScript", kLuauScriptComponent);
-		s_scriptComponentUserdata =
-			scriptComponent.AddGetter("enabled", &LuauScriptComponent::GetEnabled).AddSetter("enabled", &LuauScriptComponent::SetEnabled).Build();
+		s_scriptComponentUserdata.SetName("LuauScript")
+			.SetTag(kLuauScriptComponent)
+			.AddGetter("filePath", getScriptPath)
+			.AddGetter("enabled", &LuauScriptComponent::GetEnabled)
+			.AddSetter("enabled", &LuauScriptComponent::SetEnabled);
 	}
 
 	LuauComponent<TransformComponent>::RegisterType(L, &s_transformComponentUserdata);

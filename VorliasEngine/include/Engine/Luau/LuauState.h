@@ -15,9 +15,13 @@ namespace ENGINE_NS {
 	typedef int(*LuauRequireHandler)(lua_State* L, std::string_view path);
 
 	enum class LuauStateContext {
-		Game = 1 << 0,
+		None = 0,
 
-		LAST = Game,
+		Game = 1 << 0,
+		Editor = 1 << 1,
+
+		ALL = Game | Editor,
+		LAST = Editor,
 
 		Compiler = 10000,
 	};

@@ -5,6 +5,8 @@
 #include "entt/entt.hpp"
 #include "Engine/Log.h"
 
+#include "Component.h"
+
 
 using namespace entt::literals;
 
@@ -14,18 +16,6 @@ namespace andromeda {
 	public:
 		virtual std::string_view GetName() const = 0;
 		virtual void SetName(std::string_view name) = 0;
-	};
-
-	struct Component {};
-
-	struct NameComponent {
-		std::string name;
-	};
-
-	struct TransformComponent {
-		Vector3 position = {0.0f, 0.0f, 0.0f};
-		Vector3 rotation = {0.0f, 0.0f, 0.0f};
-		Vector3 scale = {1.0f, 1.0f, 1.0f};
 	};
 
 	class Entity : public Object {
@@ -63,6 +53,16 @@ namespace andromeda {
 		template<typename T>
 		T& GetComponent() const {
 			return m_scene->m_registry.get<T>(m_entity);
+		}
+
+		template<typename T>
+		bool TryGetComponent(T* component) {
+			*component = m_scene->m_registry.try_get<T>(m_entity);
+			return component != nullptr;
+		}
+
+		TransformComponent& GetTransform() const {
+			return GetComponent<TransformComponent>();
 		}
 
 		void SetParent(const Entity& parent);
@@ -116,6 +116,14 @@ namespace andromeda_luau {
 
 		operator andromeda::Entity() {
 			return andromeda::Entity{ scene, entity };
+		}
+
+		operator entt::registry*() {
+			return &scene->GetRegistry();
+		}
+
+		operator entt::entity() {
+			return entity;
 		}
 		
 		operator bool() const {

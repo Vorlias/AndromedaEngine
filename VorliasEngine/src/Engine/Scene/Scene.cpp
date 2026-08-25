@@ -16,6 +16,9 @@ Entity Scene::CreateEntity(const std::string& name) {
 	name_component.name = name;
 
 	auto& relationship = entity.AddComponent<EntityRelationships>();
+
+	auto& transform = entity.AddComponent<TransformComponent>();
+
 	return entity;
 }
 

@@ -54,7 +54,7 @@ int Entity_index(lua_State* L) {
 	}
 
 	if (strcmp(property_name, "id") == 0) {
-		lua_pushinteger(L, (int) entt->entity);
+		lua_pushinteger(L, (int)entt->entity);
 		return 1;
 	}
 
@@ -100,6 +100,11 @@ int Entity_namecall(lua_State* L) {
 
 	int atom;
 	const char* method_name = lua_namecallatom(L, &atom);
+
+	if (strcmp(method_name, "GetComponent") == 0) {
+		auto componentType = andromeda::GetComponentTypeFromString(lua_tostring(L, 2));
+		return andromeda::PushComponent(L, entt, componentType);
+	}
 
 	luaL_error(L, "Attempt to index entity with invalid method '%s'", method_name);
 	return 0;

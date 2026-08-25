@@ -234,6 +234,7 @@ namespace andromeda {
 		void Start();
 		void Update(float dt) const;
 
+		Ref<LuauScript> GetScript() const { return m_script; }
 
 		void Reset();
 

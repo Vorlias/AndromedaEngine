@@ -1,8 +1,5 @@
-#include "Engine/Luau/LuauScript.h"
-#include "Engine/Application.h"
-#include "Engine/Luau/LuauRuntime.h"
-#include "Engine/Objects/Component.h"
-#include "Engine/Scene/Scene.h"
+#include <Andromeda.h>
+
 using namespace std::chrono_literals;
 
 class LuauApplication : public andromeda::Application {
@@ -22,9 +19,9 @@ public:
 
         killSoon = std::thread([=]() {
             std::this_thread::sleep_for(2s);
-            luauEntity.RemoveComponent<LuauScriptComponent>();
+            // luauEntity.RemoveComponent<LuauScriptComponent>();
         });
-        
+
 		return true;
 	}
 

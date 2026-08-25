@@ -110,3 +110,9 @@ namespace andromeda {
 		return std::format("<{:d}, {:d}, {:d}>", vec.x, vec.y, vec.z);
 	}
 } // namespace andromeda
+
+
+namespace andromeda_luau {
+	void luaL_pushVector2(lua_State* L, const andromeda::Vector2& value);
+	andromeda::Vector2* luaL_toVector2(lua_State* L, int idx);
+}

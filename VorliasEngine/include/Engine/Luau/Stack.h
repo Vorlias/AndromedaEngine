@@ -12,7 +12,7 @@ namespace andromeda_luau {
 	class LuauStack {
 	public:
 		LuauStack(lua_State* L) : L(L) {}
-		
+
 		[[nodiscard]] constexpr int GetTop() {
 			return lua_gettop(L);
 		}
@@ -24,6 +24,24 @@ namespace andromeda_luau {
 		void SetTop(int top) {
 			ANDROMEDA_ASSERT(top >= 0);
 			lua_settop(L, top);
+		}
+
+		template<typename T>
+			requires(!std::is_void_v<T>)
+		const char* GetTypeName() {
+			if constexpr (std::is_same_v<T, bool>) {
+				return "boolean";
+			} else if constexpr ((std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_enum_v<T>)) {
+				return "number";
+			} else if constexpr ((std::is_same_v<T, std::string> || std::is_same_v<T, std::string_view> || std::is_same_v<T, const char*>)) {
+				return "string";
+			} else if constexpr (std::is_same_v<T, andromeda::Vector3>) {
+				return "Vector3";
+			} else if constexpr (std::is_same_v<T, andromeda::Vector2>) {
+				return "Vector2";
+			} else {
+				static_assert(always_false<T>, "Missing TypeName implementation for type");
+			}
 		}
 
 		// Push values to the stack
@@ -46,10 +64,64 @@ namespace andromeda_luau {
 				lua_pushlstring(L, value.data(), value.size());
 			} else if constexpr (std::is_same_v<T, andromeda::Vector3>) {
 				lua_pushvector(L, value.x, value.y, value.z);
+			} else if constexpr (std::is_same_v<T, andromeda::Vector2>) {
+				luaL_pushVector2(L, value);
 			} else if constexpr (std::is_null_pointer_v<T>) {
 				lua_pushnil(L);
+			} else if constexpr (std::is_enum_v<T>) {
+				lua_pushinteger(L, static_cast<int>(value));
 			} else {
 				static_assert(always_false<T>, "Missing PushValue implementation for type");
+			}
+		}
+
+		template<typename T>
+			requires(!std::is_void_v<T> && !std::is_null_pointer_v<T>)
+		T GetValue(int idx) {
+			ANDROMEDA_ASSERT(IsType<T>(idx));
+
+			if constexpr (std::is_same_v<T, bool>) {
+				return lua_toboolean(L, idx);
+			} else if constexpr (std::is_integral_v<T>) {
+				return lua_tointeger(L, idx);
+			} else if constexpr (std::is_floating_point_v<T>) {
+				return lua_tonumber(L, idx);
+			} else if constexpr (std::is_enum_v<T>) {
+				return static_cast<T>(lua_tointeger(L, idx));
+			} else if constexpr (std::is_same_v<T, const char*> || std::is_same_v<T, std::string>) {
+				return lua_tostring(L, idx);
+			} else if constexpr (std::is_same_v<T, std::string_view>) {
+				size_t size;
+				const char* str = lua_tolstring(L, idx, &size);
+				return std::string_view(str, size);
+			} else if constexpr (std::is_same_v<T, andromeda::Vector3>) {
+				const float* v = lua_tovector(L, idx);
+				return andromeda::Vector3(v[0], v[1], v[2]);
+			} else if constexpr (std::is_same_v<T, andromeda::Vector2>) {
+				const auto* v = luaL_toVector2(L, idx);
+				return *v;
+			} else {
+				static_assert(always_false<T>, "Missing GetValue implementation for type");
+			}
+		}
+
+		template<typename T>
+			requires(!std::is_void_v<T>)
+		bool IsType(int idx) {
+			if constexpr (std::is_same_v<T, bool>) {
+				return lua_type(L, -1) == LUA_TBOOLEAN;
+			} else if constexpr (std::is_integral_v<T>) {
+				return lua_type(L, -1) == LUA_TNUMBER;
+			} else if constexpr (std::is_floating_point_v<T>) {
+				return lua_type(L, -1) == LUA_TNUMBER;
+			} else if constexpr (std::is_same_v<T, const char*>) {
+				return lua_type(L, -1) == LUA_TSTRING;
+			} else if constexpr (std::is_same_v<T, andromeda::Vector3>) {
+				return lua_type(L, -1) == LUA_TVECTOR;
+			} else if constexpr (std::is_null_pointer_v<T>) {
+				return lua_type(L, -1) == LUA_TNIL;
+			} else {
+				static_assert(always_false<T>, "Missing IsType implementation for type");
 			}
 		}
 
@@ -131,49 +203,6 @@ namespace andromeda_luau {
 
 		int Length(int idx) {
 			return lua_objlen(L, idx);
-		}
-
-		template<typename T>
-			requires(!std::is_void_v<T> && !std::is_null_pointer_v<T>)
-		T GetValue(int idx) {
-			if constexpr (std::is_same_v<T, bool>) {
-				return lua_toboolean(L, idx);
-			} else if constexpr (std::is_integral_v<T>) {
-				return lua_tointeger(L, idx);
-			} else if constexpr (std::is_floating_point_v<T>) {
-				return lua_tonumber(L, idx);
-			} else if constexpr (std::is_same_v<T, const char*> || std::is_same_v<T, std::string>) {
-				return lua_tostring(L, idx);
-			} else if constexpr (std::is_same_v<T, std::string_view>) {
-				size_t size;
-				const char* str = lua_tolstring(L, idx, &size);
-				return std::string_view(str, size);
-			} else if constexpr (std::is_same_v<T, andromeda::Vector3>) {
-				const float* v = lua_tovector(L, idx);
-				return andromeda::Vector3(v[0], v[1], v[2]);
-			} else {
-				static_assert(always_false<T>, "Missing GetValue implementation for type");
-			}
-		}
-
-		template<typename T>
-			requires(!std::is_void_v<T>)
-		bool IsType(int idx) {
-			if constexpr (std::is_same_v<T, bool>) {
-				return lua_type(L, -1) == LUA_TBOOLEAN;
-			} else if constexpr (std::is_integral_v<T>) {
-				return lua_type(L, -1) == LUA_TNUMBER;
-			} else if constexpr (std::is_floating_point_v<T>) {
-				return lua_type(L, -1) == LUA_TNUMBER;
-			} else if constexpr (std::is_same_v<T, const char*>) {
-				return lua_type(L, -1) == LUA_TSTRING;
-			} else if constexpr (std::is_same_v<T, andromeda::Vector3>) {
-				return lua_type(L, -1) == LUA_TVECTOR;
-			} else if constexpr (std::is_null_pointer_v<T>) {
-				return lua_type(L, -1) == LUA_TNIL;
-			} else {
-				static_assert(always_false<T>, "Missing IsType implementation for type");
-			}
 		}
 
 		// template<typename R, typename... Args>

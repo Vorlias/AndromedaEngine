@@ -1,7 +1,15 @@
+#pragma once
 #include <entt/entt.hpp>
+#include "Engine/Data/Vector.h"
+
 struct lua_State;
 
+namespace andromeda_luau {
+	struct EntityHandle;
+}
+
 namespace andromeda {
+
 	struct EntityRelationships {
 		// The parent of this entity
 		entt::entity parent{entt::null};
@@ -38,7 +46,8 @@ namespace andromeda {
 		}
 
 		void RemoveChild(entt::registry& registry, entt::entity entity) {
-			if (childCount == 0) return; // if no children, just skip this lol
+			if (childCount == 0)
+				return; // if no children, just skip this lol
 		}
 	};
 
@@ -49,6 +58,18 @@ namespace andromeda {
 	};
 
 	LuauComponentType GetComponentTypeFromString(std::string_view str);
+	int PushComponent(lua_State* L, andromeda_luau::EntityHandle* handle, LuauComponentType componentType);
 
 	void RegisterComponents(lua_State* L);
+
+	struct NameComponent {
+		std::string name;
+		std::string tag;
+	};
+
+	struct TransformComponent {
+		Vector3 position = {0.0f, 0.0f, 0.0f};
+		Vector3 rotation = {0.0f, 0.0f, 0.0f};
+		Vector3 scale = {1.0f, 1.0f, 1.0f};
+	};
 } // namespace andromeda
