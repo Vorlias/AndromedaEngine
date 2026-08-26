@@ -35,7 +35,12 @@ FetchContent_MakeAvailable(fetch_vk_bootstrap)
 
 add_compile_definitions(ANDROMEDA_INTERNAL=1)
 add_compile_definitions(ANDROMEDA_EXPERIMENTAL=0)
-add_compile_definitions(ANDROMEDA_EDITOR=0)
+
+if (ANDROMEDA_EDITOR)
+    add_compile_definitions(ANDROMEDA_EDITOR=1)
+else()
+    add_compile_definitions(ANDROMEDA_EDITOR=0)
+endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_program(LSB_RELEASE_EXEC lsb_release)

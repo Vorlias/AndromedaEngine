@@ -13,7 +13,7 @@ namespace andromeda {
 
 	class Application {
 	public:
-		virtual const WindowOptions GetWindowOptions() const {
+		virtual const WindowOptions& GetWindowOptions() const {
 			return WindowOptions("AndromedaEngine", Vector2u(1024, 768), WindowFlags::Default);
 		}
 

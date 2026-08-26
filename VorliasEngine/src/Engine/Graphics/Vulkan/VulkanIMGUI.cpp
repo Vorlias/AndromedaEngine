@@ -12,6 +12,7 @@ void VulkanIMGUI::Initialize() {
 	ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 	int width, height;
 	SDL_GetWindowSize(m_window, &width, &height);
@@ -19,7 +20,7 @@ void VulkanIMGUI::Initialize() {
 	io.DisplaySize.y = height;
 
 	auto& style = ImGui::GetStyle();
-	style.FontScaleMain = 1.0f;
+	// style.FontScaleMain = 1.0f;
 	ImGui::StyleColorsDark();
 	ImGui::GetStyle() = GetImguiStyle();
 

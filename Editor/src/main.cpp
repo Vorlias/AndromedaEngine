@@ -1,34 +1,155 @@
 #include <Andromeda.h>
 #include "Engine/Main.h"
-
 #include "Engine/FileDialogs.h"
 #include "Engine/File.h"
-
 #include "imgui/imgui.h"
+#include <SDL3/SDL_surface.h>
+
+#include "Widgets/IconsLucide.h"
+
+#include "EditorPanels/SceneHeirarchy.h"
+
+#include "AndromedaEditorIcon.h"
 
 using namespace andromeda;
 
+static WindowIcon s_editorWindowIcon(AndromedaIcon, AndromedaIcon_len);
+
 class EditorApplication : public Application {
 public:
-	const WindowOptions GetWindowOptions() const override {
-		return WindowOptions("Andromeda Editor", Vector2u(1024, 768), (WindowFlags::Maximized | WindowFlags::Resizable));
+	EditorApplication(const std::filesystem::path& projectPath)
+		: m_projectRootPath(projectPath), m_activeScene(nullptr), m_sceneHierarchyPanel(m_activeScene) {
+			std::cout<< "root path is " << m_projectRootPath.string() << std::endl;
+		}
+
+	const WindowOptions& GetWindowOptions() const override {
+		WindowOptions options("Andromeda Editor", Vector2u(1024, 768), (WindowFlags::Maximized | WindowFlags::Resizable));
+		options.windowIcon = s_editorWindowIcon; //WindowIcon(AndromedaIcon, AndromedaIcon_len);
+	
+		return options;
 	}
 
 	bool Initialize() override {
+		SetDataPath(m_projectRootPath / "data");
+		trace("Set data path to {}", GetDataPath(true).string());
+
 		CreateWindow(GetWindowOptions());
 
 		InitIMGUI();
 		ANDROMEDA_ASSERT(imgui != nullptr);
 
+		auto& io = ImGui::GetIO();
+
+		auto imFont = io.Fonts->AddFontFromFileTTF("assets/fonts/RussoOne-Regular.ttf", 15.0f);
+		io.FontDefault = imFont;
+		{
+			static const ImWchar icons_ranges[] = { ICON_MIN_LC, ICON_MAX_16_LC, 0 };
+			ImFontConfig icons_config;
+			icons_config.MergeMode = true;
+			icons_config.PixelSnapH = true;
+
+			io.Fonts->AddFontFromFileTTF("assets/fonts/" FONT_ICON_FILE_NAME_LC, 18.0f * 2.0f / 3.0f, &icons_config, icons_ranges);
+		}
+
+		m_activeScene = std::make_shared<Scene>();
+		m_activeScene->CreateEntity("Test");
+		m_activeScene->CreateEntity("Test2");
+		m_activeScene->CreateEntity("Test3");
+
+		m_sceneHierarchyPanel.SetContext(m_activeScene);
+		m_sceneHierarchyPanel.onSelect = [&](Entity entity) {
+			m_selected = entity;
+			return true;
+		};
+
 		return true;
 	}
 
 	void DrawIMGUI() override {
-		ImGui::ShowDemoWindow();
+		auto vp = ImGui::GetMainViewport();
+		ImGui::DockSpaceOverViewport(vp->ID, vp);
+
+		if (ImGui::BeginMainMenuBar()) {
+			if (ImGui::BeginMenu("File")) {
+				if (ImGui::MenuItem("New Scene", "CTRL+N")) {
+					m_activeScene = std::make_shared<Scene>();
+				}
+
+				if (ImGui::MenuItem("Open Scene...", "CTRL+O")) {
+					// OpenScene();
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Save", "CTRL+S", false, m_activeScene != nullptr)) {
+					// Save();
+				}
+
+				if (ImGui::MenuItem("Save As...", "CTRL+SHIFT+S")) {
+					// SaveAs();
+				}
+
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Exit", "ALT+F4")) {
+					Engine::GetInstance().Quit();
+				}
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Tools")) {
+				// if (ImGui::MenuItem("Debug", "", showDebugMenu)) {
+				// 	showDebugMenu = !showDebugMenu;
+				// }
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Help")) {
+				if (ImGui::MenuItem("About", "", m_aboutWindow)) {
+					m_aboutWindow = !m_aboutWindow;
+				}
+
+				if (ImGui::MenuItem("Demo Window", "", m_demoWindow)) {
+					m_demoWindow = !m_demoWindow;
+				}
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMainMenuBar();
+		}
+
+		if (m_demoWindow)
+			ImGui::ShowDemoWindow(&m_demoWindow);
+
+		if (m_aboutWindow) {
+			// ImGui::SetWindowSize(ImVec2(200, 300), ImGuiCond_Always);
+			ImGui::Begin("About", &m_aboutWindow, ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize);
+			{
+				ImGui::TextColored(ImColor(0xFF'b3'80'FF), ANDROMEDA_VERSION_STRING);
+				ImGui::Text("Experimental Game Engine by vorlias");
+				ImGui::Text("Definitely NOT for production use.");
+			}
+			ImGui::End();
+		}
+		
+
+		m_sceneHierarchyPanel.DrawHierarchyPanel();
 	}
-	
+
+
+	void Shutdown() override {
+		s_editorWindowIcon.Destroy();
+	}
 private:
-	uint32_t wtf = 0;
+	bool m_demoWindow = false;
+	bool m_aboutWindow = false;
+
+	SharedRef<Scene> m_activeScene;
+	Entity m_selected;
+	SceneHierarchyPanel m_sceneHierarchyPanel;
+	std::filesystem::path m_projectRootPath;
 };
 
 Application* ApplicationMain(const ApplicationInit& ap) {
@@ -38,9 +159,6 @@ Application* ApplicationMain(const ApplicationInit& ap) {
 		if (result.empty())
 			return nullptr;
 	}
-
-
-
 
 	// if (result.empty())
 	// 	return false;
@@ -58,6 +176,7 @@ Application* ApplicationMain(const ApplicationInit& ap) {
 	// 	);
 	// 	return false;
 	// }
-
-	return new EditorApplication();
+	
+	auto current = std::filesystem::current_path();
+	return new EditorApplication(current);
 }

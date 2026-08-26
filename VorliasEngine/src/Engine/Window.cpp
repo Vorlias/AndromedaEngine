@@ -5,6 +5,28 @@
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 
+andromeda::WindowIcon::WindowIcon(void* data, size_t size) {
+	SDL_IOStream* iostr = SDL_IOFromConstMem(data, size);
+	m_data = SDL_LoadPNG_IO(iostr, true);
+}
+
+andromeda::WindowIcon::WindowIcon(const char* filePath) {
+	std::cout << "File path " << filePath << std::endl;
+
+	m_data = SDL_LoadPNG(filePath);
+
+	if (m_data == NULL) {
+		andromeda::error("Failed to load icon: {}", SDL_GetError());
+	}
+}
+
+void andromeda::WindowIcon::Destroy() {
+	SDL_DestroySurface(m_data);
+	m_data = 0;
+}
+
+andromeda::WindowIcon::~WindowIcon() {}
+
 andromeda::WindowOptions::WindowOptions() {}
 
 andromeda::Window::Window(const WindowOptions& options) : m_window_options(options) {}
@@ -47,6 +69,12 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 		return false;
 	}
 
+	auto& icon = m_window_options.windowIcon;
+	if (icon) {
+		SDL_SetWindowIcon(m_window, icon.m_data);
+		SDL_DestroySurface(icon.m_data);
+	}
+
 	SDL_SetWindowPosition(m_window, m_window_options.position.x, m_window_options.position.y);
 
 	m_window_id = SDL_GetWindowID(m_window);
@@ -54,7 +82,7 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	if (renderer != nullptr) {
 		renderer->Initialize();
 		m_graphics_context = renderer->CreateWindowGraphicsContext(m_window);
-		
+
 		if (m_graphics_context != nullptr)
 			m_graphics_context->Initialize();
 	}

@@ -21,6 +21,8 @@ namespace andromeda {
 		Entity CreateEntity(const std::string& name);
 		Entity CreateEntity();
 
+		void DestroyEntity(Entity entity);
+
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
 

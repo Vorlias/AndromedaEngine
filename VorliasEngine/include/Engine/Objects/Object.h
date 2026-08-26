@@ -78,6 +78,19 @@ namespace andromeda {
 			return (uint32_t)m_entity;
 		}
 
+		// Return a pointer to the inner entity
+		const entt::entity* operator*() const {
+			return &m_entity;
+		}
+
+		const uint32_t GetId() const {
+			return (uint32_t)m_entity;
+		}
+
+		bool operator==(Entity other) {
+			return other.m_entity == m_entity && other.m_scene == m_scene;
+		}
+
 		void SetName(std::string_view name) {
 			auto& nc = GetComponent<NameComponent>();
 			nc.name = name;
@@ -95,8 +108,13 @@ namespace andromeda {
 			m_entity = entt::null;
 		}
 
-		ANDROMEDA_GETCONST Scene* GetScene() const { return m_scene; }
-		ANDROMEDA_GETCONST entt::entity GetHandle() const { return m_entity; }
+		ANDROMEDA_GETCONST Scene* GetScene() const {
+			return m_scene;
+		}
+		ANDROMEDA_GETCONST entt::entity GetHandle() const {
+			return m_entity;
+		}
+
 	private:
 		friend class LuauScriptComponent;
 
@@ -110,12 +128,12 @@ namespace andromeda_luau {
 		andromeda::Scene* scene;
 		entt::entity entity{entt::null};
 
-		andromeda::Entity GetEntity() const { 
-			return andromeda::Entity{ scene, entity };
+		andromeda::Entity GetEntity() const {
+			return andromeda::Entity{scene, entity};
 		}
 
 		operator andromeda::Entity() {
-			return andromeda::Entity{ scene, entity };
+			return andromeda::Entity{scene, entity};
 		}
 
 		operator entt::registry*() {
@@ -125,7 +143,7 @@ namespace andromeda_luau {
 		operator entt::entity() {
 			return entity;
 		}
-		
+
 		operator bool() const {
 			return entity != entt::null && scene->GetRegistry().valid(entity);
 		}
@@ -147,7 +165,7 @@ namespace andromeda_luau {
 
 	template<typename T>
 	T* pushComponent(lua_State* L, andromeda::Scene* scene, entt::entity entity);
-} // namespace Luau
+} // namespace andromeda_luau
 
 template<typename T>
 void andromeda::Scene::OnComponentAdded(Entity entity, T& component) {} // annoyingly has to be here ?

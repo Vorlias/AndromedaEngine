@@ -25,7 +25,23 @@ namespace andromeda {
 		Default = Resizable,
 	};
 
+	struct WindowIcon {
+		WindowIcon(void* data, size_t size);
+		WindowIcon(const char* filePath);
+		WindowIcon() : m_data(0) {}
+		WindowIcon(const andromeda::WindowIcon& other) = delete;
 
+		operator bool() const {
+			return m_data != 0;
+		}
+
+		void Destroy();
+		~WindowIcon();
+	private:
+		friend class Window;
+
+		SDL_Surface* m_data{};
+	};
 
 	struct WindowOptions {
 		Vector2u size = Vector2u(1024, 768);
@@ -33,9 +49,10 @@ namespace andromeda {
 
 		const char* title = "Andromeda";
 		WindowFlags window_flags = WindowFlags::Default;
+		WindowIcon windowIcon;
 		WindowOptions();
-		WindowOptions(const char* title, Vector2u size) : title(title), size(size) {}
-		WindowOptions(const char* title, Vector2u size, WindowFlags flags) : title(title), size(size), window_flags(flags) {}
+		WindowOptions(const char* title, Vector2u size) : title(title), size(size), windowIcon() {}
+		WindowOptions(const char* title, Vector2u size, WindowFlags flags) : title(title), size(size), window_flags(flags), windowIcon() {}
 	};
 
 #if ANDROMEDA_EXPERIMENTAL
@@ -137,11 +154,12 @@ namespace andromeda {
 	private:
 		friend class Engine;
 		graphics::GraphicsContext* m_graphics_context = nullptr;
-		WindowOptions m_window_options;
+		const WindowOptions& m_window_options;
 		SDL_WindowID m_window_id;
 		SDL_Window* m_window = nullptr;
 		bool m_requestedExit = false;
 
+		SDL_Surface* m_windowIcon;
 		// static SDL_WindowID s_primary_window_id;
 		// static std::map<SDL_WindowID, Window&> s_windows;
 	};

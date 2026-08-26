@@ -26,6 +26,10 @@ Entity Scene::CreateEntity() {
 	return CreateEntity("Entity");
 }
 
+void Scene::DestroyEntity(Entity entity) {
+	m_registry.destroy(entity.GetHandle());
+}
+
 void Scene::Initialize() {
 	Awake();
 	// TODO: Iterate scripts, inject any referent properties
