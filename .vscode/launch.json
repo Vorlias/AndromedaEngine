@@ -14,9 +14,9 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/bin/VorliasGame",
+            "program": "${workspaceFolder}/bin/VorliasEditor",
             "args": [
-                "-wgpu"
+                "-project"
             ],
             "preLaunchTask": "Build Project using CMake",
             // "processId": "${command:pickProcess}",

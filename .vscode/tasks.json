@@ -6,8 +6,8 @@
             "label": "Build Project using CMake",
             "command": "${workspaceFolder}/build.sh",
             "args": [
-                "--gl",
-                "-G",
+                "--shaderc",
+                "-E",
             ]
         }
     ]

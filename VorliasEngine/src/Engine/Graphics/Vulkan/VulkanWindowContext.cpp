@@ -47,6 +47,8 @@ namespace andromeda::graphics {
 	void VulkanWindowContext::Resized(int width, int height) {
 		DestroySwapchain();
 		CreateSwapchain(width, height);
+		// this->width = width;
+		// this->height = height;
 	}
 
 	bool VulkanWindowContext::CreateSurface() {
@@ -411,6 +413,7 @@ namespace andromeda::graphics {
 		vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
 		vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
 	}
+
 	void VulkanWindowContext::Present() {
 		FrameResources& res = m_frameResources[frameResIdx];
 		vkCmdEndRendering(res.commandBuffer);

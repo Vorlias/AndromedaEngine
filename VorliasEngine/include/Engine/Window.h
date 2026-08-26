@@ -10,7 +10,7 @@
 namespace andromeda {
 	using WindowID = SDL_WindowID;
 
-	enum class WindowFlags : uint64_t {
+	enum class WindowFlags : int {
 		Resizable = SDL_WINDOW_RESIZABLE,
 		Fullscreen = SDL_WINDOW_FULLSCREEN,
 
@@ -25,6 +25,8 @@ namespace andromeda {
 		Default = Resizable,
 	};
 
+
+
 	struct WindowOptions {
 		Vector2u size = Vector2u(1024, 768);
 		Vector2i position = Vector2i(SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
@@ -32,8 +34,8 @@ namespace andromeda {
 		const char* title = "Andromeda";
 		WindowFlags window_flags = WindowFlags::Default;
 		WindowOptions();
-		WindowOptions(const char* title, Vector2u size): title(title), size(size) {}
-		WindowOptions(const char* title, Vector2u size, WindowFlags flags): title(title), size(size), window_flags(flags) {}
+		WindowOptions(const char* title, Vector2u size) : title(title), size(size) {}
+		WindowOptions(const char* title, Vector2u size, WindowFlags flags) : title(title), size(size), window_flags(flags) {}
 	};
 
 #if ANDROMEDA_EXPERIMENTAL
@@ -131,6 +133,7 @@ namespace andromeda {
 		constexpr graphics::GraphicsContext* GetGraphicsContext() const {
 			return m_graphics_context;
 		}
+
 	private:
 		friend class Engine;
 		graphics::GraphicsContext* m_graphics_context = nullptr;
@@ -143,3 +146,7 @@ namespace andromeda {
 		// static std::map<SDL_WindowID, Window&> s_windows;
 	};
 } // namespace andromeda
+
+static andromeda::WindowFlags operator|(andromeda::WindowFlags l, andromeda::WindowFlags r) {
+	return (andromeda::WindowFlags)(static_cast<int>(l) | static_cast<int>(r)); // why I had to do this? idk
+}

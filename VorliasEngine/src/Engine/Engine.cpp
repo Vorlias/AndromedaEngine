@@ -41,13 +41,6 @@ void Engine::Run(Application* app) {
 
 			Update();
 
-			// uint64_t nextFixedUpdate = SDL_GetTicks() - lastFixedUpdate;
-			// if (nextFixedUpdate >= app->m_fixedFrameTime.toMilliseconds()) {
-			// 	FixedUpdate();
-			// 	app->m_fixedDeltaTime = (nextFixedUpdate / 1000.0f);
-			// 	lastFixedUpdate = SDL_GetTicks();
-			// }
-
 			if (m_renderer != nullptr)
 				Render();
 
@@ -161,15 +154,31 @@ void Engine::FixedUpdate() {
 
 void Engine::Render() {
 	auto mainWindow = m_app->GetMainWindow();
-	if (mainWindow == nullptr) return;
+	if (mainWindow == nullptr)
+		return;
 
 	auto graphics = mainWindow->GetGraphicsContext();
+
+	if (m_app->imgui != nullptr)
+		m_app->imgui->NewFrame();
 	graphics->Prepare();
+
 	graphics->Render();
+
+	if (m_app->imgui != nullptr) {
+		m_app->DrawIMGUI();
+		m_app->imgui->Render();
+	}
+
 	graphics->Present();
 }
 
 void Engine::Shutdown() {
+	if (m_app->imgui != nullptr) {
+		m_app->imgui->Shutdown();
+		m_app->imgui.release();
+	}
+
 	m_app->Shutdown();
 	m_app->CloseAllWindows();
 

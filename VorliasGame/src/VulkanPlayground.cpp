@@ -1,4 +1,4 @@
-#define USE_IMGUI 0
+#define USE_IMGUI 1
 #include "VulkanPlayground.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
@@ -63,14 +63,15 @@ std::string EventStr(Uint32 eventType) {
 }
 
 void VulkanApplication::Run() {
-	// SDL_InitSubSystem(SDL_INIT_EVENTS);
+	SDL_InitSubSystem(SDL_INIT_GAMEPAD);
 
 	while (!window.HasRequestedExit()) {
 		SDL_Event e;
-#if USE_IMGUI
-		ImGui_ImplSDL3_ProcessEvent(&e);
-#endif
 		while (window.PollSDLEvent(&e)) {
+#if USE_IMGUI
+			s_imgui->ProcessEvent(e);
+#endif
+
 			switch (e.type) {
 				case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 					window.Close();
@@ -79,10 +80,16 @@ void VulkanApplication::Run() {
 					andromeda::print("Quitting application as requested by user");
 					window.Close();
 					break;
-				default:
-					std::cout << "got evt " << EventStr(e.type) << std::endl;
+				case SDL_EVENT_WINDOW_RESIZED:
+					window.Resized(e.window.data1, e.window.data2);
+#if USE_IMGUI
+					s_imgui->Resize(e.window.data1, e.window.data2);
+#endif
+					break;
 			}
 		}
+
+
 
 		Update();
 		Render();
@@ -98,13 +105,14 @@ void VulkanApplication::Render() {
 
 	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
 	ctx->Prepare();
-	ctx->Render();
-	ctx->Present();
 
+	ctx->Render();
 #if USE_IMGUI
 	ImGui::ShowDemoWindow();
 	s_imgui->Render();
 #endif
+
+	ctx->Present();
 }
 
 void VulkanApplication::Shutdown() {

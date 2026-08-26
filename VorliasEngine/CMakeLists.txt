@@ -157,6 +157,7 @@ target_sources(
     include/Andromeda/Luau.h
     include/Andromeda/Scene.h
     include/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.h
+    include/Engine/IMGUIStyle.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

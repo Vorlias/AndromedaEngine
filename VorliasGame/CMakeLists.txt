@@ -16,6 +16,7 @@ target_sources(
     src/VulkanPlayground.h
     src/VulkanPlayground.cpp
     src/LuauTesting.h
+    src/EditorTheme.h
 )
 
 # Include Luau pls

@@ -10,28 +10,28 @@
 #include "imgui/imgui_impl_vulkan.h"
 
 namespace andromeda {
-	class VulkanIMGUI {
+	class VulkanIMGUI final : public IMGUI {
 	public:
 		VulkanIMGUI(SDL_Window* window, graphics::VulkanContext* context, graphics::VulkanWindowContext* windowCtx)
-			: m_vk(context), m_vkWindow(windowCtx), m_window(window) {}
+			: m_vk(context), m_vkWindow(windowCtx), IMGUI(window) {}
 
-		void Initialize();
-
-		void UpdateSwapchain();
-		void NewFrame();
-		void Render();
-		void Shutdown();
+		void Initialize() override;
+		void UpdateSwapchain() override;
+		void Resize(int width, int height) override;
+		void NewFrame() override;
+		void Render() override;
+		bool ProcessEvent(SDL_Event& e) override;
+		void Shutdown() override;
 	private:
 		void CreateCommandBuffers();
 	private:
 		graphics::VulkanContext* m_vk;
 		graphics::VulkanWindowContext* m_vkWindow;
-		SDL_Window* m_window;
 
 		ImGui_ImplVulkan_InitInfo* m_initInfo;
 		ImGui_ImplVulkanH_Window* m_windowData;
 		ImGui_ImplVulkan_PipelineInfo* m_pipeline;
 
-		std::vector<VkCommandBuffer> m_commandBuffers;
+		std::array<ImGui_ImplVulkanH_Frame, graphics::VulkanWindowContext::MaxFramesInFlight> m_frames;
 	};
 } // namespace andromeda

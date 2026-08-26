@@ -87,10 +87,13 @@ namespace andromeda::graphics {
 			return m_frameResources;
 		}
 
+		ANDROMEDA_GETCONST const VkCommandBuffer GetCommandBuffer() const {
+			return m_frameResources[frameResIdx].commandBuffer;
+		}
+
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();
-		// [[nodiscard]] VkPipeline CreateGraphicsPipeline();
 		[[nodiscard]] bool CreateSyncResources();
 		[[nodiscard]] bool CreateCommandBuffers();
 

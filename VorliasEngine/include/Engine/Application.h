@@ -3,6 +3,10 @@
 #include "Time.h"
 #include <filesystem>
 #include "File.h"
+#include "IMGUI.h"
+#include "Log.h"
+
+// NOTE TO SELF: Don't use PREPROC defines for virtual methods
 
 namespace andromeda {
 	class RenderTarget {};
@@ -18,27 +22,22 @@ namespace andromeda {
 			return CreateWindow(GetWindowOptions()) != nullptr;
 		}
 
-#if ANDROMEDA_INTERNAL
-		virtual void WindowEvent(SDL_Event& e) {}
-		virtual void RawRender(graphics::Renderer& renderer) {}
-#endif
+		// IMGUI step
+		virtual void DrawIMGUI() {}
 
 		// Called when the application hits an update frame
 		virtual void Update(float deltaTime) {}
 
-		DEPRECATED // TBD if using
-			virtual void FixedUpdate(float fixedDeltaTime) {}
-
-		// // Called when the application hits an update frame
-		// virtual void Render(Window& window) {}
-
 		// Called when the application is shutting down
-		virtual void Shutdown() {}
-
+		virtual void Shutdown() {
+			andromeda::print("Application shutting down...");
+		}
 	protected:
 		std::shared_ptr<Window> CreateWindow(const WindowOptions& windowOptions);
 		std::shared_ptr<Window> GetMainWindow() const;
 		std::shared_ptr<Window> GetWindowById(WindowID id) const;
+
+		void InitIMGUI();
 
 		graphics::ShaderLibrary shaders;
 
@@ -49,6 +48,8 @@ namespace andromeda {
 		void SetPersistentDataPath(const std::filesystem::path& path) {
 			m_persistentDataPath = path;
 		}
+
+		std::unique_ptr<andromeda::IMGUI> imgui;
 
 	public:
 		// Gets the amount of time the application has been open

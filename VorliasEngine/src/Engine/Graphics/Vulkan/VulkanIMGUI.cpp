@@ -1,4 +1,5 @@
 #include "Engine/Graphics/Vulkan/VulkanIMGUI.h"
+#include "Engine/IMGUIStyle.h"
 using namespace andromeda;
 
 void VulkanIMGUI::CreateCommandBuffers() {
@@ -9,18 +10,22 @@ void VulkanIMGUI::Initialize() {
 	ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
 	int width, height;
 	SDL_GetWindowSize(m_window, &width, &height);
 	io.DisplaySize.x = width;
 	io.DisplaySize.y = height;
 
+	auto& style = ImGui::GetStyle();
+	style.FontScaleMain = 1.0f;
 	ImGui::StyleColorsDark();
+	ImGui::GetStyle() = GetImguiStyle();
 
 	ImGui_ImplSDL3_InitForVulkan(m_window);
-	
-	VkFormat colorFormat = m_vkWindow->swapchainFormat;
 
+	VkFormat colorFormat = m_vkWindow->swapchainFormat;
 	ImGui_ImplVulkan_InitInfo initInfo = {
 		.ApiVersion = m_vk->VulkanVersion,
 		.Instance = m_vk->GetInstance(),
@@ -28,16 +33,15 @@ void VulkanIMGUI::Initialize() {
 		.Device = m_vk->GetDevice(),
 		.QueueFamily = (uint32_t) m_vk->GetGraphicsFamilyIndex(),
 		.Queue = m_vk->GetGraphicsQueue(),
-		// .DescriptorPool = /* TODO */,
+		// .DescriptorPool
 		.DescriptorPoolSize = 8,
 		.MinImageCount = m_vkWindow->GetMinImageCount(),
 		.ImageCount = m_vkWindow->GetImageCount(),
 		.UseDynamicRendering = true,
 		.PipelineInfoMain = {
 			.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
-			.Subpass = 0,
 			.PipelineRenderingCreateInfo = {
-				.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR,
+				.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
 				.pNext = nullptr,
 				.viewMask = 0,
 				.colorAttachmentCount = 1,
@@ -45,73 +49,56 @@ void VulkanIMGUI::Initialize() {
 				.depthAttachmentFormat = m_vkWindow->depthFormat,
 				.stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
 			},
-			
-			
 		},
-		.Allocator = nullptr,
 	};
 
-	ImGui_ImplVulkan_Init(&initInfo);
+	ANDROMEDA_ASSERT(ImGui_ImplVulkan_Init(&initInfo));
 
-	m_commandBuffers.resize(m_vkWindow->GetImageCount());
+	// auto& frameRes = m_vkWindow->GetFrameResources();
+	// m_commandBuffers.resize(frameRes.size());
+	// frameRes[0].commandBuffer
+
+	// for (auto& frame : m_frames) {
+	// 	frame.Backbuffer
+	// }
+}
+
+void VulkanIMGUI::Resize(int width, int height) {
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplaySize.x = width;
+	io.DisplaySize.y = height;
 }
 
 void VulkanIMGUI::UpdateSwapchain() {
-	auto wd = m_windowData;
 
-	// Handle swapchain init
-	{
-		wd->Width = m_vkWindow->GetSwapchainWidth();
-		wd->Height = m_vkWindow->GetSwapchainHeight();
-		wd->Swapchain = m_vkWindow->GetSwapchain();
+}
 
-		wd->ImageCount = m_vkWindow->GetImageCount();
-		wd->SemaphoreCount = m_vkWindow->GetSemaphoreCount();
-
-		wd->SemaphoreCount = wd->ImageCount + 1;
-		wd->Frames.resize(wd->ImageCount);
-		wd->FrameSemaphores.resize(wd->SemaphoreCount);
-
-		memset(wd->Frames.Data, 0, wd->Frames.size_in_bytes());
-		memset(wd->FrameSemaphores.Data, 0, wd->FrameSemaphores.size_in_bytes());
-
-		const auto& images = m_vkWindow->GetSwapchainImages();
-
-		for (uint32_t i = 0; i < wd->ImageCount; i++) {
-			wd->Frames[i].Backbuffer = images[i];
-		}
-	}
-
-	// Create The Image Views
-	{
-		for (uint32_t i = 0; i < wd->ImageCount; i++) {
-			ImGui_ImplVulkanH_Frame* fd = &wd->Frames[i];
-			fd->BackbufferView = m_vkWindow->GetImageView(i);
-		}
-	}
+bool VulkanIMGUI::ProcessEvent(SDL_Event& e) {
+	return (ImGui_ImplSDL3_ProcessEvent(&e));
 }
 
 void VulkanIMGUI::NewFrame() {
-	ImGui::NewFrame();
 	
-	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
+	ImGui_ImplVulkan_NewFrame();
+	ImGui::NewFrame();
 }
 
 void VulkanIMGUI::Render() {
 	ImGui::Render();
-	// auto drawData = ImGui::GetDrawData();
+	auto drawData = ImGui::GetDrawData();
 
-	// if (drawData == nullptr)
-	// 	return;
+	if (drawData == nullptr)
+		return;
 
-	// const bool isMinimized = (drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f);
-	// if (!isMinimized) {
-	// 	ImGui_ImplVulkan_RenderDrawData(drawData, /*TODO*/ VK_NULL_HANDLE, m_windowData->Pipeline);
-	// }
+	const bool isMinimized = (drawData->DisplaySize.x <= 0.0f || drawData->DisplaySize.y <= 0.0f);
+	if (isMinimized) return;
+
+	ImGui_ImplVulkan_RenderDrawData(drawData, m_vkWindow->GetCommandBuffer());
 }
 
 void VulkanIMGUI::Shutdown() {
+	vkDeviceWaitIdle(m_vk->GetDevice());
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplSDL3_Shutdown();
 }
