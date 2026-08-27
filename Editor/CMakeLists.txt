@@ -21,6 +21,12 @@ target_sources(
     src/Widgets/TextEditor.cpp
 
     src/Widgets/dtl.h
+    src/EditorPanels/Console.h
+    src/EditorPanels/Console.cpp
+    src/EditorPanels/Inspector.h
+    src/EditorPanels/Inspector.cpp
+    src/Widgets/Widgets.h
+    src/Widgets/Widgets.cpp
 )
 
 # Include Luau pls

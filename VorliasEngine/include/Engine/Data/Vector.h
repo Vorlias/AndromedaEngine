@@ -1,6 +1,7 @@
 #pragma once
 #include <math.h>
 #include "lualib.h"
+#include "Engine/Math.h"
 
 struct lua_State;
 
@@ -109,10 +110,26 @@ namespace andromeda {
 	inline std::string to_string(const Vector3i& vec) {
 		return std::format("<{:d}, {:d}, {:d}>", vec.x, vec.y, vec.z);
 	}
+
+	inline Vector3 radiansToDegrees(Vector3 radians) {
+		return Vector3(radiansToDegrees(radians.x), radiansToDegrees(radians.y), radiansToDegrees(radians.z));
+	}
+
+	inline Vector3 radiansToDegreesAbs(Vector3 radians) {
+		float x = radiansToDegreesAbs(radians.x);
+		float y = radiansToDegreesAbs(radians.y);
+		float z = radiansToDegreesAbs(radians.z);
+
+		return Vector3(x, y, z);
+	}
+
+	inline Vector3 degreesToRadians(Vector3 degrees) {
+		return Vector3(degreesToRadians(degrees.x), degreesToRadians(degrees.y), degreesToRadians(degrees.z));
+	}
 } // namespace andromeda
 
 
 namespace andromeda_luau {
 	void luaL_pushVector2(lua_State* L, const andromeda::Vector2& value);
 	andromeda::Vector2* luaL_toVector2(lua_State* L, int idx);
-}
+} // namespace andromeda_luau

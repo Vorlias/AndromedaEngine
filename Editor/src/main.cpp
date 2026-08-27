@@ -8,10 +8,13 @@
 #include "Widgets/IconsLucide.h"
 
 #include "EditorPanels/SceneHeirarchy.h"
+#include "EditorPanels/Inspector.h"
 
 #include "AndromedaEditorIcon.h"
 
 #include "Widgets/TextEditor.h"
+
+#include "EditorPanels/Console.h"
 
 
 using namespace andromeda;
@@ -21,7 +24,7 @@ static WindowIcon s_editorWindowIcon(AndromedaIcon, AndromedaIcon_len);
 class EditorApplication : public Application {
 public:
 	EditorApplication(const std::filesystem::path& projectPath)
-		: m_projectRootPath(projectPath), m_activeScene(nullptr), m_sceneHierarchyPanel(m_activeScene) {
+		: m_projectRootPath(projectPath), m_activeScene(nullptr), m_sceneHierarchyPanel(m_activeScene), m_inspector(m_activeScene) {
 		std::cout << "root path is " << m_projectRootPath.string() << std::endl;
 	}
 
@@ -70,21 +73,37 @@ public:
 
 		textEditorFont = io.Fonts->AddFontFromFileTTF("assets/fonts/JetBrainsMono-Regular.ttf", 15.0f);
 
-		m_activeScene = std::make_shared<Scene>();
-		m_activeScene->CreateEntity("Test");
-		
-		auto test2 = m_activeScene->CreateEntity("Test2");
-		test2.AddComponent<LuauScriptComponent>();
+        m_luau = LuauRuntime::GetGameRuntime();
 
-		m_activeScene->CreateEntity("Test3");
+		m_activeScene = std::make_shared<Scene>();
+		
+
+        auto testScript = m_luau->LoadScriptFromFile("assets/scripts/test.luau");
+
+
+		// m_activeScene->CreateEntity("Test");
+		
+		auto test2 = m_activeScene->CreateEntity("Script Object");
+		test2.AddComponent<LuauScriptComponent>(testScript);
+
+		// m_activeScene->CreateEntity("Test3");
 
 		m_sceneHierarchyPanel.SetContext(m_activeScene);
 		m_sceneHierarchyPanel.onSelect = [&](Entity entity) {
 			m_selected = entity;
+			m_inspector.SetActiveEntity(entity);
 			return true;
 		};
 
+		console.Initialize(textEditorFont);
+		m_activeScene->Initialize();
+
 		return true;
+	}
+
+	void Update(float dt) override {
+		if (m_activeScene != nullptr) m_activeScene->Update(dt);
+		m_luau->Update(dt);
 	}
 
 	void DrawIMGUI() override {
@@ -158,6 +177,8 @@ public:
 
 
 		m_sceneHierarchyPanel.DrawHierarchyPanel();
+		m_inspector.DrawInspector();
+		
 		
 		// ImGui::PushFont(textEditorFont, 20.f);
 		// editor.SetLanguage(TextEditor::Language::Luau());
@@ -166,6 +187,8 @@ public:
 		// editor.Render("Text Editor");
 		
 		// ImGui::PopFont();
+
+		console.Draw();
 	}
 
 
@@ -178,9 +201,15 @@ private:
 	bool m_aboutWindow = false;
 
 	SharedRef<Scene> m_activeScene;
+    SharedRef<LuauRuntime> m_luau;
+
 	Entity m_selected;
+
 	SceneHierarchyPanel m_sceneHierarchyPanel;
+	InspectorPanel m_inspector;
+	
 	std::filesystem::path m_projectRootPath;
+	Console console;
 
 	ImFont* textEditorFont;
 

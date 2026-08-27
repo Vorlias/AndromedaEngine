@@ -74,3 +74,20 @@ type EntityCtor = {
 }
 
 declare Entity: EntityCtor
+
+export type function LuauScriptObject(T: type?)
+    local tbl = types.newtable({
+        [types.singleton("name")] = types.string,
+        [types.singleton("enabled")] = types.boolean
+    })
+
+    if T then
+        return types.intersectionof(T, tbl)
+    end
+
+    return tbl
+end
+-- export type LuauScriptObject = {
+--     -- name: string,
+--     -- enabled: string,
+-- }

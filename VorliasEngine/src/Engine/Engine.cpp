@@ -116,7 +116,7 @@ bool Engine::Initialize() {
 			}
 
 			if (m_renderer != nullptr) {
-				print("Renderer: {}", m_renderer->GetAPIString());
+				trace("Renderer: {}", m_renderer->GetAPIString());
 			}
 
 			m_isInitialized = true;

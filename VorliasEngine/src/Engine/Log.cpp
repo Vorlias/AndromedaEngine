@@ -11,6 +11,10 @@ namespace andromeda {
 	static std::shared_ptr<spdlog::logger> logger;
 	static bool init = false;
 
+	std::shared_ptr<spdlog::logger> getLogger() {
+		return logger;
+	}
+
 	void initializeLogger(const std::string& logPath) {
 		if (init) return;
 		init = true;

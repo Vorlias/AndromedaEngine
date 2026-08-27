@@ -8,6 +8,8 @@
 #endif
 
 namespace andromeda {
+	std::shared_ptr<spdlog::logger> getLogger();
+
 	void initializeLogger(const std::string& logPath);
 
 	void trace(const std::string& message);
