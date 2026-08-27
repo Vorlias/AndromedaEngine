@@ -26,7 +26,6 @@ void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, co
 		flags |= ImGuiTreeNodeFlags_Selected;
 	}
 
-
 	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5.0f, 5.0f));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 1.0f));
 
@@ -81,7 +80,8 @@ void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, co
 }
 
 void andromeda::SceneHierarchyPanel::DrawHierarchyPanel() {
-	ImGui::Begin(ICON_LC_LIST_TREE " Hierarchy##sceneHierarchy");
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
+	ImGui::Begin(ICON_LC_LIST_TREE " Scene##sceneHierarchy");
 	{
 		if (m_scene) {
 			auto& registry = m_scene->GetRegistry();
@@ -94,7 +94,24 @@ void andromeda::SceneHierarchyPanel::DrawHierarchyPanel() {
 
 				DrawEntityNode(entity, rel);
 			}
+
+			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {
+				m_selected = Entity();
+				onSelect(m_selected);
+			}
+
+			// Right clicking on the heirachy
+			if (ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems)) {
+				if (ImGui::MenuItem("Create Entity")) {
+					auto entity = m_scene->CreateEntity("Entity");
+					onSelect(entity);
+					m_selected = entity;
+				}
+
+				ImGui::EndPopup();
+			}
 		}
 	}
 	ImGui::End();
+	ImGui::PopStyleVar();
 }

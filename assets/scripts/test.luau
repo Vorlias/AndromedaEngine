@@ -16,6 +16,8 @@ end
 
 function Test._ready(self: Test)
     print("Called _ready!")
+    
+    print("the script on this is", entity.script.filePath)
 end
 
 function Test._enabled(self: Test)
@@ -26,7 +28,7 @@ function Test._disabled(self: Test)
     print("Called _disabled!");
 end
 
-function Test._destroy(self: Test)
+function Test._remove(self: Test)
     print("Destroyed")
 end
 

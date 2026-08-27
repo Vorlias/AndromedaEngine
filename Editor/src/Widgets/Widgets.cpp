@@ -13,7 +13,7 @@ namespace andromeda::widgets {
 	static bool DrawAxisInput(Axis axis, float* value, float resetValue, ImVec2 buttonSize, NumberFormat format) {
 		bool modified = false;
 		ImGuiIO& io = ImGui::GetIO();
-		auto boldFont = io.Fonts->Fonts[1];
+		auto boldFont = io.Fonts->Fonts[2];
 
 		const char* id;
 		const char* label;
@@ -51,17 +51,23 @@ namespace andromeda::widgets {
 				return false;
 		}
 
-		ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, buttonHoveredColor);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, buttonActiveColor);
+		// ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
+		// ImGui::PushStyleColor(ImGuiCol_ButtonHovered, buttonHoveredColor);
+		// ImGui::PushStyleColor(ImGuiCol_ButtonActive, buttonActiveColor);
+		ImGui::PushStyleColor(ImGuiCol_Text,  buttonColor);
 		ImGui::PushFont(boldFont);
 		if (ImGui::Button(label, buttonSize)) {
 			*value = resetValue;
 			modified = true;
 		}
-		ImGui::PopStyleColor(3);
+		// ImGui::PopStyleColor(3);
+		ImGui::PopStyleColor(1);
 		ImGui::PopFont();
 
+		ImGui::SameLine();
+		ImGui::PushStyleColor(ImGuiCol_Separator, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+		ImGui::PopStyleColor();
 		ImGui::SameLine();
 
 		if (format == FORMAT_DEGREES) {

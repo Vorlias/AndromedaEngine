@@ -128,15 +128,15 @@ namespace andromeda {
 		DrawComponentIfExists<LuauScriptComponent>(
 			entity,
 			[](LuauScriptComponent& component) {
-				char buffer[256];
-				memset(buffer, 0, sizeof(buffer));
+				// char buffer[256];
+				// memset(buffer, 0, sizeof(buffer));
 
-				auto script = component.GetScript();
-				auto scriptPath = script->GetFilePath();
+				// auto script = component.GetScript();
+				// auto scriptPath = script->GetFilePath();
 
-				strcpy(buffer, scriptPath.c_str());
+				// strcpy(buffer, scriptPath.c_str());
 
-				if (ImGui::InputText("Script Path", buffer, sizeof(buffer))) {}
+				// if (ImGui::InputText("Script Path", buffer, sizeof(buffer))) {}
 			},
 			"Luau Script"
 		);

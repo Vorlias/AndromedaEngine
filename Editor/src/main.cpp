@@ -58,8 +58,6 @@ public:
 
 		io.Fonts->AddFontDefault();
 		auto imFont = io.Fonts->AddFontFromFileTTF("assets/fonts/OpenSans-Regular.ttf", 15.0f);
-
-
 		io.FontDefault = imFont;
 		{
 			static const ImWchar icons_ranges[] = {ICON_MIN_LC, ICON_MAX_16_LC, 0};
@@ -71,6 +69,7 @@ public:
 			io.Fonts->AddFontFromFileTTF("assets/fonts/" FONT_ICON_FILE_NAME_LC, 20.0f * 2.0f / 3.0f, &icons_config, icons_ranges);
 		}
 
+		boldDefaultFont = io.Fonts->AddFontFromFileTTF("assets/fonts/OpenSans-Bold.ttf", 15.0f);
 		textEditorFont = io.Fonts->AddFontFromFileTTF("assets/fonts/JetBrainsMono-Regular.ttf", 15.0f);
 
         m_luau = LuauRuntime::GetGameRuntime();
@@ -212,6 +211,7 @@ private:
 	Console console;
 
 	ImFont* textEditorFont;
+	ImFont* boldDefaultFont;
 
 	TextEditor editor;
 };
