@@ -47,10 +47,13 @@ namespace andromeda {
 		if (m_main_window != nullptr) {
 			SDL_Event e;
 			while (m_main_window->PollSDLEvent(&e)) {
-				if (imgui) imgui->ProcessEvent(e);
+				if (imgui)
+					imgui->ProcessEvent(e);
 
 				switch (e.type) {
 					case SDL_EVENT_QUIT:
+						Quit();
+						break;
 					case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 						if (e.window.windowID == m_main_window->GetWindowId()) {
 							shaders.UnloadAllShaders();
@@ -66,7 +69,8 @@ namespace andromeda {
 						break;
 					case SDL_EVENT_WINDOW_RESIZED:
 						m_main_window->Resized(e.window.data1, e.window.data2);
-						if (imgui != nullptr) imgui->Resize(e.window.data1, e.window.data2);
+						if (imgui != nullptr)
+							imgui->Resize(e.window.data1, e.window.data2);
 						break;
 				}
 			}
@@ -76,7 +80,6 @@ namespace andromeda {
 					window->Shutdown();
 					m_windows.erase(std::remove(m_windows.begin(), m_windows.end(), window), m_windows.end());
 				}
-				
 			}
 		}
 	}

@@ -27,6 +27,12 @@ Entity Scene::CreateEntity() {
 }
 
 void Scene::DestroyEntity(Entity entity) {
+	auto& rel = m_registry.get<EntityRelationships>(entity);
+	if (rel.parent != entt::null && m_registry.valid(rel.parent)) {
+		auto& parentRel = m_registry.get<EntityRelationships>(rel.parent);
+		parentRel.RemoveChild(m_registry, entity);
+	}
+
 	m_registry.destroy(entity.GetHandle());
 }
 

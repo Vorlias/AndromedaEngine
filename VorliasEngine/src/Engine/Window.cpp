@@ -35,6 +35,10 @@ andromeda::Window::~Window() {}
 // SDL_WindowID andromeda::Window::s_primary_window_id{};
 // std::map<SDL_WindowID, andromeda::Window&> andromeda::Window::s_windows{};
 
+void andromeda::Window::SetTitle(const char* title) {
+	SDL_SetWindowTitle(m_window, title);
+}
+
 bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	using namespace graphics;
 

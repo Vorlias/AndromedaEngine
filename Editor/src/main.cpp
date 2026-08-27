@@ -11,6 +11,9 @@
 
 #include "AndromedaEditorIcon.h"
 
+#include "Widgets/TextEditor.h"
+
+
 using namespace andromeda;
 
 static WindowIcon s_editorWindowIcon(AndromedaIcon, AndromedaIcon_len);
@@ -19,13 +22,13 @@ class EditorApplication : public Application {
 public:
 	EditorApplication(const std::filesystem::path& projectPath)
 		: m_projectRootPath(projectPath), m_activeScene(nullptr), m_sceneHierarchyPanel(m_activeScene) {
-			std::cout<< "root path is " << m_projectRootPath.string() << std::endl;
-		}
+		std::cout << "root path is " << m_projectRootPath.string() << std::endl;
+	}
 
 	const WindowOptions& GetWindowOptions() const override {
 		WindowOptions options("Andromeda Editor", Vector2u(1024, 768), (WindowFlags::Maximized | WindowFlags::Resizable));
-		options.windowIcon = s_editorWindowIcon; //WindowIcon(AndromedaIcon, AndromedaIcon_len);
-	
+		options.windowIcon = s_editorWindowIcon; // WindowIcon(AndromedaIcon, AndromedaIcon_len);
+
 		return options;
 	}
 
@@ -33,27 +36,46 @@ public:
 		SetDataPath(m_projectRootPath / "data");
 		trace("Set data path to {}", GetDataPath(true).string());
 
+
+
 		CreateWindow(GetWindowOptions());
+		std::string title;
+
+		title += "Andromeda Project - ";
+
+		title += ANDROMEDA_VERSION_STRING;
+		title += " <" + Engine::GetInstance().GetRenderer()->GetAPIString() + ">";
+
+		GetMainWindow()->SetTitle(title.c_str());
 
 		InitIMGUI();
 		ANDROMEDA_ASSERT(imgui != nullptr);
 
 		auto& io = ImGui::GetIO();
 
-		auto imFont = io.Fonts->AddFontFromFileTTF("assets/fonts/RussoOne-Regular.ttf", 15.0f);
+		io.Fonts->AddFontDefault();
+		auto imFont = io.Fonts->AddFontFromFileTTF("assets/fonts/OpenSans-Regular.ttf", 15.0f);
+
+
 		io.FontDefault = imFont;
 		{
-			static const ImWchar icons_ranges[] = { ICON_MIN_LC, ICON_MAX_16_LC, 0 };
+			static const ImWchar icons_ranges[] = {ICON_MIN_LC, ICON_MAX_16_LC, 0};
 			ImFontConfig icons_config;
 			icons_config.MergeMode = true;
 			icons_config.PixelSnapH = true;
+			icons_config.GlyphMinAdvanceX = 20.0f * 2.0f / 3.0f;
 
-			io.Fonts->AddFontFromFileTTF("assets/fonts/" FONT_ICON_FILE_NAME_LC, 18.0f * 2.0f / 3.0f, &icons_config, icons_ranges);
+			io.Fonts->AddFontFromFileTTF("assets/fonts/" FONT_ICON_FILE_NAME_LC, 20.0f * 2.0f / 3.0f, &icons_config, icons_ranges);
 		}
+
+		textEditorFont = io.Fonts->AddFontFromFileTTF("assets/fonts/JetBrainsMono-Regular.ttf", 15.0f);
 
 		m_activeScene = std::make_shared<Scene>();
 		m_activeScene->CreateEntity("Test");
-		m_activeScene->CreateEntity("Test2");
+		
+		auto test2 = m_activeScene->CreateEntity("Test2");
+		test2.AddComponent<LuauScriptComponent>();
+
 		m_activeScene->CreateEntity("Test3");
 
 		m_sceneHierarchyPanel.SetContext(m_activeScene);
@@ -133,15 +155,24 @@ public:
 			}
 			ImGui::End();
 		}
-		
+
 
 		m_sceneHierarchyPanel.DrawHierarchyPanel();
+		
+		// ImGui::PushFont(textEditorFont, 20.f);
+		// editor.SetLanguage(TextEditor::Language::Luau());
+		// editor.SetShowMiniMapEnabled(true);
+		// editor.SetPalette(editor.GetDarkPalette());
+		// editor.Render("Text Editor");
+		
+		// ImGui::PopFont();
 	}
 
 
 	void Shutdown() override {
 		s_editorWindowIcon.Destroy();
 	}
+
 private:
 	bool m_demoWindow = false;
 	bool m_aboutWindow = false;
@@ -150,6 +181,10 @@ private:
 	Entity m_selected;
 	SceneHierarchyPanel m_sceneHierarchyPanel;
 	std::filesystem::path m_projectRootPath;
+
+	ImFont* textEditorFont;
+
+	TextEditor editor;
 };
 
 Application* ApplicationMain(const ApplicationInit& ap) {
@@ -176,7 +211,7 @@ Application* ApplicationMain(const ApplicationInit& ap) {
 	// 	);
 	// 	return false;
 	// }
-	
+
 	auto current = std::filesystem::current_path();
 	return new EditorApplication(current);
 }

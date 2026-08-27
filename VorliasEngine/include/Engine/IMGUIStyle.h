@@ -4,6 +4,7 @@
 inline static ImGuiStyle GetImguiStyle() {
 	ImGuiStyle style;
 
+	style.FontScaleMain = 1.2f;
 	style.Alpha = 1.0f;
 	style.DisabledAlpha = 1.0f;
 	style.WindowPadding = ImVec2(12.0f, 12.0f);

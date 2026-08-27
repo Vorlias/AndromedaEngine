@@ -141,6 +141,8 @@ namespace andromeda {
 
 		void Resized(int width, int height);
 
+		void SetTitle(const char* title);
+
 		constexpr Vector2i GetWindowSizeInPixels() const {
 			int w, h;
 			SDL_GetWindowSizeInPixels(m_window, &w, &h);

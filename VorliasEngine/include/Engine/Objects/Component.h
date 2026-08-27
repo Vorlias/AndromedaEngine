@@ -48,6 +48,8 @@ namespace andromeda {
 		void RemoveChild(entt::registry& registry, entt::entity entity) {
 			if (childCount == 0)
 				return; // if no children, just skip this lol
+
+			childCount--;
 		}
 	};
 
