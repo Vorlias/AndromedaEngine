@@ -11,8 +11,18 @@
 
 namespace andromeda {
 	enum class AssetType {
+		Unknown,
 		LuauScript,
 	};
+
+	inline const std::string GetAssetTypeName(AssetType assetType) {
+		switch (assetType) {
+			case AssetType::LuauScript:
+				return "LuauScript";
+		}
+
+		return "";
+	}
 
 	class UUID {
 	public:
@@ -30,6 +40,7 @@ namespace andromeda {
 
 	class Asset : public RefCounted {
 		friend class AssetLibrary;
+
 	protected:
 		Asset(AssetType type, UUID uuid, const std::string& path) : m_uuid(uuid), m_path(path), m_assetType(type) {}
 
@@ -107,7 +118,7 @@ namespace andromeda {
 		void ImportAsset(const std::filesystem::path& path) {
 			auto extension = path.extension();
 			auto name = path.stem();
-			
+
 			std::filesystem::path meta = path;
 			meta += ".meta";
 		}
@@ -126,7 +137,7 @@ namespace andromeda {
 			handle.asset = assetBase;
 
 			andromeda::trace("Register asset '{}' ({}) from '{}'", name, (uint32_t)uuid, path);
-			m_assets.insert({ path, handle });
+			m_assets.insert({path, handle});
 		}
 
 		template<class T>

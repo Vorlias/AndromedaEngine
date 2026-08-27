@@ -1,5 +1,4 @@
 #include "Widgets.h"
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -54,7 +53,7 @@ namespace andromeda::widgets {
 		// ImGui::PushStyleColor(ImGuiCol_Button, buttonColor);
 		// ImGui::PushStyleColor(ImGuiCol_ButtonHovered, buttonHoveredColor);
 		// ImGui::PushStyleColor(ImGuiCol_ButtonActive, buttonActiveColor);
-		ImGui::PushStyleColor(ImGuiCol_Text,  buttonColor);
+		ImGui::PushStyleColor(ImGuiCol_Text, buttonColor);
 		ImGui::PushFont(boldFont);
 		if (ImGui::Button(label, buttonSize)) {
 			*value = resetValue;
@@ -169,4 +168,78 @@ namespace andromeda::widgets {
 		return modified;
 	}
 
+	internal::ObjectContainerAction ObjectContainer(const char* label, bool hasObject, std::string_view objName, std::string_view clsName) {
+		using namespace internal;
+
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (window->SkipItems)
+			return OBJECT_ACTION_NONE;
+
+		ImGuiContext& g = *GImGui;
+		const ImGuiStyle& style = g.Style;
+		const ImGuiID id = window->GetID(label);
+
+		float w = ImGui::GetColumnWidth();
+
+		ImVec2 pos = window->DC.CursorPos;
+		ImVec2 size = ImVec2(w, window->DC.CurrLineSize.y);
+
+		const ImRect fieldBB(pos, ImVec2(pos.x + size.x - 31, pos.y + size.y));
+		const ImRect pickerBB(pos + ImVec2(size.x - 30, 0), ImVec2(pos.x + size.x, pos.y + size.y));
+
+		ImGui::ItemSize(fieldBB.GetSize(), style.FramePadding.y);
+
+		if (!ImGui::ItemAdd(fieldBB, id))
+			return OBJECT_ACTION_NONE;
+
+		auto bg = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_FrameBg));
+		auto bgHover = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_FrameBgHovered));
+
+		auto btn = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_Button));
+		auto btnHover = ImGui::ColorConvertFloat4ToU32(ImGui::GetStyleColorVec4(ImGuiCol_ButtonHovered));
+
+		auto mouseOverField = ImGui::IsMouseHoveringRect(fieldBB.Min, fieldBB.Max);
+		auto mouseOverPicker = ImGui::IsMouseHoveringRect(pickerBB.Min, pickerBB.Max);
+
+		if (mouseOverField) {
+			window->DrawList->AddRectFilled(fieldBB.Min, fieldBB.Max, bgHover);
+		} else {
+			window->DrawList->AddRectFilled(fieldBB.Min, fieldBB.Max, bg);
+		}
+
+		window->DrawList->AddRectFilled(pickerBB.Min, pickerBB.Max, mouseOverPicker ? btnHover : btn);
+		window->DrawList->AddText(
+			g.Font, g.FontSize, pickerBB.Min + ImVec2(8.0f, 8.0f), ImGui::GetColorU32(ImGuiCol_TextDisabled), "" ICON_LC_CIRCLE_DOT, 0, 0
+		);
+
+		if (hasObject) {
+			window->DrawList->AddText(g.Font, g.FontSize, fieldBB.Min + style.FramePadding, ImGui::GetColorU32(ImGuiCol_Text), objName.data(), 0, 0);
+		} else {
+			window->DrawList->AddText(
+				g.Font, g.FontSize, fieldBB.Min + style.FramePadding, ImGui::GetColorU32(ImGuiCol_TextDisabled), "(None)", 0, 0
+			);
+		}
+
+
+
+		if (mouseOverField) {
+			if (ImGui::IsMouseDoubleClicked(0)) {
+				return OBJECT_ACTION_DBLCLICK;
+			}
+
+			if (ImGui::IsMouseClicked(1)) {
+				return OBJECT_ACTION_CONTEXT;
+			}
+
+			if (ImGui::IsMouseClicked(0)) {
+				return OBJECT_ACTION_CLICK;
+			}
+		} else if (mouseOverPicker) {
+			if (ImGui::IsMouseClicked(0)) {
+				return OBJECT_ACTION_SELECT;
+			}
+		}
+
+		return OBJECT_ACTION_NONE;
+	}
 } // namespace andromeda::widgets

@@ -29,6 +29,10 @@ namespace andromeda {
 		bool CompileSource(const char* source, int source_len, const char* file_name, int file_name_len, int optimization_level);
 
 	public:
+		// const std::string GetTypeName() const override {
+		// 	return "LuauScript";
+		// }
+
 		bool Compile(std::string_view source, const std::string& fileName = "chunk") {
 			SetFilePath(fileName);
 			return CompileSource(source.data(), source.length(), fileName.data(), fileName.length(), 2);
@@ -234,7 +238,10 @@ namespace andromeda {
 		void Start();
 		void Update(float dt) const;
 
-		Ref<LuauScript> GetScript() const { return m_script; }
+		Ref<LuauScript> GetScript() const {
+			return m_script;
+		}
+
 
 		void Reset();
 

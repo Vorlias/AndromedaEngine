@@ -131,6 +131,8 @@ namespace andromeda {
 				// char buffer[256];
 				// memset(buffer, 0, sizeof(buffer));
 
+				auto value = widgets::Object("Script", component.GetScript());
+
 				// auto script = component.GetScript();
 				// auto scriptPath = script->GetFilePath();
 
