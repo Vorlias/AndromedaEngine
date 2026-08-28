@@ -163,6 +163,8 @@ target_sources(
     include/Andromeda/Scene.h
     include/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.h
     include/Engine/IMGUIStyle.h
+    include/Engine/Serialization/SerializationTypes.h
+    include/Engine/Serialization/Scene.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
@@ -177,6 +179,8 @@ target_link_libraries(AndromedaEngine PUBLIC
     SDL3::SDL3 # SDL
     IMGUI
 )
+
+target_link_libraries(AndromedaEngine PUBLIC yaml-cpp::yaml-cpp)
 
 if(OPENGL_RENDERER)
     target_link_libraries(AndromedaEngine PRIVATE 

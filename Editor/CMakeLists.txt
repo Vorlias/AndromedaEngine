@@ -27,7 +27,29 @@ target_sources(
     src/EditorPanels/Inspector.cpp
     src/Widgets/Widgets.h
     src/Widgets/Widgets.cpp
+    src/Assets/Assets.h
+
+    src/crossguid/guid.hpp
+    src/crossguid/guid.cpp
+    src/Assets/FileWatcher.h
+    src/Assets/Importers.h
+    src/Assets/LuauScriptImporter.h
 )
+
+if (WIN32)
+    target_compile_definitions(VorliasEditor PRIVATE GUID_WINDOWS)
+elseif(APPLE)
+    target_compile_definitions(VorliasEditor PRIVATE GUID_CFUUID)
+else()
+    # find_package(libuuid REQUIRED)
+    # if (NOT LIBUUID_FOUND)
+    #     message(FATAL_ERROR
+    #         "You might need to run 'sudo apt-get install uuid-dev' or similar")
+    # endif()
+    # target_include_directories(crossguid PRIVATE ${LIBUUID_INCLUDE_DIR})
+    # target_link_libraries(crossguid ${LIBUUID_LIBRARY})
+    # target_compile_definitions(crossguid PRIVATE GUID_LIBUUID)
+endif()
 
 # Include Luau pls
 target_link_libraries(VorliasEditor PUBLIC AndromedaEngine)

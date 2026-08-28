@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <algorithm>
+#include <stdint.h>
 
 #include <string>
 #include <sstream>

@@ -38,6 +38,7 @@ add_subdirectory(External/SDL)
 add_subdirectory(External/glad)
 add_subdirectory(External/webgpu)
 add_subdirectory(External/sdl3webgpu)
+add_subdirectory(External/yaml-cpp)
 
 add_subdirectory(Tools/Lute)
 

@@ -5,17 +5,17 @@
 #include "imgui/imgui.h"
 #include <SDL3/SDL_surface.h>
 
+#include "Widgets/TextEditor.h"
 #include "Widgets/IconsLucide.h"
 
 #include "EditorPanels/SceneHeirarchy.h"
 #include "EditorPanels/Inspector.h"
+#include "EditorPanels/Console.h"
 
 #include "AndromedaEditorIcon.h"
 
-#include "Widgets/TextEditor.h"
-
-#include "EditorPanels/Console.h"
-
+#include "Assets/Assets.h"
+#include "Assets/LuauScriptImporter.h"
 
 using namespace andromeda;
 
@@ -36,10 +36,11 @@ public:
 	}
 
 	bool Initialize() override {
-		SetDataPath(m_projectRootPath / "data");
-		trace("Set data path to {}", GetDataPath(true).string());
-
-
+		SetDataPath(m_projectRootPath / "assets");
+		
+		assets.RegisterImporter<LuauScriptImporter>();
+		assets.Initialize(m_projectRootPath, GetDataPath(true));
+		
 
 		CreateWindow(GetWindowOptions());
 		std::string title;
@@ -72,18 +73,18 @@ public:
 		boldDefaultFont = io.Fonts->AddFontFromFileTTF("assets/fonts/OpenSans-Bold.ttf", 15.0f);
 		textEditorFont = io.Fonts->AddFontFromFileTTF("assets/fonts/JetBrainsMono-Regular.ttf", 15.0f);
 
-        m_luau = LuauRuntime::GetGameRuntime();
+		m_luau = LuauRuntime::GetGameRuntime();
 
 		m_activeScene = std::make_shared<Scene>();
-		
 
-        auto testScript = m_luau->LoadScriptFromFile("assets/scripts/test.luau");
+
+		// auto testScript = m_luau->LoadScriptFromFile("assets/scripts/test.luau");
 
 
 		// m_activeScene->CreateEntity("Test");
-		
+
 		auto test2 = m_activeScene->CreateEntity("Script Object");
-		test2.AddComponent<LuauScriptComponent>(testScript);
+		test2.AddComponent<LuauScriptComponent>(assets.GetAsset<LuauScript>("assets/scripts/test.luau"));
 
 		// m_activeScene->CreateEntity("Test3");
 
@@ -101,7 +102,8 @@ public:
 	}
 
 	void Update(float dt) override {
-		if (m_activeScene != nullptr) m_activeScene->Update(dt);
+		if (m_activeScene != nullptr)
+			m_activeScene->Update(dt);
 		m_luau->Update(dt);
 	}
 
@@ -177,14 +179,14 @@ public:
 
 		m_sceneHierarchyPanel.DrawHierarchyPanel();
 		m_inspector.DrawInspector();
-		
-		
+
+
 		// ImGui::PushFont(textEditorFont, 20.f);
 		// editor.SetLanguage(TextEditor::Language::Luau());
 		// editor.SetShowMiniMapEnabled(true);
 		// editor.SetPalette(editor.GetDarkPalette());
 		// editor.Render("Text Editor");
-		
+
 		// ImGui::PopFont();
 
 		console.Draw();
@@ -192,6 +194,7 @@ public:
 
 
 	void Shutdown() override {
+		assets.Shutdown();
 		s_editorWindowIcon.Destroy();
 	}
 
@@ -200,13 +203,13 @@ private:
 	bool m_aboutWindow = false;
 
 	SharedRef<Scene> m_activeScene;
-    SharedRef<LuauRuntime> m_luau;
+	SharedRef<LuauRuntime> m_luau;
 
 	Entity m_selected;
 
 	SceneHierarchyPanel m_sceneHierarchyPanel;
 	InspectorPanel m_inspector;
-	
+
 	std::filesystem::path m_projectRootPath;
 	Console console;
 
@@ -214,6 +217,7 @@ private:
 	ImFont* boldDefaultFont;
 
 	TextEditor editor;
+	AssetLibrary assets;
 };
 
 Application* ApplicationMain(const ApplicationInit& ap) {
@@ -224,22 +228,6 @@ Application* ApplicationMain(const ApplicationInit& ap) {
 			return nullptr;
 	}
 
-	// if (result.empty())
-	// 	return false;
-	// SetDataPath(result);
-
-	// auto andromedaProj = GetDataPath() / "project.andproj";
-	// if (!std::filesystem::exists(andromedaProj)) {
-	// 	warn("no project file");
-	// }
-
-	// auto assets = GetDataPath() / "assets";
-	// if (!std::filesystem::exists(assets)) {
-	// 	pfd::message(
-	// 		"Invalid Andromeda project", "The path " + GetDataPath(true).string() + " contains no assets folder", pfd::choice::ok, pfd::icon::error
-	// 	);
-	// 	return false;
-	// }
 
 	auto current = std::filesystem::current_path();
 	return new EditorApplication(current);

@@ -229,7 +229,11 @@ namespace andromeda {
 		TAG_COMPONENT(DisableLifecycle)
 
 		LuauScriptComponent() : m_script(nullptr), m_entity() {}
-		LuauScriptComponent(Ref<LuauScript> script) : m_script(script), m_entity() {}
+		LuauScriptComponent(Ref<LuauScript> script) : m_script(script), m_entity() {
+			if (script == nullptr) {
+				andromeda::warn("Failed to load script");
+			}
+		}
 
 		void SetScript(Ref<LuauScript> script);
 		void SetEnabled(bool enabled);

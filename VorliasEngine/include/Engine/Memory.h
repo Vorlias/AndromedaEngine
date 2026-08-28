@@ -63,8 +63,6 @@ namespace andromeda {
 			requires(std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
 		Ref<T2> As() const {
 			Ref<T2> newRef = Ref<T2>((T2*)this->ptr);
-			std::cout << "newRef count is " << newRef.GetRefCount() << std::endl;
-			// this->ptr = nullptr;
 			return newRef;
 		}
 
