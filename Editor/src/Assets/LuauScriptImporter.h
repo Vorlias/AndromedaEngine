@@ -3,6 +3,8 @@
 #include "Assets.h"
 #include "Andromeda.h"
 
+#include "Engine/Graphics/Shader.h"
+
 namespace andromeda {
 	class LuauScriptImporter : public AssetImporter {
 	public:
@@ -16,8 +18,20 @@ namespace andromeda {
 				script->Compile(source, context.assetPath);
 			} else {
 				auto script = LuauScript::CreateScript(source, context.assetPath);
-				context.assetLibrary->AddAsset(context.assetPath.stem(), context.assetPath, script);
+				context.assetLibrary->AddAsset(AssetType::LuauScript, context.assetPath.stem(), context.assetPath, script);
 			}
 		}
+	};
+
+	class FontImporterTTF : public AssetImporter {
+	public:
+		FontImporterTTF() : AssetImporter("ttf", 1) {}
+		void OnImportAsset(const AssetImportContext& context) const {}
+	};
+
+	class SPIRVShaderImporter : public AssetImporter {
+	public:
+		SPIRVShaderImporter() : AssetImporter("spv", 1) {}
+		void OnImportAsset(const AssetImportContext& context) const {}
 	};
 } // namespace andromeda

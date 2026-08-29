@@ -34,6 +34,15 @@ namespace andromeda {
 			return uuid;
 		}
 
+		bool operator!() const {
+			return uuid == 0;
+		}
+
+		bool operator==(const UUID& other) {
+			return other.uuid == uuid;
+		}
+
+		static UUID None;
 	private:
 		uint64_t uuid;
 	};

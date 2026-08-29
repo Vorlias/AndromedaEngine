@@ -2,14 +2,19 @@
 #include "Engine/Log.h"
 #include "Engine/Engine.h"
 #include "Engine/Graphics/Vulkan/VulkanIMGUI.h"
+
+#include "Engine/Events/Event.h"
+
 #define DISALLOW_MULTI_WINDOWS 1
 
 namespace andromeda {
+
+
 	SharedRef<Window> Application::GetMainWindow() const {
 		return m_main_window;
 	}
 
-	SharedRef<Window> Application::CreateWindow(const WindowOptions& windowOptions) {
+	SharedRef<Window> Application::CreateWindow(const WindowOptions windowOptions) {
 		// temporary for now
 #if DISALLOW_MULTI_WINDOWS
 		if (m_main_window != nullptr) {
@@ -43,6 +48,14 @@ namespace andromeda {
 		return nullptr;
 	}
 
+	void printEvent(uint32_t type) {
+		switch (type) {
+			case SDL_EVENT_WINDOW_OCCLUDED:
+				std::cout << "occluded" << std::endl;
+				break;
+		}
+	}
+
 	void Application::UpdateWindows() {
 		if (m_main_window != nullptr) {
 			SDL_Event e;
@@ -54,7 +67,7 @@ namespace andromeda {
 					case SDL_EVENT_QUIT:
 						Quit();
 						break;
-					case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+					case SDL_EVENT_WINDOW_CLOSE_REQUESTED: {
 						if (e.window.windowID == m_main_window->GetWindowId()) {
 							shaders.UnloadAllShaders();
 							CloseAllWindows();
@@ -67,11 +80,66 @@ namespace andromeda {
 						}
 
 						break;
-					case SDL_EVENT_WINDOW_RESIZED:
+					}
+					case SDL_EVENT_WINDOW_RESIZED: {
 						m_main_window->Resized(e.window.data1, e.window.data2);
 						if (imgui != nullptr)
 							imgui->Resize(e.window.data1, e.window.data2);
+
+						WindowResizedEvent resizedEvent(e.window.data1, e.window.data2);
+						m_dispatchFn(resizedEvent);
 						break;
+					}
+					case SDL_EVENT_WINDOW_FOCUS_GAINED: {
+						WindowFocusedEvent focused;
+						m_dispatchFn(focused);
+						break;
+					}
+					case SDL_EVENT_WINDOW_FOCUS_LOST: {
+						WindowFocusLostEvent unfocused;
+						m_dispatchFn(unfocused);
+						break;
+					}
+					case SDL_EVENT_WINDOW_MAXIMIZED: {
+						WindowMaximizedEvent maximizedEvent;
+						m_dispatchFn(maximizedEvent);
+						break;
+					}
+					case SDL_EVENT_WINDOW_RESTORED: {
+						WindowRestoredEvent windowRestored;
+						m_dispatchFn(windowRestored);
+						break;
+					}
+					case SDL_EVENT_WINDOW_MINIMIZED: {
+						WindowMinimizedEvent windowMinimized;
+						m_dispatchFn(windowMinimized);
+						break;
+					}
+					case SDL_EVENT_WINDOW_SHOWN: {
+						WindowVisibilityChangedEvent event(true);
+						m_dispatchFn(event);
+						break;
+					}
+					case SDL_EVENT_WINDOW_OCCLUDED: {
+						WindowVisibilityChangedEvent event(false);
+						m_dispatchFn(event);
+						break;
+					}
+					case SDL_EVENT_WINDOW_MOVED: {
+						WindowMovedEvent movedEvent(e.window.data1, e.window.data2);
+						m_dispatchFn(movedEvent);
+						break;
+					}
+					case SDL_EVENT_WINDOW_ENTER_FULLSCREEN: {
+						WindowFullscreenChangedEvent event(true);
+						m_dispatchFn(event);
+						break;
+					}
+					case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN: {
+						WindowFullscreenChangedEvent event(false);
+						m_dispatchFn(event);
+						break;
+					}
 				}
 			}
 

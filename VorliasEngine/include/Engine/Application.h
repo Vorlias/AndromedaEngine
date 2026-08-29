@@ -6,21 +6,22 @@
 #include "IMGUI.h"
 #include "Log.h"
 
+#include "Engine/Events/Event.h"
 // NOTE TO SELF: Don't use PREPROC defines for virtual methods
 
 namespace andromeda {
+	using EventDispatchFunction = std::function<void(Event&)>;
+
 	class RenderTarget {};
 
 	class Application {
 	public:
-		virtual const WindowOptions& GetWindowOptions() const {
-			return WindowOptions("AndromedaEngine", Vector2u(1024, 768), WindowFlags::Default);
-		}
+		// virtual const WindowOptions& GetWindowOptions() const {
+		// 	return WindowOptions("AndromedaEngine", Vector2u(1024, 768), WindowFlags::Default);
+		// }
 
 		// Set up the application - returns a boolean indicating if initialization was successful
-		virtual bool Initialize() {
-			return CreateWindow(GetWindowOptions()) != nullptr;
-		}
+		virtual bool Initialize() = 0;
 
 		// IMGUI step
 		virtual void DrawIMGUI() {}
@@ -29,11 +30,17 @@ namespace andromeda {
 		virtual void Update(float deltaTime) {}
 
 		// Called when the application is shutting down
-		virtual void Shutdown() {
-			andromeda::print("Application shutting down...");
-		}
+		virtual void Shutdown() {}
+
+		// virtual void WindowResized(int width, int height) {}
+		// virtual void WindowMaximized() {}
+		// virtual void WindowMinimized() {}
+		// virtual void WindowRestored() {}
+
+		virtual void Event(Event& e) {}
+
 	protected:
-		std::shared_ptr<Window> CreateWindow(const WindowOptions& windowOptions);
+		std::shared_ptr<Window> CreateWindow(const WindowOptions windowOptions);
 		std::shared_ptr<Window> GetMainWindow() const;
 		std::shared_ptr<Window> GetWindowById(WindowID id) const;
 
@@ -84,6 +91,8 @@ namespace andromeda {
 		}
 
 		friend class Engine;
+
+		EventDispatchFunction m_dispatchFn;
 
 		std::shared_ptr<Window> m_main_window;
 		std::vector<std::shared_ptr<Window>> m_windows{};

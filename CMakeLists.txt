@@ -14,6 +14,9 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
 
     set(SDL_STATIC ON)
     set(SDL_SHARED OFF)
+
+    message(STATUS "Session: " ${XDG_SESSION_TYPE})
+
 else()
     set(SDL_STATIC OFF)
     set(SDL_SHARED ON)

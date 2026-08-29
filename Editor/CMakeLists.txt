@@ -34,6 +34,12 @@ target_sources(
     src/Assets/FileWatcher.h
     src/Assets/Importers.h
     src/Assets/LuauScriptImporter.h
+    src/Settings/UserSettings.h
+    src/Settings/toml.hpp
+    src/Settings/UserSettings.cpp
+    src/ArgParse.h
+    src/EditorApplication.h
+    src/EditorApplication.cpp
 )
 
 if (WIN32)

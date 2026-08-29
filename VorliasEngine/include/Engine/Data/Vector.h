@@ -9,10 +9,13 @@ static constexpr float kEpsilon = 0.00001f;
 namespace andromeda {
 	struct Vector3;
 	struct Vector2 {
-		float x, y;
+		float x{}, y{};
 
 		Vector2() = default;
-		Vector2(float x, float y) : x(x), y(y) {}
+
+		explicit Vector2(float x, float y) : x(x), y(y) {}
+		explicit Vector2(double x, double y): x(static_cast<float>(x)), y(static_cast<float>(y)) {}
+		explicit Vector2(int x, int y): x(static_cast<float>(x)), y(static_cast<float>(y)) {}
 
 		Vector2 Normalize() const;
 		float GetMagnitude() const;
@@ -29,6 +32,10 @@ namespace andromeda {
 
 		Vector2 operator/(float r) const {
 			return Vector2(x / r, y / r);
+		}
+
+		bool operator==(Vector2 other) {
+			return x == other.x && y == other.y;
 		}
 	};
 
@@ -50,23 +57,25 @@ namespace andromeda {
 
 	// two dimensional unsigned-based vector
 	struct Vector2u {
-		uint32_t x, y;
+		uint32_t x{}, y{};
 
 		Vector2u() = default;
 		Vector2u(uint32_t x, uint32_t y) : x(x), y(y) {}
+		Vector2u(const Vector2& vec): x(static_cast<uint32_t>(vec.x)), y(static_cast<uint32_t>(vec.y)) {}
 	};
 
 	// two dimensional integer-based vector
 	struct Vector2i {
-		int32_t x, y;
+		int32_t x{}, y{};
 
 		Vector2i() = default;
 		Vector2i(int32_t x, int32_t y) : x(x), y(y) {}
+		Vector2i(const Vector2& vec): x(static_cast<int32_t>(vec.x)), y(static_cast<int32_t>(vec.y)) {}
 	};
 
 	// three dimensional integer-based vector
 	struct Vector3i {
-		int32_t x, y, z;
+		int32_t x{}, y{}, z{};
 
 		Vector3i() = default;
 		Vector3i(int32_t x, int32_t y, int32_t z) : x(x), y(y), z(z) {}

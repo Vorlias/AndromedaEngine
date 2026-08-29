@@ -35,6 +35,10 @@ void Engine::Run(Application* app) {
 	if (Initialize()) {
 		uint64_t lastFixedUpdate = SDL_GetTicks();
 
+		m_app->m_dispatchFn = [app](Event& event) {
+			app->Event(event);
+		};
+
 		while (m_isRunning) {
 			uint64_t currentTicks = SDL_GetTicks();
 			app->m_elapsedTime = currentTicks / 1000.0f;

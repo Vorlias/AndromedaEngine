@@ -12940,7 +12940,7 @@ const TextEditor::Language* TextEditor::Language::Luau() {
 		};
 
 		static const char* const identifiers[] = {
-			
+			"print", "warn", "error", "task", "table", "math", "string", "bit32", "entity"
 		};
 
 		for (auto& keyword : keywords) { language.keywords.insert(keyword); }

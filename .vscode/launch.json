@@ -16,7 +16,8 @@
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/bin/VorliasEditor",
             "args": [
-                "-project"
+                "--project",
+                "."
             ],
             "preLaunchTask": "Build Project using CMake",
             // "processId": "${command:pickProcess}",

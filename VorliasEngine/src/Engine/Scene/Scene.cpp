@@ -87,7 +87,6 @@ void Scene::Start() {
 
 void Scene::Update(float dt) {
 	if (!m_active) {
-		andromeda::warn("Scene '{}' is inactive", m_name);
 		return;
 	}
 

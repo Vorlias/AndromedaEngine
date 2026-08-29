@@ -165,6 +165,7 @@ target_sources(
     include/Engine/IMGUIStyle.h
     include/Engine/Serialization/SerializationTypes.h
     include/Engine/Serialization/Scene.h
+    include/Engine/Events/Event.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

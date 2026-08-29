@@ -60,10 +60,14 @@ namespace andromeda {
 		}
 
 		template<typename T2>
+		T2* AsPtr() {
+			return static_cast<T2*>(ptr);
+		}
+
+		template<typename T2>
 			requires(std::is_base_of_v<T2, T> || std::is_base_of_v<T, T2>)
 		Ref<T2> As() const {
-			Ref<T2> newRef = Ref<T2>((T2*)this->ptr);
-			return newRef;
+			return {(T2*)this->ptr};
 		}
 
 		template<typename T2>
@@ -71,7 +75,7 @@ namespace andromeda {
 			return is_explicitly_convertible<T, T2>::value;
 		}
 
-		T* operator-> () {
+		T* operator->() {
 			return ptr;
 		}
 

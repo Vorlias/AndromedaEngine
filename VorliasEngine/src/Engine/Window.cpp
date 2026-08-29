@@ -1,5 +1,6 @@
 #include "Engine/Window.h"
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_video.h"
 #include <optional>
 #include "Engine/Log.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
@@ -26,8 +27,6 @@ void andromeda::WindowIcon::Destroy() {
 }
 
 andromeda::WindowIcon::~WindowIcon() {}
-
-andromeda::WindowOptions::WindowOptions() {}
 
 andromeda::Window::Window(const WindowOptions& options) : m_window_options(options) {}
 andromeda::Window::~Window() {}
@@ -69,7 +68,13 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	m_window = SDL_CreateWindow(m_window_options.title, m_window_options.size.x, m_window_options.size.y, window_flags);
 
 	if (!m_window) {
-		andromeda::error("Failed to initialize window!");
+		andromeda::error(
+			"SDL could not create window: title={}, size={}, flags={} - {}",
+			m_window_options.title,
+			to_string(m_window_options.size),
+			(int)window_flags,
+			SDL_GetError()
+		);
 		return false;
 	}
 

@@ -10,20 +10,23 @@
 namespace andromeda {
 	using WindowID = SDL_WindowID;
 
-	enum class WindowFlags : int {
-		Resizable = SDL_WINDOW_RESIZABLE,
-		Fullscreen = SDL_WINDOW_FULLSCREEN,
+	namespace WindowFlags {
+		enum {
+			Resizable = SDL_WINDOW_RESIZABLE,
+			Fullscreen = SDL_WINDOW_FULLSCREEN,
 
-		Borderless = SDL_WINDOW_BORDERLESS,
-		Maximized = SDL_WINDOW_MAXIMIZED,
-		AlwaysOnTop = SDL_WINDOW_ALWAYS_ON_TOP,
+			Borderless = SDL_WINDOW_BORDERLESS,
+			Maximized = SDL_WINDOW_MAXIMIZED,
+			AlwaysOnTop = SDL_WINDOW_ALWAYS_ON_TOP,
 
-		// Modal = SDL_WINDOW_MODAL,
-		// Utility = SDL_WINDOW_UTILITY,
+			// Modal = SDL_WINDOW_MODAL,
+			// Utility = SDL_WINDOW_UTILITY,
 
-		BorderlessFullscreen = Fullscreen | Borderless,
-		Default = Resizable,
+			BorderlessFullscreen = Fullscreen | Borderless,
+			Default = Resizable,
+		};
 	};
+
 
 	struct WindowIcon {
 		WindowIcon(void* data, size_t size);
@@ -37,6 +40,7 @@ namespace andromeda {
 
 		void Destroy();
 		~WindowIcon();
+
 	private:
 		friend class Window;
 
@@ -48,11 +52,18 @@ namespace andromeda {
 		Vector2i position = Vector2i(SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
 		const char* title = "Andromeda";
-		WindowFlags window_flags = WindowFlags::Default;
+		int window_flags = WindowFlags::Default;
 		WindowIcon windowIcon;
-		WindowOptions();
-		WindowOptions(const char* title, Vector2u size) : title(title), size(size), windowIcon() {}
-		WindowOptions(const char* title, Vector2u size, WindowFlags flags) : title(title), size(size), window_flags(flags), windowIcon() {}
+		// WindowOptions();
+		WindowOptions(const char* title, Vector2u size) : title(title), size(size), windowIcon(), window_flags(WindowFlags::Default) {}
+		WindowOptions(const char* title, Vector2u size, int flags) : title(title), size(size), window_flags(flags), windowIcon() {}
+
+		WindowOptions(const WindowOptions& src) {
+			windowIcon = src.windowIcon;
+			window_flags = src.window_flags;
+			size = src.size;
+			position = src.position;
+		}
 	};
 
 #if ANDROMEDA_EXPERIMENTAL
@@ -113,6 +124,8 @@ namespace andromeda {
 	};
 #endif
 
+	struct WindowData {};
+
 	class Window {
 		friend class graphics::Shader;
 
@@ -167,6 +180,10 @@ namespace andromeda {
 	};
 } // namespace andromeda
 
-static andromeda::WindowFlags operator|(andromeda::WindowFlags l, andromeda::WindowFlags r) {
-	return (andromeda::WindowFlags)(static_cast<int>(l) | static_cast<int>(r)); // why I had to do this? idk
-}
+// static andromeda::WindowFlags operator|(andromeda::WindowFlags l, andromeda::WindowFlags r) {
+// 	return (andromeda::WindowFlags)(static_cast<int>(l) | static_cast<int>(r)); // why I had to do this? idk
+// }
+
+// static andromeda::WindowFlags operator|=(andromeda::WindowFlags& l, andromeda::WindowFlags r) {
+// 	return l | r;
+// }
