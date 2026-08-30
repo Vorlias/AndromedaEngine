@@ -17,9 +17,6 @@
 static andromeda::graphics::VulkanRenderer s_renderer;
 static andromeda::VulkanIMGUI* s_imgui;
 static andromeda::WindowOptions s_windowOptions("Andromeda Vulkan Playground", andromeda::Vector2u(1920, 1080));
-static bool s_renderTargetResizePending = false;
-static int s_renderTargetWidth = 0;
-static int s_renderTargetHeight = 0;
 
 VulkanApplication::VulkanApplication() : window(s_windowOptions) {}
 
@@ -97,9 +94,6 @@ void VulkanApplication::Run() {
 					window.Resized(e.window.data1, e.window.data2);
 #if USE_IMGUI
 					s_imgui->Resize(e.window.data1, e.window.data2);
-					s_renderTargetResizePending = true;
-					s_renderTargetWidth = e.window.data1;
-					s_renderTargetHeight = e.window.data2;
 #endif
 					break;
 			}
@@ -117,33 +111,26 @@ void VulkanApplication::Update() {}
 void VulkanApplication::Render() {
 #if USE_IMGUI
 	s_imgui->NewFrame();
-#endif
 
-	if (s_renderTargetResizePending && rt != nullptr) {
-		rt->Resize(s_renderTargetWidth, s_renderTargetHeight);
-		s_renderTargetResizePending = false;
-	}
-
-	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
-	ctx->BeforeRender();
-	ctx->RenderPrepare();
-#if USE_IMGUI
 	ImGui::Begin("Render Target Test");
 	{
 		ImVec2 avail = ImGui::GetContentRegionAvail();
 		int width = static_cast<int>(avail.x);
 		int height = static_cast<int>(avail.y);
 
-		if (width > 0 && height > 0) {
-			if (s_renderTargetResizePending && rt != nullptr) {
+		if (width > 0 && height > 0 && rt != nullptr) {
+			if (rt->GetWidth() != width || rt->GetHeight() != height) {
 				rt->Resize(width, height);
-				s_renderTargetResizePending = false;
 			}
 			ImGui::Image(rt->GetImGuiTexture(), avail);
 		}
 	}
 	ImGui::End();
 #endif
+
+	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
+	ctx->BeforeRender();
+	ctx->RenderPrepare();
 	ctx->RenderDraw();
 #if USE_IMGUI
 	s_imgui->Render();
