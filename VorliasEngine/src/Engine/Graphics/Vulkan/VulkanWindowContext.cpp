@@ -72,10 +72,9 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::Resized(int width, int height) {
-		DestroySwapchain();
-		CreateSwapchain(width, height);
-		// this->width = width;
-		// this->height = height;
+		this->width = width;
+		this->height = height;
+		m_swapchainRequiresRecreate = true;
 	}
 
 	bool VulkanWindowContext::CreateSurface() {
@@ -214,6 +213,8 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::DestroySwapchain() {
+		vkDeviceWaitIdle(device);
+
 		for (VkImageView swapchainImageView : swapchainImageViews) {
 			vkDestroyImageView(device, swapchainImageView, nullptr);
 		}
