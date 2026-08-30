@@ -129,17 +129,52 @@ void VulkanRenderTexture::TransitionImage(VkCommandBuffer commandBuffer, VkImage
 }
 
 void VulkanRenderTexture::Resize(int width, int height) {
-	if (width == 0 || height == 0) {
+	if (width <= 0 || height <= 0) {
 		return;
 	}
 
-	if (width == m_width && height == m_height) {
+	if (width == m_width && height == m_height && m_isValid) {
 		return;
+	}
+
+	if (m_ctx == nullptr) {
+		RenderTarget::Resize(width, height);
+		return;
+	}
+
+	// Vulkan resources must not be destroyed while a frame may still be using them.
+	// This is the primary cause of hangs when resizing render targets.
+	vkDeviceWaitIdle(m_ctx->GetDevice());
+
+	if (m_isValid) {
+		if ((m_textureType & RENDER_TEXTURE_IMGUI) != 0 && m_imguiDescriptor != VK_NULL_HANDLE) {
+			ImGui_ImplVulkan_RemoveTexture(m_imguiDescriptor);
+			m_imguiDescriptor = VK_NULL_HANDLE;
+		}
+
+		if (m_sampler != nullptr) {
+			vkDestroySampler(m_ctx->GetDevice(), m_sampler, nullptr);
+			m_sampler = VK_NULL_HANDLE;
+		}
+
+		if (m_imageView != nullptr) {
+			vkDestroyImageView(m_ctx->GetDevice(), m_imageView, nullptr);
+			m_imageView = VK_NULL_HANDLE;
+		}
+
+		if (m_image != nullptr) {
+			vmaDestroyImage(m_ctx->GetAllocator(), m_image, m_allocation);
+			m_image = VK_NULL_HANDLE;
+			m_allocation = VK_NULL_HANDLE;
+		}
+
+		m_isValid = false;
 	}
 
 	RenderTarget::Resize(width, height);
-	Destroy();
-	Create(m_ctx, m_wctx, width, height, m_format);
+	if (!Create(m_ctx, m_wctx, width, height, m_format)) {
+		andromeda::error("Failed to recreate resized Vulkan render texture");
+	}
 }
 
 void VulkanRenderTexture::TransitionToColorAttachment(VkCommandBuffer commandBuffer) {
@@ -212,7 +247,6 @@ void VulkanRenderTexture::BeginRender(const FrameResources& res) {
 		.pColorAttachments = &colorAttachment,
 	};
 
-	std::cout << m_width << "x" << m_height << std::endl;
 	vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
 }
 
@@ -246,6 +280,7 @@ void VulkanRenderTexture::Destroy() {
 	}
 
 	vkDeviceWaitIdle(m_ctx->GetDevice());
+
 	if ((m_textureType & RENDER_TEXTURE_IMGUI) != 0 && m_imguiDescriptor != VK_NULL_HANDLE) {
 		ImGui_ImplVulkan_RemoveTexture(m_imguiDescriptor);
 		m_imguiDescriptor = VK_NULL_HANDLE;
@@ -267,6 +302,7 @@ void VulkanRenderTexture::Destroy() {
 		m_allocation = VK_NULL_HANDLE;
 	}
 
+	m_currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 	m_isValid = false;
 	RenderTarget::Destroy();
 }

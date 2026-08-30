@@ -31,7 +31,7 @@ namespace andromeda::graphics {
 			VulkanWindowContext* vkw /* TODO: Make this not required*/,
 			int width,
 			int height,
-			VkFormat format = VK_FORMAT_R8G8B8A8_SRGB
+			VkFormat format = VK_FORMAT_B8G8R8A8_SRGB
 		);
 		void Destroy() override;
 		void Resize(int width, int height) override;
