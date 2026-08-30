@@ -7,12 +7,11 @@
 #include "Log.h"
 
 #include "Engine/Events/Event.h"
+#include "Engine/Graphics/RenderTarget.h"
 // NOTE TO SELF: Don't use PREPROC defines for virtual methods
 
 namespace andromeda {
 	using EventDispatchFunction = std::function<void(Event&)>;
-
-	class RenderTarget {};
 
 	class Application {
 	public:

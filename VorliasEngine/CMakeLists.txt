@@ -168,6 +168,7 @@ target_sources(
     include/Engine/Serialization/Scene.h
     include/Engine/Events/Event.h
     include/Engine/Graphics/Vulkan/VulkanRenderTexture.h
+    include/Engine/Graphics/RenderTarget.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

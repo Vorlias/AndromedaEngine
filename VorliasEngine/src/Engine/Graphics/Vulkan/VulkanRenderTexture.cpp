@@ -10,16 +10,16 @@ bool VulkanRenderTexture::Create(VulkanContext* vk, VulkanWindowContext* vkw, in
 	m_ctx = vk;
 	m_wctx = vkw;
 
-	auto res = vkw->GetCurrentFrameResources();
-
-	CreateImage();
-	CreateImageView();
-	CreateSampler();
+	if (!CreateImage() || !CreateImageView() || !CreateSampler()) {
+		Destroy();
+		return false;
+	}
 
 	if ((m_textureType & RENDER_TEXTURE_IMGUI) != 0) {
 		m_imguiDescriptor = ImGui_ImplVulkan_AddTexture(m_sampler, m_imageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
 
+	m_isValid = true;
 	m_currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 	return true;
 }
@@ -129,13 +129,15 @@ void VulkanRenderTexture::TransitionImage(VkCommandBuffer commandBuffer, VkImage
 }
 
 void VulkanRenderTexture::Resize(int width, int height) {
-	if (width == 0 || height == 0)
+	if (width == 0 || height == 0) {
 		return;
+	}
 
 	if (width == m_width && height == m_height) {
 		return;
 	}
 
+	RenderTarget::Resize(width, height);
 	Destroy();
 	Create(m_ctx, m_wctx, width, height, m_format);
 }
@@ -204,7 +206,7 @@ void VulkanRenderTexture::BeginRender(const FrameResources& res) {
 
 	VkRenderingInfoKHR renderingInfo = {
 		.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
-		.renderArea = {{0, 0}, {800, 600}},
+		.renderArea = {{0, 0}, {m_width, m_height}},
 		.layerCount = 1,
 		.colorAttachmentCount = 1,
 		.pColorAttachments = &colorAttachment,
@@ -237,25 +239,35 @@ void VulkanRenderTexture::EndRender(const FrameResources& res) {
 }
 
 void VulkanRenderTexture::Destroy() {
+	if (m_ctx == nullptr) {
+		RenderTarget::Destroy();
+		return;
+	}
+
 	vkDeviceWaitIdle(m_ctx->GetDevice());
-	if ((m_textureType & RENDER_TEXTURE_IMGUI) != 0) {
+	if ((m_textureType & RENDER_TEXTURE_IMGUI) != 0 && m_imguiDescriptor != VK_NULL_HANDLE) {
 		ImGui_ImplVulkan_RemoveTexture(m_imguiDescriptor);
 		m_imguiDescriptor = VK_NULL_HANDLE;
 	}
 
 	if (m_sampler != nullptr) {
 		vkDestroySampler(m_ctx->GetDevice(), m_sampler, nullptr);
+		m_sampler = VK_NULL_HANDLE;
 	}
 
 	if (m_imageView != nullptr) {
 		vkDestroyImageView(m_ctx->GetDevice(), m_imageView, nullptr);
+		m_imageView = VK_NULL_HANDLE;
 	}
 
 	if (m_image != nullptr) {
 		vmaDestroyImage(m_ctx->GetAllocator(), m_image, m_allocation);
-		m_image = nullptr;
-		m_allocation = nullptr;
+		m_image = VK_NULL_HANDLE;
+		m_allocation = VK_NULL_HANDLE;
 	}
+
+	m_isValid = false;
+	RenderTarget::Destroy();
 }
 
 VulkanRenderTexture::~VulkanRenderTexture() {}

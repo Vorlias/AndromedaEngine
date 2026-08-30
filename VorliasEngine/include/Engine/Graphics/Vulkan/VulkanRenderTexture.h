@@ -1,5 +1,6 @@
 #pragma once
 #include "VulkanBase.h"
+#include "Engine/Graphics/RenderTarget.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_vulkan.h"
@@ -10,7 +11,7 @@
 #include "Engine/Graphics/Vulkan/VulkanIMGUI.h"
 
 namespace andromeda::graphics {
-	class VulkanRenderTexture {
+	class VulkanRenderTexture : public RenderTarget {
 	public:
 		enum RenderTextureFlags {
 			RENDER_TEXTURE_NONE = 0,
@@ -32,8 +33,8 @@ namespace andromeda::graphics {
 			int height,
 			VkFormat format = VK_FORMAT_R8G8B8A8_SRGB
 		);
-		void Destroy();
-		void Resize(int width, int height);
+		void Destroy() override;
+		void Resize(int width, int height) override;
 
 		void BeginRender(const FrameResources& res);
 		void EndRender(const FrameResources& res);
@@ -50,10 +51,10 @@ namespace andromeda::graphics {
 			return m_sampler;
 		}
 
-		uint32_t GetWidth() const {
+		int GetWidth() const override {
 			return m_width;
 		}
-		uint32_t GetHeight() const {
+		int GetHeight() const override {
 			return m_height;
 		}
 
