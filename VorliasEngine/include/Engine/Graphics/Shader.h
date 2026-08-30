@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Common.h"
 #include "Engine/Memory.h"
+#include "Engine/Asset.h"
 #include <unordered_map>
 
 namespace andromeda::graphics {
@@ -15,15 +16,20 @@ namespace andromeda::graphics {
 	public:
 		virtual bool LoadSPIRV(const std::vector<char>& data, ShaderType shaderType, const char* entryPoint = "main") = 0;
 		virtual void Unload() = 0;
+
+		const UUID GetUUID() const { return m_uuid; }
+		void SetUUID(UUID uuid) { m_uuid = uuid; }
 	private:
+		andromeda::UUID m_uuid;
 	};
 
 	class ShaderLibrary {
-    public:
-        // Ref<Shader> LoadShader(const std::string& name, const std::string& fileName);
+	public:
+		// Ref<Shader> LoadShader(const std::string& name, const std::string& fileName);
 		Ref<Shader> LoadShaderFromFiles(const std::string& name, const std::string& vertexFileName, const std::string& fragmentFileName);
 
 		void UnloadAllShaders();
+
 	private:
 		std::unordered_map<std::string, Ref<Shader>> m_shaders;
 	};

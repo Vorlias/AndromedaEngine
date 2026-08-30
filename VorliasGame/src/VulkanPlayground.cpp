@@ -5,6 +5,7 @@
 #include "Engine/Graphics/Vulkan/VulkanIMGUI.h"
 #include "Engine/Graphics/Vulkan/VulkanRenderTexture.h"
 
+#include "Engine/Graphics/RenderCommand.h"
 #include "Engine/Graphics/Vulkan/VulkanBase.h"
 
 #include "SDL3/SDL.h"
@@ -109,6 +110,12 @@ void VulkanApplication::Run() {
 void VulkanApplication::Update() {}
 
 void VulkanApplication::Render() {
+	using namespace andromeda::graphics;
+
+	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
+	ctx->Submit<DrawVkTriangleDemoCommand>();
+
+
 #if USE_IMGUI
 	s_imgui->NewFrame();
 
@@ -128,7 +135,7 @@ void VulkanApplication::Render() {
 	ImGui::End();
 #endif
 
-	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
+
 	ctx->BeforeRender();
 	ctx->RenderPrepare();
 	ctx->RenderDraw();

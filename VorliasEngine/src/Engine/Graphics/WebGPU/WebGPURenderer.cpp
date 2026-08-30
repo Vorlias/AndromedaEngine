@@ -1,3 +1,4 @@
+#if ANDROMEDA_WGPU
 #include "Engine/Graphics/WebGPU/WebGPURenderer.h"
 
 using namespace andromeda::graphics;
@@ -130,3 +131,4 @@ void WGPURenderer::Shutdown() {
 	wgpuInstanceRelease(m_instance);
     andromeda::trace("shut down WGPU");
 }
+#endif

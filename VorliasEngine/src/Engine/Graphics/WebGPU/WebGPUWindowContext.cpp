@@ -1,3 +1,4 @@
+#if ANDROMEDA_WGPU
 #include "Engine/Graphics/WebGPU/WebGPURenderer.h"
 #include "Engine/Graphics/WebGPU/WebGPUWindowContext.h"
 #include <webgpu/webgpu.hpp>
@@ -129,3 +130,4 @@ void andromeda::graphics::WGPUWindowContext::RenderPresent() {
 	wgpuTextureViewRelease(m_textureView);
 	wgpuSurfacePresent(m_surface);
 }
+#endif

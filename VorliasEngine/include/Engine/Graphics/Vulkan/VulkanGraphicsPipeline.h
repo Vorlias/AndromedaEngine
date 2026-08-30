@@ -25,6 +25,7 @@ namespace andromeda::graphics {
 
 		constexpr VkPipeline GetPipeline() const { return m_graphicsPipeline; }
 		constexpr VkPipelineLayout GetPipelineLayout() const { return m_graphicsPipelineLayout; }
+		constexpr VulkanShader* GetShader() const { return m_shader; }
 
         ~VulkanGraphicsPipeline();
 	private:

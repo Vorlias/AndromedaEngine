@@ -1,11 +1,11 @@
 #pragma once
+#if ANDROMEDA_WGPU
 #include <webgpu/webgpu.h>
 #include "../RendererAPI.h"
 #include "Engine/Common.h"
 #include "Engine/Log.h"
 #include "WebGPUWindowContext.h"
 
-#if ANDROMEDA_WGPU
 namespace andromeda::graphics {
 	class WGPURenderer : public Renderer {
 	public:

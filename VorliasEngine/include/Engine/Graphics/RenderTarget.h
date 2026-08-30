@@ -30,18 +30,10 @@ namespace andromeda::graphics {
 		virtual void Bind() {}
 		virtual void Unbind() {}
 
-		virtual void SetClearColor(Color color) {
-			m_clearColor = color;
-		}
-
-		virtual Color GetClearColor() const {
-			return m_clearColor;
-		}
-
+		virtual void SetClearColor(Color color) = 0;
 	protected:
 		int m_width = 0;
 		int m_height = 0;
 		bool m_isValid = false;
-		Color m_clearColor{0.0f, 0.0f, 0.0f, 1.0f};
 	};
 } // namespace andromeda::graphics

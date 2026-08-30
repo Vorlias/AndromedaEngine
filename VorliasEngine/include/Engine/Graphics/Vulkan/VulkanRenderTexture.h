@@ -11,7 +11,7 @@
 #include "Engine/Graphics/Vulkan/VulkanIMGUI.h"
 
 namespace andromeda::graphics {
-	class VulkanRenderTexture : public RenderTarget {
+	class VulkanRenderTexture final : public RenderTarget {
 	public:
 		enum RenderTextureFlags {
 			RENDER_TEXTURE_NONE = 0,
@@ -38,6 +38,10 @@ namespace andromeda::graphics {
 
 		void BeginRender(const FrameResources& res);
 		void EndRender(const FrameResources& res);
+
+		void SetClearColor(Color color) {
+			m_clearColor = {color.r, color.g, color.b, color.a};
+		}
 
 		VkImage GetImage() const {
 			return m_image;
@@ -81,15 +85,12 @@ namespace andromeda::graphics {
 			}
 		}
 
-		void TransitionToColorAttachment(VkCommandBuffer commandBuffer);
-		void TransitionToShaderRead(VkCommandBuffer commandBuffer);
 	private:
 		bool CreateImage();
 		bool CreateImageView();
 		bool CreateSampler();
-		void TransitionImage(VkCommandBuffer commandBuffer, VkImageLayout oldLayout, VkImageLayout newLayout);
 
-	protected:
+	private:
 		VkImage m_image = VK_NULL_HANDLE;
 		VkImageView m_imageView = VK_NULL_HANDLE;
 		VkSampler m_sampler = VK_NULL_HANDLE;
@@ -99,9 +100,10 @@ namespace andromeda::graphics {
 		VkDescriptorSet m_imguiDescriptor = VK_NULL_HANDLE;
 		VkImageLayout m_currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-	private:
 		VulkanContext* m_ctx = VK_NULL_HANDLE;
 		VulkanWindowContext* m_wctx = VK_NULL_HANDLE;
+
+		VkClearColorValue m_clearColor = {0.0f, 0.0f, 0.0f, 0.0f};
 
 		VkImageMemoryBarrier m_imageMemoryBarrier;
 

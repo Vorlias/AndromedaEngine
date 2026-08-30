@@ -10,6 +10,8 @@
 #include "VulkanGraphicsPipeline.h"
 
 namespace andromeda::graphics {
+	using PipelineId = uint16_t;
+
 	struct FrameResources {
 		VkCommandPool commandPool = nullptr;
 		VkCommandBuffer commandBuffer = nullptr;
@@ -23,12 +25,22 @@ namespace andromeda::graphics {
 		constexpr static uint32_t MaxFramesInFlight{2};
 		constexpr static VkFormat swapchainFormat{VK_FORMAT_B8G8R8A8_SRGB};
 		constexpr static VkFormat depthFormat{VK_FORMAT_D32_SFLOAT}; // represents a depth buffer of 32 bit floats
+		static PipelineId s_pipelineIdx;
 	public:
 		VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window);
 
 		void Initialize() override;
 		void Shutdown() override;
 		void Resized(int width, int height) override;
+		API GetAPI() override;
+
+		void SetClearColor(Color color) override {
+			m_clearColor = { color.r, color.g, color.b, color.a };
+		}
+
+		void DrawDemoTriangle();
+
+		void SubmitCommand(std::unique_ptr<RenderCommand> command) override;
 
 		void BeforeRender() override;
 		void RenderPrepare() override;
@@ -101,6 +113,22 @@ namespace andromeda::graphics {
 		void SetTargetRenderTexture(VulkanRenderTexture* renderTexture);
 		void RenderToTarget(VulkanRenderTexture* renderTexture = nullptr);
 		bool HasRenderTarget() const;
+
+		VulkanGraphicsPipeline* GetPipeline(PipelineId pipelineId) { // a bit like a program
+			if (!m_pipelines.contains(pipelineId)) return nullptr;
+			return m_pipelines.at(pipelineId);
+		}
+
+		VulkanGraphicsPipeline* CreatePipeline(VulkanShader* shader) {
+			VulkanGraphicsPipeline* pp = new VulkanGraphicsPipeline(vulkan, swapchainFormat, depthFormat, shader);
+			if (!pp->Create()) return nullptr;
+
+			m_pipelines.insert({ s_pipelineIdx, pp });
+
+			std::cout << "create pipeline with id " << s_pipelineIdx << std::endl;
+			s_pipelineIdx++;
+			return pp;
+		}
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();
@@ -117,6 +145,9 @@ namespace andromeda::graphics {
 		uint32_t width, height;
 
 		VulkanGraphicsPipeline* m_graphicsPipeline = nullptr;
+
+		// map of shader UUID to pipeline
+		std::unordered_map<uint64_t, VulkanGraphicsPipeline*> m_pipelines{};
 
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
 
@@ -146,5 +177,8 @@ namespace andromeda::graphics {
 		// frame and synchronization resources
 		VkSemaphore m_timelineSemaphore = nullptr;
 		std::array<FrameResources, MaxFramesInFlight> m_frameResources;
+
+		VkClearColorValue m_clearColor{0.01f, 0.01f, 0.01f, 1};
+		std::vector<std::unique_ptr<RenderCommand>> m_renderCommands;
 	};
 } // namespace andromeda::graphics

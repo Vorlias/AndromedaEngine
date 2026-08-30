@@ -92,42 +92,6 @@ bool VulkanRenderTexture::CreateSampler() {
 	return true;
 }
 
-void VulkanRenderTexture::TransitionImage(VkCommandBuffer commandBuffer, VkImageLayout oldLayout, VkImageLayout newLayout) {
-	VkImageMemoryBarrier barrier{
-		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-		.oldLayout = oldLayout,
-		.newLayout = newLayout,
-		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.image = m_image,
-		.subresourceRange = {.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .baseMipLevel = 0, .levelCount = 1, .baseArrayLayer = 0, .layerCount = 1}
-	};
-
-	VkPipelineStageFlags sourceStage;
-	VkPipelineStageFlags destinationStage;
-
-	if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-		barrier.srcAccessMask = 0;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	} else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-		barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		barrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		sourceStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		destinationStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	} else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-		barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-		sourceStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	} else {
-		throw std::runtime_error("Unsupported RenderTexture layout transition");
-	}
-
-	vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
-}
-
 void VulkanRenderTexture::Resize(int width, int height) {
 	if (width <= 0 || height <= 0) {
 		return;
@@ -177,26 +141,6 @@ void VulkanRenderTexture::Resize(int width, int height) {
 	}
 }
 
-void VulkanRenderTexture::TransitionToColorAttachment(VkCommandBuffer commandBuffer) {
-	if (m_currentLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-		return;
-	}
-
-	TransitionImage(commandBuffer, m_currentLayout, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-	m_currentLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-}
-
-void VulkanRenderTexture::TransitionToShaderRead(VkCommandBuffer commandBuffer) {
-	if (m_currentLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-		return;
-	}
-
-	TransitionImage(commandBuffer, m_currentLayout, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-	m_currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-}
-
 void VulkanRenderTexture::BeginRender(const FrameResources& res) {
 	// 4. Transition image layout (in command buffer)
 	m_imageMemoryBarrier = {
@@ -236,7 +180,7 @@ void VulkanRenderTexture::BeginRender(const FrameResources& res) {
 		.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 		.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-		.clearValue = {{0.0f, 0.0f, 0.0f, 1.0f}},
+		.clearValue = {m_clearColor},
 	};
 
 	VkRenderingInfoKHR renderingInfo = {

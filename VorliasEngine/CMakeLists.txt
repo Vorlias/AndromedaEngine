@@ -103,6 +103,7 @@ target_sources(
     src/Engine/Luau/Userdata.cpp
     src/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.cpp
     src/Engine/Graphics/Vulkan/VulkanRenderTexture.cpp
+    src/Engine/Graphics/RenderCommand.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h

@@ -1,4 +1,5 @@
 #pragma once
+#include "Engine/Graphics/RenderCommand.h"
 #include "Engine/Data/Color.h"
 #include "Engine/Data/Rect.h"
 #include <vector>
@@ -19,6 +20,8 @@ namespace andromeda::graphics {
 	// 	std::vector<DrawData> drawList;
 	// };
 
+	enum class API;
+
 	class GraphicsContext {
 	public:
 		virtual void Initialize() = 0;
@@ -30,6 +33,17 @@ namespace andromeda::graphics {
 		virtual void RenderPrepare() {}
 		virtual void RenderDraw() {}
 		virtual void RenderPresent() {}
+
+		virtual API GetAPI() = 0;
+
+		template<typename T, typename... Args>
+			requires(std::is_base_of_v<andromeda::graphics::RenderCommand, T> && !std::is_same_v<andromeda::graphics::RenderCommand, T>)
+		void Submit(Args&&... args) {
+			std::unique_ptr<andromeda::graphics::RenderCommand> command = createCommand<T>(std::forward<Args>(args)...);
+			SubmitCommand(std::move(command));
+		}
+
+		virtual void SubmitCommand(std::unique_ptr<andromeda::graphics::RenderCommand> command) {}
 
 		virtual void SetClearColor(Color color) {}
 

@@ -48,6 +48,8 @@ namespace andromeda::graphics {
 	};
 
 	struct VertexArray {
+		VertexArray(): data(nullptr), size(0) {}
+
 		VertexArray(std::vector<Vertex> vertices) {
 			data = vertices.data();
 			size = vertices.size();

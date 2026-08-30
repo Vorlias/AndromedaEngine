@@ -10,6 +10,8 @@
 #include <spdlog/spdlog.h>
 #include "Engine/Graphics/Vulkan/VulkanShader.h"
 
+andromeda::graphics::PipelineId andromeda::graphics::VulkanWindowContext::s_pipelineIdx = 0;
+
 void andromeda::graphics::VulkanWindowContext::SetTargetRenderTexture(andromeda::graphics::VulkanRenderTexture* rt) {
 	m_renderTexture = rt;
 }
@@ -22,23 +24,37 @@ void andromeda::graphics::VulkanWindowContext::RenderToTarget(VulkanRenderTextur
 
 	FrameResources& res = m_frameResources[frameResIdx];
 	target->BeginRender(res);
+	{
+		VkViewport viewport{.x = 0, .y = 0, .width = static_cast<float>(target->GetWidth()), .height = static_cast<float>(target->GetHeight())};
+		vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
 
-	VkViewport viewport{.x = 0, .y = 0, .width = static_cast<float>(target->GetWidth()), .height = static_cast<float>(target->GetHeight())};
-	vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
+		VkRect2D scissor{
+			.offset{.x = 0, .y = 0}, .extent{.width = static_cast<uint32_t>(target->GetWidth()), .height = static_cast<uint32_t>(target->GetHeight())}
+		};
+		vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
 
-	VkRect2D scissor{
-		.offset{.x = 0, .y = 0}, .extent{.width = static_cast<uint32_t>(target->GetWidth()), .height = static_cast<uint32_t>(target->GetHeight())}
-	};
-	vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
-
-	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
-	vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
+		for (auto& command : m_renderCommands) {
+			command->Bind(this);
+			command->Draw(this);
+		}
+	}
 	target->EndRender(res);
 }
 
 namespace andromeda::graphics {
 	VulkanWindowContext::VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window) : vulkan(vulkan), window(window) {
 		andromeda::trace("Create window context");
+	}
+
+	API VulkanWindowContext::GetAPI() {
+		return API::Vulkan;
+	}
+
+	void VulkanWindowContext::DrawDemoTriangle() {
+		FrameResources& res = m_frameResources[frameResIdx];
+
+		vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
+		vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
 	}
 
 	void VulkanWindowContext::Initialize() {
@@ -56,8 +72,13 @@ namespace andromeda::graphics {
 		if (!CreateShaders())
 			return;
 
-		m_graphicsPipeline = new VulkanGraphicsPipeline(vulkan, swapchainFormat, depthFormat, static_cast<VulkanShader*>(m_shader.AsPtr()));
-		if (!m_graphicsPipeline->Create()) {
+		// m_graphicsPipeline = new VulkanGraphicsPipeline(vulkan, swapchainFormat, depthFormat, static_cast<VulkanShader*>(m_shader.AsPtr()));
+		// if (!m_graphicsPipeline->Create()) {
+		// 	return;
+		// }
+
+		m_graphicsPipeline = CreatePipeline(static_cast<VulkanShader*>(m_shader.AsPtr()));
+		if (!m_graphicsPipeline) {
 			return;
 		}
 
@@ -307,6 +328,10 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::BeforeRender() {
+		for (auto& command : m_renderCommands) {
+			command->BeforeRender(this);
+		}
+
 		// First check if swapchain is valid, if not we'll recreate it
 		if (m_swapchainRequiresRecreate) {
 			vkDeviceWaitIdle(vulkan->GetDevice());
@@ -342,6 +367,10 @@ namespace andromeda::graphics {
 
 	bool VulkanWindowContext::HasRenderTarget() const {
 		return m_renderTexture != nullptr && m_renderTexture->IsValid();
+	}
+
+	void VulkanWindowContext::SubmitCommand(std::unique_ptr<RenderCommand> command) {
+		m_renderCommands.push_back(std::move(command));
 	}
 
 	void VulkanWindowContext::RenderPrepare() {
@@ -417,7 +446,7 @@ namespace andromeda::graphics {
 			.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-			.clearValue{.color{0.01f, 0.01f, 0.01f, 1}}
+			.clearValue{m_clearColor}
 		};
 
 		VkRenderingAttachmentInfo depthAttachInfo{
@@ -438,6 +467,8 @@ namespace andromeda::graphics {
 			.pDepthAttachment = &depthAttachInfo
 		};
 
+
+
 		vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
 	}
 
@@ -451,9 +482,16 @@ namespace andromeda::graphics {
 		VkRect2D scissor{.offset{.x = 0, .y = 0}, .extent{.width = swapchainWidth, .height = swapchainHeight}};
 		vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
 
-		// draw our triangle
-		vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
-		vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
+		// // draw our triangle
+		// vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
+		// vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
+
+		if (m_renderTexture == nullptr) {
+			for (auto& command : m_renderCommands) {
+				command->Bind(this);
+				command->Draw(this);
+			}
+		}
 	}
 
 	void VulkanWindowContext::RenderPresent() {
@@ -532,6 +570,8 @@ namespace andromeda::graphics {
 		};
 
 		vkQueuePresentKHR(vulkan->GetGraphicsQueue(), &presentInfo);
+
+		m_renderCommands.clear();
 	}
 
 	void VulkanWindowContext::Shutdown() {
