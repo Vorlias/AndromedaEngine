@@ -54,7 +54,8 @@ namespace andromeda {
 		const char* title = "Andromeda";
 		int window_flags = WindowFlags::Default;
 		WindowIcon windowIcon;
-		// WindowOptions();
+
+		WindowOptions() = default;
 		WindowOptions(const char* title, Vector2u size) : title(title), size(size), windowIcon(), window_flags(WindowFlags::Default) {}
 		WindowOptions(const char* title, Vector2u size, int flags) : title(title), size(size), window_flags(flags), windowIcon() {}
 
@@ -62,6 +63,7 @@ namespace andromeda {
 			windowIcon = src.windowIcon;
 			window_flags = src.window_flags;
 			size = src.size;
+			title = src.title;
 			position = src.position;
 		}
 	};

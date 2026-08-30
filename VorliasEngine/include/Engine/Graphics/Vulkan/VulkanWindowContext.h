@@ -16,6 +16,8 @@ namespace andromeda::graphics {
 		VkSemaphore imageAcquiredSemaphore = nullptr;
 	};
 
+	class VulkanRenderTexture;
+
 	class VulkanWindowContext : public GraphicsContext {
 	public:
 		constexpr static uint32_t MaxFramesInFlight{2};
@@ -28,9 +30,10 @@ namespace andromeda::graphics {
 		void Shutdown() override;
 		void Resized(int width, int height) override;
 
-		void Prepare() override;
-		void Render() override;
-		void Present() override;
+		void BeforeRender() override;
+		void RenderPrepare() override;
+		void RenderDraw() override;
+		void RenderPresent() override;
 
 		ANDROMEDA_GETCONST VkDevice GetDevice() const {
 			return device;
@@ -87,10 +90,15 @@ namespace andromeda::graphics {
 			return m_frameResources;
 		}
 
+		ANDROMEDA_GETCONST const FrameResources& GetCurrentFrameResources() const {
+			return m_frameResources[frameResIdx];
+		}
+
 		ANDROMEDA_GETCONST const VkCommandBuffer GetCommandBuffer() const {
 			return m_frameResources[frameResIdx].commandBuffer;
 		}
 
+		void SetTargetRenderTexture(VulkanRenderTexture* renderTexture);
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();
@@ -99,6 +107,8 @@ namespace andromeda::graphics {
 
 		[[nodiscard]] bool CreateSwapchain(int width, int height);
 		void DestroySwapchain();
+
+		VulkanRenderTexture* m_renderTexture;
 
 		SDL_Window* window;
 		VulkanContext* vulkan;

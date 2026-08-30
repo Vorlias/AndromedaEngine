@@ -51,6 +51,7 @@ namespace andromeda {
 		}
 
 		template<typename T>
+			requires(!std::is_empty<T>::value)
 		T& GetComponent() const {
 			return m_scene->m_registry.get<T>(m_entity);
 		}

@@ -3,11 +3,20 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "Build Project using CMake",
+            "label": "Build Editor Project using CMake",
             "command": "${workspaceFolder}/build.sh",
             "args": [
                 "--shaderc",
                 "-E",
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "Build Game Project using CMake",
+            "command": "${workspaceFolder}/build.sh",
+            "args": [
+                "--shaderc",
+                "-G",
             ]
         }
     ]

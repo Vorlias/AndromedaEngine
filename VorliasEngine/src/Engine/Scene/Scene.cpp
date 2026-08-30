@@ -117,7 +117,7 @@ void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformCompone
 
 template<>
 void Scene::OnComponentAdded<NameComponent>(Entity entity, NameComponent& component) {
-	andromeda::print("Transform added to {}", entity.GetName());
+
 }
 
 template<>

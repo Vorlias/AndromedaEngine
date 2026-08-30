@@ -59,7 +59,6 @@ namespace andromeda {
 		virtual ~Event() = default;
 		bool handled = false;
 
-
 		virtual EventType GetEventType() const = 0;
 		virtual const char* GetName() const = 0;
 		virtual int GetCategoryFlags() const = 0;
@@ -84,7 +83,7 @@ namespace andromeda {
 
 		// Dispatch the event to a method if it matches
 		template<typename T, typename C>
-			// requires std::is_base_of_v<Event, T>
+			requires std::is_base_of_v<Event, T> 
 		bool Dispatch(C* obj, Method<C, bool, T&> dispatcher) {
 			if (event.GetEventType() == T::GetStaticType()) {
 				event.handled |= (obj->*dispatcher)(static_cast<T&>(event));
@@ -93,7 +92,6 @@ namespace andromeda {
 
 			return false;
 		}
-
 	private:
 		Event& event;
 	};
@@ -123,7 +121,7 @@ namespace andromeda {
 
 	class WindowResizedEvent : public Event {
 	public:
-		WindowResizedEvent(int32_t width, int32_t height): width(width), height(height) {}
+		WindowResizedEvent(int32_t width, int32_t height) : width(width), height(height) {}
 
 	public:
 		EVENT_TYPE(EventType::WindowResized)
@@ -134,7 +132,7 @@ namespace andromeda {
 
 	class WindowMovedEvent : public Event {
 	public:
-		WindowMovedEvent(int32_t x, int32_t y): x(x), y(y) {}
+		WindowMovedEvent(int32_t x, int32_t y) : x(x), y(y) {}
 
 	public:
 		EVENT_TYPE(EventType::WindowMoved)
@@ -145,7 +143,7 @@ namespace andromeda {
 
 	class WindowVisibilityChangedEvent : public Event {
 	public:
-		WindowVisibilityChangedEvent(bool visible): visible(visible) {}
+		WindowVisibilityChangedEvent(bool visible) : visible(visible) {}
 
 	public:
 		EVENT_TYPE(EventType::WindowVisibilityChanged)
@@ -156,7 +154,7 @@ namespace andromeda {
 
 	class WindowFullscreenChangedEvent : public Event {
 	public:
-		WindowFullscreenChangedEvent(bool fullscreen): fullscreen(fullscreen) {}
+		WindowFullscreenChangedEvent(bool fullscreen) : fullscreen(fullscreen) {}
 
 	public:
 		EVENT_TYPE(EventType::WindowFullscreenChanged)

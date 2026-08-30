@@ -74,4 +74,8 @@ namespace andromeda {
 		Vector3 rotation = {0.0f, 0.0f, 0.0f};
 		Vector3 scale = {1.0f, 1.0f, 1.0f};
 	};
+
+	struct CameraComponent {
+		int _placeholder;
+	};
 } // namespace andromeda

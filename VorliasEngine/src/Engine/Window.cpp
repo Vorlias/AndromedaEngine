@@ -65,6 +65,8 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 			break;
 	}
 
+	ANDROMEDA_ASSERT(m_window_options.title);
+
 	m_window = SDL_CreateWindow(m_window_options.title, m_window_options.size.x, m_window_options.size.y, window_flags);
 
 	if (!m_window) {

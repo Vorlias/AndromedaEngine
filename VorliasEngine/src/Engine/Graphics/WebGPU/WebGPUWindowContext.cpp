@@ -81,7 +81,7 @@ WGPUTextureView andromeda::graphics::WGPUWindowContext::GetNextSurfaceView() {
 	return targetView;
 }
 
-void andromeda::graphics::WGPUWindowContext::Prepare() {
+void andromeda::graphics::WGPUWindowContext::RenderPrepare() {
 	m_textureView = GetNextSurfaceView();
 	if (!m_textureView) {
 		andromeda::error("no texture view");
@@ -89,7 +89,7 @@ void andromeda::graphics::WGPUWindowContext::Prepare() {
 	}
 }
 
-void andromeda::graphics::WGPUWindowContext::Render() {
+void andromeda::graphics::WGPUWindowContext::RenderDraw() {
 	WGPUCommandEncoderDescriptor cmdEncoderDesc{};
 	WGPUCommandEncoder cmdEncoder = wgpuDeviceCreateCommandEncoder(m_renderer->GetDevice(), &cmdEncoderDesc);
 	WGPURenderPassDescriptor renderPassDescriptor{
@@ -124,7 +124,7 @@ void andromeda::graphics::WGPUWindowContext::Render() {
 	wgpuCommandBufferRelease(command);
 }
 
-void andromeda::graphics::WGPUWindowContext::Present() {
+void andromeda::graphics::WGPUWindowContext::RenderPresent() {
 	// At the end of the frame
 	wgpuTextureViewRelease(m_textureView);
 	wgpuSurfacePresent(m_surface);

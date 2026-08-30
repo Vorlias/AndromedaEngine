@@ -25,9 +25,9 @@ namespace andromeda::graphics {
 			return m_surface;
 		}
 
-		void Prepare() override;
-		void Render() override;
-		void Present() override;
+		void RenderPrepare() override;
+		void RenderDraw() override;
+		void RenderPresent() override;
 
 		void SetClearColor(Color color) override {
 			m_clearColor =

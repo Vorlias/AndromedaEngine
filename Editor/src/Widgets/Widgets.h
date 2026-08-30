@@ -34,6 +34,8 @@ namespace andromeda::widgets {
 
 	internal::ObjectContainerAction ObjectContainer(const char* id, bool hasObject, std::string_view objName, std::string_view clsName);
 
+	void OffsetY(float yOffset);
+
 	template<typename T>
 	Ref<T> Object(const std::string& label, Ref<T> value) {
 		if constexpr (std::is_base_of_v<Asset, T>) {
@@ -41,9 +43,15 @@ namespace andromeda::widgets {
 			ImGui::Text(label.c_str());
 			ImGui::SameLine();
 
+			if constexpr (std::is_base_of_v<LuauScript, T>) {
+				OffsetY(9);
+				ImGui::Text(ICON_LC_SCROLL);
+				ImGui::SameLine();
+			}
+
 			AssetType assetType = value != nullptr ? value->GetAssetType() : AssetType::Unknown;
 
-			int result = ObjectContainer(label.c_str(), value != nullptr, value != nullptr ? value->GetFilePath() : "" , GetAssetTypeName(assetType).c_str());
+			int result = ObjectContainer(label.c_str(), value != nullptr, value != nullptr ? value->GetFilePath() : "", GetAssetTypeName(assetType).c_str());
 			if (result) {
 				print("Picker selection is {}", result);
 			}

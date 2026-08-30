@@ -3,6 +3,7 @@
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 #include "Engine/Graphics/Vulkan/VulkanIMGUI.h"
+#include "Engine/Graphics/Vulkan/VulkanRenderTexture.h"
 
 #include "Engine/Graphics/Vulkan/VulkanBase.h"
 
@@ -15,16 +16,20 @@
 
 static andromeda::graphics::VulkanRenderer s_renderer;
 static andromeda::VulkanIMGUI* s_imgui;
+static andromeda::WindowOptions s_windowOptions("Andromeda Vulkan Playground", andromeda::Vector2u(1920, 1080));
 
-VulkanApplication::VulkanApplication() : window(andromeda::WindowOptions()) {}
+VulkanApplication::VulkanApplication() : window(s_windowOptions) {}
 
 bool VulkanApplication::Initialize() {
+	using namespace andromeda::graphics;
+
 	if (!SDL_Init(SDL_INIT_VIDEO))
 		return false;
 	andromeda::initializeLogger("./VulkanPlayground.log");
 
 	if (!s_renderer.Initialize())
 		return false;
+
 
 
 	bool windowInit = window.Initialize(&s_renderer);
@@ -35,10 +40,15 @@ bool VulkanApplication::Initialize() {
 #if USE_IMGUI
 	{
 		auto vk = s_renderer.GetContext();
-		auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
+		auto ctx = static_cast<VulkanWindowContext*>(window.GetGraphicsContext());
 
 		s_imgui = new andromeda::VulkanIMGUI(window.GetHandle(), vk, ctx);
 		s_imgui->Initialize();
+
+		rt = new VulkanRenderTexture(VulkanRenderTexture::RENDER_TEXTURE_IMGUI);
+		rt->Create(vk, ctx, 1920, 1080);
+
+		ctx->SetTargetRenderTexture(rt);
 	}
 #endif
 
@@ -103,20 +113,39 @@ void VulkanApplication::Render() {
 	s_imgui->NewFrame();
 #endif
 
-	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
-	ctx->Prepare();
 
-	ctx->Render();
+	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
+	ctx->BeforeRender();
+
+	ctx->RenderPrepare();
 #if USE_IMGUI
-	ImGui::ShowDemoWindow();
+	ImGui::Begin("Render Target Test");
+	{
+		ImVec2 avail = ImGui::GetContentRegionAvail();
+		int width = static_cast<int>(avail.x);
+		int height = static_cast<int>(avail.y);
+
+		if (width > 0 && height > 0) {
+			rt->Resize(width, height);
+			ImGui::Image(rt->GetImGuiTexture(), avail);
+		}
+	}
+	ImGui::End();
+#endif
+
+	ctx->RenderDraw();
+#if USE_IMGUI
 	s_imgui->Render();
 #endif
 
-	ctx->Present();
+	ctx->RenderPresent();
 }
 
 void VulkanApplication::Shutdown() {
 #if USE_IMGUI
+	rt->Destroy();
+	delete rt;
+
 	s_imgui->Shutdown();
 #endif
 

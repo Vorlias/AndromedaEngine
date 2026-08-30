@@ -102,6 +102,7 @@ target_sources(
     src/Engine/Asset.cpp
     src/Engine/Luau/Userdata.cpp
     src/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.cpp
+    src/Engine/Graphics/Vulkan/VulkanRenderTexture.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -166,6 +167,7 @@ target_sources(
     include/Engine/Serialization/SerializationTypes.h
     include/Engine/Serialization/Scene.h
     include/Engine/Events/Event.h
+    include/Engine/Graphics/Vulkan/VulkanRenderTexture.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

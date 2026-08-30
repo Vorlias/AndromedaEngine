@@ -5,12 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Build",
-            "type": "cmake",
-            "request": "launch",
-        },
-        {
-            "name": "Debug (Linux GDB)",
+            "name": "Debug Editor (Linux GDB)",
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
@@ -19,8 +14,48 @@
                 "--project",
                 "."
             ],
-            "preLaunchTask": "Build Project using CMake",
-            // "processId": "${command:pickProcess}",
+            "preLaunchTask": "Build Editor Project using CMake",
+            "linux": {
+                "MIMode": "gdb"
+            },
+            "setupCommands": [
+                {
+                    "description": "Ignore SIGPWR",
+                    "text": "handle SIGPWR nostop noprint pass"
+                },
+                {
+                    "description": "Ignore SIGUSR1",
+                    "text": "handle SIGUSR1 nostop noprint pass"
+                },
+                {
+                    "description": "Ignore SIGUSR2",
+                    "text": "handle SIGUSR2 nostop noprint pass"
+                },
+                {
+                    "description": "Ignore SIGXCPU",
+                    "text": "handle SIGXCPU nostop noprint pass"
+                },
+                {
+                    "description": "Ignore SIG37",
+                    "text": "handle SIG37 nostop noprint pass"
+                },
+                {
+                    "description": "Ignore SIG35",
+                    "text": "handle SIG35 nostop noprint pass"
+                }
+            ]
+        },
+        {
+            "name": "Debug Game (Linux GDB)",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/bin/VorliasGame",
+            "args": [
+                "--project",
+                "."
+            ],
+            "preLaunchTask": "Build Game Project using CMake",
             "linux": {
                 "MIMode": "gdb"
             },

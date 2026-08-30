@@ -62,6 +62,7 @@ void VulkanIMGUI::Initialize() {
 	// for (auto& frame : m_frames) {
 	// 	frame.Backbuffer
 	// }
+	m_active = true;
 }
 
 void VulkanIMGUI::Resize(int width, int height) {
@@ -102,4 +103,5 @@ void VulkanIMGUI::Shutdown() {
 	vkDeviceWaitIdle(m_vk->GetDevice());
 	ImGui_ImplVulkan_Shutdown();
 	ImGui_ImplSDL3_Shutdown();
+	m_active = false;
 }

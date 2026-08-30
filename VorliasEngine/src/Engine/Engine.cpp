@@ -165,16 +165,18 @@ void Engine::Render() {
 
 	if (m_app->imgui != nullptr)
 		m_app->imgui->NewFrame();
-	graphics->Prepare();
 
-	graphics->Render();
+	graphics->BeforeRender();
+	graphics->RenderPrepare();
+
+	graphics->RenderDraw();
 
 	if (m_app->imgui != nullptr) {
 		m_app->DrawIMGUI();
 		m_app->imgui->Render();
 	}
 
-	graphics->Present();
+	graphics->RenderPresent();
 }
 
 void Engine::Shutdown() {

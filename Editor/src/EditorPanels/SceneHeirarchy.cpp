@@ -2,6 +2,7 @@
 #include "SceneHeirarchy.h"
 #include "imgui/imgui.h"
 #include "../IMGUIExt.h"
+#include "../Widgets/Widgets.h"
 
 #include "Engine/Objects/Component.h"
 
@@ -17,7 +18,7 @@ void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, co
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth;
 
 	if (rel.childCount == 0) {
-		flags |= ImGuiTreeNodeFlags_Leaf;
+		flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_DrawLinesToNodes;
 	} else {
 		// flags |= ImGuiTreeNodeFlags_CollapsingHeader;
 	}
@@ -32,7 +33,7 @@ void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, co
 	ImGui::PushID(entity.GetId());
 	auto id = ImGui::GetID(entity.GetId());
 
-	bool open = ImGui::TreeNodeEx(*entity, flags, ICON_LC_BOX "\t%s", name.c_str());
+	bool open = ImGui::TreeNodeEx(*entity, flags, "\t%s", name.c_str());
 	if (ImGui::BeginPopupContextItem()) {
 		if (ImGui::MenuItem("Delete")) {
 			destroy = true;
@@ -41,14 +42,32 @@ void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, co
 		ImGui::EndPopup();
 	}
 
-	// if (entity.HasComponent<LuauScriptComponent>()) {
-	// 	ImGui::SameLine(ImGui::GetColumnWidth() - 0.0f);
-	// 	ImGuiEx::TextIcon(ICON_LC_SCROLL);
-	// }
-
 	if (ImGui::IsItemClicked() && onSelect) {
 		if (onSelect(entity))
 			m_selected = entity;
+	}
+
+	// ImGui::AlignTextToFramePadding();
+
+	ImGui::SameLine(ImGui::GetCursorStartPos().x + 15);
+		widgets::OffsetY(8);
+	ImGui::Text(ICON_LC_BOX);
+
+	float offset = 0.0f;
+
+
+
+	if (entity.HasComponent<LuauScriptComponent>()) {
+		ImGui::AlignTextToFramePadding();
+		ImGui::SameLine(ImGui::GetColumnWidth() - offset);
+		ImGui::Text(ICON_LC_SCROLL);
+		offset += 20.0f;
+	}
+
+	if (entity.HasComponent<CameraComponent>()) {
+		ImGui::AlignTextToFramePadding();
+		ImGui::SameLine(ImGui::GetColumnWidth() - offset);
+		ImGui::Text(ICON_LC_CAMERA);
 	}
 
 	if (destroy) {
@@ -85,13 +104,10 @@ void andromeda::SceneHierarchyPanel::DrawHierarchyPanel() {
 	{
 		if (m_scene) {
 			auto& registry = m_scene->GetRegistry();
-			auto entities = registry.view<andromeda::NameComponent, andromeda::TransformComponent, andromeda::EntityRelationships>();
+			auto entities = registry.view<andromeda::NameComponent, andromeda::EntityRelationships>();
 
-			for (auto [entityId, name, transform, rel] : entities.each()) {
+			for (auto [entityId, name, rel] : entities.each()) {
 				Entity entity(m_scene.get(), entityId);
-				// if (rel.parent != entt::null)
-				// 	continue;
-
 				DrawEntityNode(entity, rel);
 			}
 

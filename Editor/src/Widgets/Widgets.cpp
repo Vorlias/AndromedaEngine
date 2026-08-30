@@ -168,6 +168,15 @@ namespace andromeda::widgets {
 		return modified;
 	}
 
+	void OffsetY(float yOffset) {
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (window->SkipItems)
+			return;
+
+		ImGuiContext& g = *GImGui;
+		window->DC.CurrLineTextBaseOffset = ImMax(window->DC.CurrLineTextBaseOffset, yOffset);
+	}
+
 	internal::ObjectContainerAction ObjectContainer(const char* label, bool hasObject, std::string_view objName, std::string_view clsName) {
 		using namespace internal;
 
@@ -219,8 +228,6 @@ namespace andromeda::widgets {
 				g.Font, g.FontSize, fieldBB.Min + style.FramePadding, ImGui::GetColorU32(ImGuiCol_TextDisabled), "(None)", 0, 0
 			);
 		}
-
-
 
 		if (mouseOverField) {
 			if (ImGui::IsMouseDoubleClicked(0)) {

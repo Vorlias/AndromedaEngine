@@ -1,6 +1,7 @@
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 #include "Engine/Graphics/Vulkan/VulkanUtils.h"
 #include "Engine/Log.h"
+#include "Engine/Graphics/Vulkan/VulkanRenderTexture.h"
 
 
 #include "Engine/Graphics/Vulkan/VulkanBase.h"
@@ -8,6 +9,10 @@
 #include <SDL3/SDL_vulkan.h>
 #include <spdlog/spdlog.h>
 #include "Engine/Graphics/Vulkan/VulkanShader.h"
+
+void andromeda::graphics::VulkanWindowContext::SetTargetRenderTexture(andromeda::graphics::VulkanRenderTexture* rt) {
+	m_renderTexture = rt;
+}
 
 namespace andromeda::graphics {
 	VulkanWindowContext::VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window) : vulkan(vulkan), window(window) {
@@ -278,7 +283,7 @@ namespace andromeda::graphics {
 		return true;
 	}
 
-	void VulkanWindowContext::Prepare() {
+	void VulkanWindowContext::BeforeRender() {
 		// First check if swapchain is valid, if not we'll recreate it
 		if (m_swapchainRequiresRecreate) {
 			vkDeviceWaitIdle(vulkan->GetDevice());
@@ -289,7 +294,7 @@ namespace andromeda::graphics {
 
 		frameResIdx = frameIndex++ % MaxFramesInFlight; // get current frame resource idx
 		signalValue = nextSignalValue++; // value that current frame will set timeline semaphore to when completed, this will be the
-		                                                // value it will wait on for resource
+		                                 // value it will wait on for resource
 		const uint64_t waitValue = signalValue - MaxFramesInFlight; // value that the current frame will wait on, before begins using the resources
 
 		VkSemaphoreWaitInfo waitInfo{
@@ -303,6 +308,17 @@ namespace andromeda::graphics {
 		// now safe to start recording commands
 		FrameResources& res = m_frameResources[frameResIdx];
 		vkResetCommandPool(vulkan->GetDevice(), res.commandPool, 0);
+	
+		// Begin recording commands
+		VkCommandBufferBeginInfo cmdBeginInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+		};
+		vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
+	}
+
+	void VulkanWindowContext::RenderPrepare() {
+		FrameResources& res = m_frameResources[frameResIdx];
 
 		// get the resources for this frame
 		VkSemaphore imageAcquireSemaphore = m_frameResources[frameResIdx].imageAcquiredSemaphore;
@@ -318,13 +334,6 @@ namespace andromeda::graphics {
 		} else if (acquireResult == VK_SUBOPTIMAL_KHR) {
 			m_swapchainRequiresRecreate = true; // we can recreate the next frame
 		}
-
-		// Begin recording commands
-		VkCommandBufferBeginInfo cmdBeginInfo{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-		};
-		vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
 
 		// transition the colour and depth images
 		std::vector<VkImageMemoryBarrier2KHR> layoutBarriers{
@@ -379,6 +388,7 @@ namespace andromeda::graphics {
 			.storeOp = VK_ATTACHMENT_STORE_OP_STORE, // keep data for presentation
 			.clearValue{.color{0.01f, 0.01f, 0.01f, 1}}
 		};
+
 		VkRenderingAttachmentInfo depthAttachInfo{
 			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 			.imageView = depthImageView,
@@ -387,6 +397,7 @@ namespace andromeda::graphics {
 			.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, // don't care after rendering
 			.clearValue{.depthStencil{1.0f, 0}}
 		};
+
 		VkRenderingInfo renderingInfo{
 			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
 			.renderArea{.offset{.x = 0, .y = 0}, .extent{.width = swapchainWidth, .height = swapchainHeight}},
@@ -399,7 +410,7 @@ namespace andromeda::graphics {
 		vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
 	}
 
-	void VulkanWindowContext::Render() {
+	void VulkanWindowContext::RenderDraw() {
 		FrameResources& res = m_frameResources[frameResIdx];
 
 		// set the viewpot and scissor state
@@ -414,7 +425,7 @@ namespace andromeda::graphics {
 		vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
 	}
 
-	void VulkanWindowContext::Present() {
+	void VulkanWindowContext::RenderPresent() {
 		FrameResources& res = m_frameResources[frameResIdx];
 		vkCmdEndRendering(res.commandBuffer);
 

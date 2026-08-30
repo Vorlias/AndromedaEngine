@@ -22,9 +22,13 @@ namespace andromeda {
 		void Render() override;
 		bool ProcessEvent(SDL_Event& e) override;
 		void Shutdown() override;
+
+		constexpr bool IsActive() const { return m_active; }
 	private:
 		void CreateCommandBuffers();
 	private:
+		bool m_active = false;
+
 		graphics::VulkanContext* m_vk;
 		graphics::VulkanWindowContext* m_vkWindow;
 

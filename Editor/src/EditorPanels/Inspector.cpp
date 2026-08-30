@@ -31,9 +31,6 @@ namespace andromeda {
 		ImGui::SetNextWindowSizeConstraints(ImVec2(370.0f, 200.0f), ImVec2(1000, 1000));
 		ImGui::Begin(ICON_LC_INFO " Inspector###inspector");
 		{
-			// static GUID testguid = CreateGUID();
-			// ImGui::Text("%s", testguid.str().c_str());
-
 			if (selected) {
 				DrawComponents(selected);
 
@@ -53,12 +50,7 @@ namespace andromeda {
 
 				if (ImGui::BeginPopup("AddComponent")) {
 					ITEM_ADD(LuauScriptComponent, "Luau Script");
-					// ITEM_ADD(SpriteRendererComponent, "Sprite Renderer");
-					// if (!selected.HasComponent<LuauScriptComponent>()) {
-					// 	if (ImGui::MenuItem("Luau Script")) {
-					// 		auto& component = selected.AddComponent<LuauScriptComponent>();
-					// 	};
-					// }
+					// ITEM_ADD(CameraComponent, "Camera");
 					ImGui::EndPopup();
 				}
 			}
@@ -125,20 +117,18 @@ namespace andromeda {
 			"Transform"
 		);
 
+		DrawComponentIfExists<CameraComponent>(
+			entity,
+			[](CameraComponent& camera) {
+
+			},
+			"Camera"
+		);
+
 		DrawComponentIfExists<LuauScriptComponent>(
 			entity,
 			[](LuauScriptComponent& component) {
-				// char buffer[256];
-				// memset(buffer, 0, sizeof(buffer));
-
 				auto value = widgets::Object("Script", component.GetScript());
-
-				// auto script = component.GetScript();
-				// auto scriptPath = script->GetFilePath();
-
-				// strcpy(buffer, scriptPath.c_str());
-
-				// if (ImGui::InputText("Script Path", buffer, sizeof(buffer))) {}
 			},
 			"Luau Script"
 		);
