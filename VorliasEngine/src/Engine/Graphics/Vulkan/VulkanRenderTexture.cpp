@@ -29,7 +29,7 @@ bool VulkanRenderTexture::CreateImage() {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 		.imageType = VK_IMAGE_TYPE_2D,
 		.format = m_format,
-		.extent = VkExtent3D{m_width, m_height, 1},
+		.extent = VkExtent3D{(uint32_t)m_width, (uint32_t)m_height, 1},
 		.mipLevels = 1,
 		.arrayLayers = 1,
 		.samples = VK_SAMPLE_COUNT_1_BIT,
@@ -206,12 +206,13 @@ void VulkanRenderTexture::BeginRender(const FrameResources& res) {
 
 	VkRenderingInfoKHR renderingInfo = {
 		.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
-		.renderArea = {{0, 0}, {m_width, m_height}},
+		.renderArea = {{0, 0}, {static_cast<uint32_t>(m_width), static_cast<uint32_t>(m_height)}},
 		.layerCount = 1,
 		.colorAttachmentCount = 1,
 		.pColorAttachments = &colorAttachment,
 	};
 
+	std::cout << m_width << "x" << m_height << std::endl;
 	vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
 }
 

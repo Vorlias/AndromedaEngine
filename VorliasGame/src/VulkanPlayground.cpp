@@ -116,7 +116,6 @@ void VulkanApplication::Render() {
 
 	auto ctx = static_cast<andromeda::graphics::VulkanWindowContext*>(window.GetGraphicsContext());
 	ctx->BeforeRender();
-
 	ctx->RenderPrepare();
 #if USE_IMGUI
 	ImGui::Begin("Render Target Test");
@@ -132,12 +131,10 @@ void VulkanApplication::Render() {
 	}
 	ImGui::End();
 #endif
-
 	ctx->RenderDraw();
 #if USE_IMGUI
 	s_imgui->Render();
 #endif
-
 	ctx->RenderPresent();
 }
 

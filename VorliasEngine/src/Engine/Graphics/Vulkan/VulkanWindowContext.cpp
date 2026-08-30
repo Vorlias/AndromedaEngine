@@ -14,6 +14,28 @@ void andromeda::graphics::VulkanWindowContext::SetTargetRenderTexture(andromeda:
 	m_renderTexture = rt;
 }
 
+void andromeda::graphics::VulkanWindowContext::RenderToTarget(VulkanRenderTexture* renderTexture) {
+	auto* target = renderTexture != nullptr ? renderTexture : m_renderTexture;
+	if (target == nullptr || !target->IsValid()) {
+		return;
+	}
+
+	FrameResources& res = m_frameResources[frameResIdx];
+	target->BeginRender(res);
+
+	VkViewport viewport{.x = 0, .y = 0, .width = static_cast<float>(target->GetWidth()), .height = static_cast<float>(target->GetHeight())};
+	vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
+
+	VkRect2D scissor{
+		.offset{.x = 0, .y = 0}, .extent{.width = static_cast<uint32_t>(target->GetWidth()), .height = static_cast<uint32_t>(target->GetHeight())}
+	};
+	vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
+
+	vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
+	vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
+	target->EndRender(res);
+}
+
 namespace andromeda::graphics {
 	VulkanWindowContext::VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window) : vulkan(vulkan), window(window) {
 		andromeda::trace("Create window context");
@@ -308,13 +330,17 @@ namespace andromeda::graphics {
 		// now safe to start recording commands
 		FrameResources& res = m_frameResources[frameResIdx];
 		vkResetCommandPool(vulkan->GetDevice(), res.commandPool, 0);
-	
+
 		// Begin recording commands
 		VkCommandBufferBeginInfo cmdBeginInfo{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 		};
 		vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
+	}
+
+	bool VulkanWindowContext::HasRenderTarget() const {
+		return m_renderTexture != nullptr && m_renderTexture->IsValid();
 	}
 
 	void VulkanWindowContext::RenderPrepare() {
@@ -371,7 +397,6 @@ namespace andromeda::graphics {
 			 }}
 		};
 
-
 		VkDependencyInfo depInfo{
 			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
 			.imageMemoryBarrierCount = static_cast<uint32_t>(layoutBarriers.size()),
@@ -379,13 +404,18 @@ namespace andromeda::graphics {
 		};
 		vkCmdPipelineBarrier2(res.commandBuffer, &depInfo);
 
+		// Optional offscreen render target, but the normal window render pass still must continue for ImGui/UI.
+		if (m_renderTexture != nullptr && m_renderTexture->IsValid()) {
+			RenderToTarget(m_renderTexture);
+		}
+
 		// setup the attachments (color and depth) and begin rendering (dynamic)
 		VkRenderingAttachmentInfo colorAttachInfo{
 			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 			.imageView = swapchainImageViews[imageIndex],
 			.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, // clear the image
-			.storeOp = VK_ATTACHMENT_STORE_OP_STORE, // keep data for presentation
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
 			.clearValue{.color{0.01f, 0.01f, 0.01f, 1}}
 		};
 
@@ -393,14 +423,14 @@ namespace andromeda::graphics {
 			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 			.imageView = depthImageView,
 			.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR, // clear the depth data
-			.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE, // don't care after rendering
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
 			.clearValue{.depthStencil{1.0f, 0}}
 		};
 
 		VkRenderingInfo renderingInfo{
 			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-			.renderArea{.offset{.x = 0, .y = 0}, .extent{.width = swapchainWidth, .height = swapchainHeight}},
+			.renderArea = {.offset = {.x = 0, .y = 0}, .extent = {.width = swapchainWidth, .height = swapchainHeight}},
 			.layerCount = 1,
 			.colorAttachmentCount = 1,
 			.pColorAttachments = &colorAttachInfo,
@@ -413,7 +443,7 @@ namespace andromeda::graphics {
 	void VulkanWindowContext::RenderDraw() {
 		FrameResources& res = m_frameResources[frameResIdx];
 
-		// set the viewpot and scissor state
+		// set the viewport and scissor state
 		VkViewport viewport{.x = 0, .y = 0, .width = static_cast<float>(swapchainWidth), .height = static_cast<float>(swapchainHeight)};
 		vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
 

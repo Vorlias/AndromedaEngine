@@ -51,13 +51,6 @@ namespace andromeda::graphics {
 			return m_sampler;
 		}
 
-		int GetWidth() const override {
-			return m_width;
-		}
-		int GetHeight() const override {
-			return m_height;
-		}
-
 		VkFormat GetFormat() const {
 			return m_format;
 		}
@@ -111,9 +104,6 @@ namespace andromeda::graphics {
 		VulkanWindowContext* m_wctx = VK_NULL_HANDLE;
 
 		VkImageMemoryBarrier m_imageMemoryBarrier;
-
-		uint32_t m_width = 0;
-		uint32_t m_height = 0;
 
 		RenderTextureFlags m_textureType = RENDER_TEXTURE_NONE;
 	};

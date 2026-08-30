@@ -99,6 +99,8 @@ namespace andromeda::graphics {
 		}
 
 		void SetTargetRenderTexture(VulkanRenderTexture* renderTexture);
+		void RenderToTarget(VulkanRenderTexture* renderTexture = nullptr);
+		bool HasRenderTarget() const;
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();
