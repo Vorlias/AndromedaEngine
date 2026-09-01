@@ -12,10 +12,11 @@ namespace andromeda {
 
         SelectionCallback onSelect;
 	private:
-		void DrawEntityNode(Entity entity, const andromeda::EntityRelationships& relationships, int level = 0);
+		bool DrawEntityNode(Entity entity, const andromeda::EntityRelationships& relationships, int level = 0);
 
 	private:
 		SharedRef<Scene> m_scene;
 		Entity m_selected;
+		bool m_showHierarchyView = true;
 	};
 } // namespace andromeda

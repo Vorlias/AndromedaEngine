@@ -6,24 +6,57 @@
 #include "Engine/Luau/Lib.h"
 using namespace andromeda;
 
+
+// struct RegistryData {
+// 	Scene* scene;
+// 	uint32_t nextId;
+// };
+// static std::unordered_map<entt::registry*, RegistryData> s_registryData;
+
+// void added(entt::registry& registry, const entt::entity entity) {
+// 	auto& data = s_registryData.at(&registry);
+// }
+
 Scene::Scene() {
+	// s_registryData.insert({ &m_registry, { this } });
+	// m_registry.on_construct<entt::entity>().connect<&added>();
 }
 
 Entity Scene::CreateEntity(const std::string& name) {
+	return CreateEntity(name, Entity());
+}
+
+Entity Scene::CreateEntity(const std::string& name, Entity parent) {
 	Entity entity = {this, m_registry.create()};
 
 	auto& name_component = entity.AddComponent<NameComponent>();
 	name_component.name = name;
 
 	auto& relationship = entity.AddComponent<EntityRelationships>();
+	if (parent) {
+		entity.SetParent(parent);
+	}
 
 	auto& transform = entity.AddComponent<TransformComponent>();
+
+#if ANDROMEDA_EDITOR
+	// In editor the entity is sortable
+	auto& sort = entity.AddComponent<EntitySort>(m_sortIdx++);
+	m_registry.sort<EntitySort>([](const EntitySort& left, const EntitySort& right) {
+		return left.order < right.order;
+	});
+	std::cout << "create sort of " << m_sortIdx << std::endl;
+#endif
 
 	return entity;
 }
 
 Entity Scene::CreateEntity() {
-	return CreateEntity("Entity");
+	return CreateEntity("Entity", Entity::Null);
+}
+
+Entity Scene::CreateEntity(Entity parent) {
+	return CreateEntity("Entity", parent);
 }
 
 void Scene::DestroyEntity(Entity entity) {
@@ -34,7 +67,7 @@ void Scene::DestroyEntity(Entity entity) {
 		auto& prel = m_registry.get<EntityRelationships>(rel.parent);
 		auto it = prel.children.find(entity);
 		if (it != prel.children.end()) {
-			prel.children.remove(it);
+			prel.children.erase(it);
 		}
 	}
 
@@ -44,13 +77,24 @@ void Scene::DestroyEntity(Entity entity) {
 	}
 
 	m_registry.destroy(entity.GetHandle());
+
+#if ANDROMEDA_EDITOR
+	m_registry.sort<EntitySort>([](const EntitySort& left, const EntitySort& right) {
+		return left.order < right.order;
+	});
+#endif
 }
+
 
 void Scene::Initialize() {
 	Awake();
 	// TODO: Iterate scripts, inject any referent properties
 	Start();
+
+	// entt::sigh_helper{m_registry}.
 }
+
+void Scene::Sort(entt::entity entity) {}
 
 void Scene::Shutdown() {
 	m_active = false;
@@ -126,9 +170,7 @@ template<>
 void Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component) {}
 
 template<>
-void Scene::OnComponentAdded<NameComponent>(Entity entity, NameComponent& component) {
-
-}
+void Scene::OnComponentAdded<NameComponent>(Entity entity, NameComponent& component) {}
 
 template<>
 void Scene::OnComponentAdded<LuauScriptComponent>(Entity entity, LuauScriptComponent& component) {
@@ -138,4 +180,6 @@ void Scene::OnComponentAdded<LuauScriptComponent>(Entity entity, LuauScriptCompo
 Scene::~Scene() {
 	if (m_active)
 		Shutdown();
+
+	// s_registryData.erase(&m_registry);
 }

@@ -20,6 +20,8 @@ namespace andromeda {
 
 	class Entity : public Object {
 	public:
+		static Entity Null;
+
 		Entity() {};
 		Entity(Scene* scene, entt::entity entity) : m_scene(scene), m_entity(entity) {}
 		Entity(const Entity& other) = default;
@@ -71,7 +73,7 @@ namespace andromeda {
 		const std::vector<Entity>& GetChildren() const;
 		// const List<Entity>& GetDescendants() const;
 
-		const List<Entity> GetDescendants() const;
+		const LinkedList<Entity> GetDescendants() const;
 
 		operator bool() const {
 			return m_entity != entt::null;

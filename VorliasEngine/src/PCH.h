@@ -20,6 +20,9 @@
 #include <queue>
 #include <stack>
 
+// features
+#define ANDROMEDA_OBJECT_HIERARCHY 1
+
 using byte = unsigned char;
 
 #define NO_COPY(_CLS) \

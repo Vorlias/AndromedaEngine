@@ -1,4 +1,5 @@
 #pragma once
+#include "Common.h"
 
 #define MAKE_PTR(T, ...) new T(__VA_ARGS__) // std::make_shared<T>(__VA_ARGS__)
 
@@ -10,29 +11,44 @@ namespace andromeda {
 		}
 	};
 
-
-
 	template<typename T>
-	struct ListNode {
-		using Node = ListNode<T>*;
+	class LinkedList {
+	public:
+		struct Node {
+			static SharedRef<Node> Create(T value) {
+				return std::make_shared<Node>(value);
+			}
 
-		T value;
+			T value;
+			SharedRef<Node> next;
+			SharedRef<Node> prev;
 
-		Node next{};
-		Node prev{};
+			const T& operator*() const {
+				return value;
+			}
 
-		ListNode(T value) : value(value) {}
-	};
+			const T* operator&() const {
+				return &value;
+			}
 
-	// A linked list
-	template<typename T>
-	struct List {
+			SharedRef<Node> operator++() const {
+				return next;
+			}
+
+			SharedRef<Node> operator--() const {
+				return prev;
+			}
+
+			Node(T value) : value(value) {}
+		};
+		typedef SharedRef<Node> NodePtr;
+
 		class Iterator {
 		public:
-			const List<T>* list{};
-			ListNode<T>* ptr{};
+			const LinkedList<T>* list{};
+			NodePtr ptr{};
 
-			Iterator(const List<T>* list, ListNode<T>* value) : list(list), ptr(value) {};
+			Iterator(const LinkedList<T>* list, NodePtr value) : list(list), ptr(value) {};
 
 			Iterator operator++() {
 				ptr = ptr->next;
@@ -44,50 +60,34 @@ namespace andromeda {
 				return *this;
 			}
 
-			Iterator operator+(int value) {
-				if (value > 0) {
-					for (int i = 0; i < value; i++) {
-						ptr = ptr->next;
-						if (ptr == nullptr)
-							return *this;
-					}
-				} else if (value < 0) {
-					for (int i = 0; i < -value; i++) {
-						ptr = ptr->prev;
-						if (ptr == nullptr)
-							return *this;
-					}
-				}
-
-				return *this;
-			}
-
-			Iterator operator-(int value) {
-				return (*this) + (-value);
-			}
-
-			bool operator==(const Iterator& other) {
+			bool operator==(const Iterator& other) const {
 				return ptr == other.ptr;
 			}
 
-			bool operator!=(const Iterator& other) {
+			bool operator!=(const Iterator& other) const {
 				return ptr != other.ptr;
 			}
 
 			operator bool() const {
-				return ptr != nullptr && list->size() > 0;
+				return ptr != nullptr;
 			}
 
-			const T& operator*() const {
+			T& operator*() const {
+				return ptr->value;
+			}
+
+			T& value() const {
 				return ptr->value;
 			}
 		};
+
+
 		class ReverseIterator {
 		public:
-			const List<T>* list;
-			ListNode<T>* ptr;
+			const LinkedList<T>* list;
+			NodePtr ptr{};
 
-			ReverseIterator(const List<T>* list, ListNode<T>* value) : list(list), ptr(value) {};
+			ReverseIterator(const LinkedList<T>* list, NodePtr value) : list(list), ptr(value) {};
 
 			ReverseIterator operator++() {
 				ptr = ptr->prev;
@@ -99,95 +99,118 @@ namespace andromeda {
 				return *this;
 			}
 
-			bool operator!=(const ReverseIterator& other) {
+			bool operator==(const Iterator& other) const {
+				return ptr == other.ptr;
+			}
+
+			bool operator!=(const ReverseIterator& other) const {
 				return ptr != other.ptr;
 			}
 
-			const T& operator*() const {
+			T& operator*() const {
 				return ptr->value;
 			}
 		};
 
-		List() = default;
-		List(const T& value) {
+	private:
+	public:
+		LinkedList() = default;
+
+		LinkedList(const T& value) {
 			push_back(value);
 		}
 
-		List(std::initializer_list<T> values) {
+		LinkedList(std::initializer_list<T> values) {
 			for (auto it = values.begin(); it != values.end(); it++) {
 				push_back(*it);
 			}
 		}
 
-		List(List<T>& src) = delete;
-
-		List(List<T>&& src) {
-			std::cout << " move list " << std::endl;
-
-			m_head = std::move(src.m_head);
-			m_tail = std::move(src.m_tail);
-			count = src.count;
-
-			src.m_head = nullptr;
-			src.m_tail = nullptr;
-			src.count = 0;
-		}
-
-		List(const List<T>& src) {
-			for (auto it = src.begin(); it != src.end(); ++it) {
-				push_back(*it);
-			}
-		}
-
 		void push_back(T value) {
-			ListNode<T>* node = new ListNode<T>(value);
-			if (m_tail != nullptr) {
-				m_tail->next = node;
-				node->prev = m_tail;
+			NodePtr node = Node::Create(value);
+			if (_tail != nullptr) {
+				_tail->next = node;
+				node->prev = _tail;
 			} else {
-				m_head = node;
+				_head = node;
 			}
-			m_tail = node;
-			count += 1;
+			_tail = node;
+			_count += 1;
 		}
 
-		// // push back by value
-		// void push_back(List<T>& other) {
+		void push_front(T value) {
+			NodePtr node = Node::Create(value);
+			if (_head != nullptr) {
+				_head->prev = node;
+				node->next = _head;
+			} else {
+				_tail = node;
+			}
+			_head = node;
+			_count += 1;
+		}
 
-		// }
+		void move_back(LinkedList<T>& other) {
+			_tail->next = other._head;
+			_tail = other._tail;
+			_count += other._count;
 
-		// push back by ref
-		void push_back(const List<T>& other) {
+			other._count = 0;
+			other._tail = nullptr;
+			other._head = nullptr;
+		}
+
+		void move_front(LinkedList<T>& other) {
+			_head->prev = other._tail;
+			other._tail->next = _head;
+
+			_head = other._head;
+			_count += other._count;
+
+			other._count = 0;
+			other._tail = nullptr;
+			other._head = nullptr;
+		}
+
+		void push_back(const LinkedList<T>& other) {
 			for (auto it = other.begin(); it != other.end(); ++it) {
 				push_back(*it);
 			}
 		}
 
-		// push front by value
-		void push_front(const List<T>& other) {
-			for (auto it = other.rbegin(); it != other.rend(); ++it) {
+		void push_front(const LinkedList<T>& other) {
+			for (auto it = other.begin(); it != other.end(); ++it) {
 				push_front(*it);
 			}
 		}
 
-		void push_front(T value) {
-			ListNode<T>* node = new ListNode<T>(value);
-			if (m_head != nullptr) {
-				m_head->prev = node;
-				node->next = m_head;
-			} else {
-				m_tail = node;
+		void erase(Iterator position) {
+			ANDROMEDA_ASSERT(position.list == this);
+
+			NodePtr toRemove = position.ptr;
+			if (_head == toRemove) {
+				_head = toRemove->next;
 			}
-			m_head = node;
-			count += 1;
+
+			if (_tail == toRemove) {
+				_tail = toRemove->prev;
+			}
+
+			if (toRemove->next != nullptr) {
+				toRemove->next->prev = toRemove->prev;
+			}
+
+			if (toRemove->prev != nullptr) {
+				toRemove->prev->next = toRemove->next;
+			}
+
+			_count -= 1;
+			position.ptr = nullptr;
 		}
 
-		// void swap(Iterator a, Iterator b) {
-		// 	ANDROMEDA_ASSERT(a.list == this);
-		// 	ANDROMEDA_ASSERT(b.list == this);
-		// }
 
-		void erase_front(Iterator position, size_t count) {
+		// Erase from the position given to
+		void erase(Iterator position, size_t count) {
 			size_t i{0};
 
 			for (; position != end(); position++) {
@@ -199,45 +222,17 @@ namespace andromeda {
 			}
 		}
 
-		void erase_back(ReverseIterator position, size_t count) {
-			size_t i{0};
-
-			for (; position != rend(); position++) {
-				remove(position);
-				i++;
-
-				if (i >= count)
-					break;
+		// Find the given value in this linked list that matches the given predicate
+		const Iterator find(std::function<bool(const T&)> predicate) const {
+			for (Iterator it = begin(); it != end(); it++) {
+				if (predicate(*it))
+					return it;
 			}
+
+			return end();
 		}
 
-		void remove(Iterator position) {
-			ANDROMEDA_ASSERT(position.list == this);
-
-			ListNode<T>* toRemove = position.ptr;
-			if (m_head == toRemove) {
-				m_head = toRemove->next;
-			}
-
-			if (m_tail == toRemove) {
-				m_tail = toRemove->prev;
-			}
-
-			if (toRemove->next != nullptr) {
-				toRemove->next->prev = toRemove->prev;
-			}
-
-			if (toRemove->prev != nullptr) {
-				toRemove->prev->next = toRemove->next;
-			}
-
-			// finally delete this node
-			/// delete toRemove;
-			count -= 1;
-
-			position.ptr = nullptr;
-		}
-
+		// Find the given value in this linked list
 		const Iterator find(const T& value) {
 			for (Iterator it = begin(); it != end(); it++) {
 				if (*it == value)
@@ -247,17 +242,8 @@ namespace andromeda {
 			return end();
 		}
 
-		const ReverseIterator rfind(const T& value) {
-			for (ReverseIterator it = begin(); it != end(); it++) {
-				if (*it == value)
-					return it;
-			}
-
-			return end();
-		}
-
 		Iterator begin() const {
-			return Iterator(this, m_head);
+			return Iterator(this, _head);
 		}
 
 		Iterator end() const {
@@ -265,49 +251,29 @@ namespace andromeda {
 		}
 
 		ReverseIterator rbegin() const {
-			return ReverseIterator(this, m_tail);
+			return ReverseIterator(this, _tail);
 		}
 
 		ReverseIterator rend() const {
 			return ReverseIterator(this, nullptr);
 		}
 
-		operator bool() const {
-			return m_head != nullptr && m_tail != nullptr;
+		NodePtr tail() const {
+			return _tail;
 		}
 
-		void clear() {
-			for (Iterator it = begin(); it != end(); it++) {
-				delete it.ptr;
-			}
-			m_head = nullptr;
-			m_tail = nullptr;
+		NodePtr head() const {
+			return _head;
 		}
 
-		~List() {
-			// clear();
-		}
-
-		const ListNode<T>* head() const {
-			return m_head;
-		}
-		const ListNode<T>* tail() const {
-			return m_tail;
-		}
-		const size_t size() const {
-			return count;
-		}
-
-		T operator[](int i) {
-			Iterator v = begin() + i;
-			if (v == end())
-				throw ListIndexException();
-			return *v;
+		constexpr size_t size() const {
+			return _count;
 		}
 
 	private:
-		ListNode<T>::Node m_head{};
-		ListNode<T>::Node m_tail{};
-		size_t count{0};
+		NodePtr _head{};
+		NodePtr _tail{};
+		size_t _count{0};
+		bool _readonly = false;
 	};
 } // namespace andromeda

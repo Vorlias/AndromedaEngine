@@ -18,8 +18,11 @@ namespace andromeda {
 			return m_registry;
 		}
 
+		Entity CreateEntity(const std::string& name, Entity parent);
 		Entity CreateEntity(const std::string& name);
+
 		Entity CreateEntity();
+		Entity CreateEntity(Entity parent);
 
 		void DestroyEntity(Entity entity);
 
@@ -32,6 +35,8 @@ namespace andromeda {
 		// Update the scene
 		void Update(float dt);
 		
+		void Sort(entt::entity entity);
+
 		// Shutdown the scene
 		void Shutdown();
 
@@ -51,6 +56,8 @@ namespace andromeda {
 		bool m_active;
 		std::string m_name = "Scene";
 		entt::registry m_registry;
+
+		int32_t m_sortIdx = 0;
 
 		friend class Entity;
 	};

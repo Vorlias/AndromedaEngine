@@ -13,11 +13,23 @@ namespace andromeda_luau {
 namespace andromeda {
 
 	struct EntityRelationships {
+		uint32_t sortOrder = 0;
+
 		// The parent of this entity
 		entt::entity parent{entt::null};
 
 		// The children of this entity
-		List<entt::entity> children{};
+		LinkedList<entt::entity> children{};
+
+		constexpr size_t size() const { return children.size(); }
+	};
+	
+	struct EntitySort {
+		int32_t level{};
+		int32_t order{};
+
+		EntitySort() = default;
+		EntitySort(int32_t order): order(order) {}
 	};
 
 	enum struct LuauComponentType {
