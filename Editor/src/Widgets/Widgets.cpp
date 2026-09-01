@@ -168,6 +168,61 @@ namespace andromeda::widgets {
 		return modified;
 	}
 
+	ImVec2 GetPadding() {
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (window->SkipItems)
+			return ImVec2();
+
+		ImGuiContext& g = *GImGui;
+		const ImGuiStyle& style = g.Style;
+
+		return ImVec2(style.FramePadding.x, style.FramePadding.y);
+	}
+
+	// void GetSTack() {
+	// 	ImGuiContext& g = *GImGui;
+	// 	ImGuiWindow* window = g.CurrentWindow;
+	// 	ImGuiTreeNodeStackData* tree_node_data = &g.TreeNodeStack.Data[g.TreeNodeStack.Size - 1];
+
+
+	// 	tree_node_data->
+	// }
+
+	int GetTreeDepth() {
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (window->SkipItems)
+			return 0;
+
+		return window->DC.TreeDepth;
+	}
+
+	void DrawText(ImVec2 pos, const char* txt, ImVec4 col) {
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (window->SkipItems)
+			return;
+
+		ImGuiContext& g = *GImGui;
+		const ImGuiStyle& style = g.Style;
+		window->DrawList->AddText(pos, ImGui::ColorConvertFloat4ToU32(col), txt, 0);
+	}
+
+	void DrawTextPreviousLine(const char* text, ImVec2 offset, ImVec4 col, DrawTextPreviousLineFlags flags) {
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (window->SkipItems)
+			return;
+
+		ImGuiContext& g = *GImGui;
+		const ImGuiStyle& style = g.Style;
+
+		if ((flags & TextPreviousLine_VerticalOnly) != 0) {
+			ImVec2 textPos(offset.x, window->DC.CursorPosPrevLine.y + offset.y);
+			window->DrawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(col), text, 0);
+		} else {
+			ImVec2 textPos(window->DC.CursorPosPrevLine.x + offset.x, window->DC.CursorPosPrevLine.y + offset.y);
+			window->DrawList->AddText(textPos, ImGui::ColorConvertFloat4ToU32(col), text, 0);
+		}
+	}
+
 	void OffsetY(float yOffset) {
 		ImGuiWindow* window = ImGui::GetCurrentWindow();
 		if (window->SkipItems)

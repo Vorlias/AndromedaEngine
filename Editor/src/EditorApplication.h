@@ -13,6 +13,7 @@
 #include "EditorPanels/SceneHeirarchy.h"
 #include "EditorPanels/Inspector.h"
 #include "EditorPanels/Console.h"
+#include "EditorPanels/SceneView.h"
 
 #include "Assets/Assets.h"
 #include "Assets/LuauScriptImporter.h"
@@ -80,6 +81,10 @@ namespace andromeda {
 			m_luau->Update(dt);
 		}
 
+		void Render(graphics::GraphicsContext* context) override {
+			context->Submit<graphics::DrawVkTriangleDemoCommand>();
+		}
+
 		void Event(andromeda::Event& e) override {
 			EventDispatcher dispatcher(e);
 
@@ -123,6 +128,8 @@ namespace andromeda {
 		SceneHierarchyPanel m_sceneHierarchyPanel;
 		InspectorPanel m_inspector;
 		Console m_console;
+
+		SceneView m_sceneView;
 
 		std::filesystem::path m_projectRootPath;
 

@@ -11,7 +11,7 @@
 #include "Engine/Graphics/Vulkan/VulkanIMGUI.h"
 
 namespace andromeda::graphics {
-	class VulkanRenderTexture final : public RenderTarget {
+	class VulkanRenderTexture final : public RenderTexture {
 	public:
 		enum RenderTextureFlags {
 			RENDER_TEXTURE_NONE = 0,
@@ -59,7 +59,7 @@ namespace andromeda::graphics {
 			return m_format;
 		}
 
-		ImTextureID GetImGuiTexture() const {
+		ImTextureID GetImGuiTexture() const override {
 			ANDROMEDA_ASSERTM(m_imguiDescriptor != nullptr, "To use IMGUI textures the RENDER_TEXTURE_IMGUI flag must be passed");
 			return reinterpret_cast<ImTextureID>(m_imguiDescriptor);
 		}

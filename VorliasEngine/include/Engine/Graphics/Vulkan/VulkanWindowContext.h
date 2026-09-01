@@ -26,6 +26,7 @@ namespace andromeda::graphics {
 		constexpr static VkFormat swapchainFormat{VK_FORMAT_B8G8R8A8_SRGB};
 		constexpr static VkFormat depthFormat{VK_FORMAT_D32_SFLOAT}; // represents a depth buffer of 32 bit floats
 		static PipelineId s_pipelineIdx;
+
 	public:
 		VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window);
 
@@ -35,7 +36,7 @@ namespace andromeda::graphics {
 		API GetAPI() override;
 
 		void SetClearColor(Color color) override {
-			m_clearColor = { color.r, color.g, color.b, color.a };
+			m_clearColor = {color.r, color.g, color.b, color.a};
 		}
 
 		void DrawDemoTriangle();
@@ -110,25 +111,30 @@ namespace andromeda::graphics {
 			return m_frameResources[frameResIdx].commandBuffer;
 		}
 
-		void SetTargetRenderTexture(VulkanRenderTexture* renderTexture);
+		void SetVulkanRenderTexture(VulkanRenderTexture* renderTexture);
 		void RenderToTarget(VulkanRenderTexture* renderTexture = nullptr);
 		bool HasRenderTarget() const;
 
+		void SetRenderTarget(std::shared_ptr<RenderTexture> renderTarget) override;
+
 		VulkanGraphicsPipeline* GetPipeline(PipelineId pipelineId) { // a bit like a program
-			if (!m_pipelines.contains(pipelineId)) return nullptr;
+			if (!m_pipelines.contains(pipelineId))
+				return nullptr;
 			return m_pipelines.at(pipelineId);
 		}
 
 		VulkanGraphicsPipeline* CreatePipeline(VulkanShader* shader) {
 			VulkanGraphicsPipeline* pp = new VulkanGraphicsPipeline(vulkan, swapchainFormat, depthFormat, shader);
-			if (!pp->Create()) return nullptr;
+			if (!pp->Create())
+				return nullptr;
 
-			m_pipelines.insert({ s_pipelineIdx, pp });
+			m_pipelines.insert({s_pipelineIdx, pp});
 
 			std::cout << "create pipeline with id " << s_pipelineIdx << std::endl;
 			s_pipelineIdx++;
 			return pp;
 		}
+
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();

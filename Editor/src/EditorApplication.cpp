@@ -42,11 +42,22 @@ bool EditorApplication::Initialize() {
 	SetupIMGUI();
 	SetupLuau();
 
+	// m_sceneView.Initialize();
+
 	auto scene = NewScene();
 	{
 		auto entity = scene->CreateEntity("Script Object");
 		auto script = assets.GetAsset<LuauScript>("assets/scripts/test.luau");
 		entity.AddComponent<LuauScriptComponent>(script);
+
+		auto childEntity = scene->CreateEntity("Child object");
+		childEntity.SetParent(entity);
+
+		auto childEntity2 = scene->CreateEntity("Child object2");
+		childEntity2.SetParent(entity);
+
+		auto childEntity3 = scene->CreateEntity();
+		childEntity3.SetParent(childEntity2);
 	}
 
 	return true;
@@ -57,11 +68,11 @@ void EditorApplication::SetupIMGUI() {
 	ANDROMEDA_ASSERT(imgui != nullptr);
 
 	auto& io = ImGui::GetIO();
-	io.IniFilename = NULL;
+	// io.IniFilename = NULL;
 
-	std::string imguiIniFile = m_projectRootPath / "imgui.ini";
+	// std::string imguiIniFile = m_projectRootPath / "imgui.ini";
 
-	ImGui::LoadIniSettingsFromDisk(imguiIniFile.c_str());
+	// ImGui::LoadIniSettingsFromDisk(imguiIniFile.c_str());
 
 	io.Fonts->AddFontDefault();
 	auto imFont = io.Fonts->AddFontFromFileTTF("assets/fonts/OpenSans-Regular.ttf", 15.0f);
@@ -147,6 +158,8 @@ void EditorApplication::DrawIMGUI() {
 
 	m_sceneHierarchyPanel.DrawHierarchyPanel();
 	m_inspector.DrawInspector();
+
+	// m_sceneView.DrawSceneView();
 
 	// ImGui::PushFont(textEditorFont, 20.f);
 	// {

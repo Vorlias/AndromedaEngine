@@ -1,8 +1,10 @@
 #include "EditorApplication.h"
 #include "ArgParse.h"
 #include "Engine/Main.h"
+#include "Engine/LinkedList.h"
 
 using namespace andromeda;
+
 
 Application* ApplicationMain(const ApplicationInit& ap) {
 	int flags = EditorApplication::EDITOR_DEFAULT;
@@ -17,7 +19,6 @@ Application* ApplicationMain(const ApplicationInit& ap) {
 		if (result.empty())
 			return nullptr;
 	}
-
 
 	if (args.ProjectPath == ".") {
 		projectPath = std::filesystem::current_path();

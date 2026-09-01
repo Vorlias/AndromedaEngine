@@ -28,9 +28,19 @@ Entity Scene::CreateEntity() {
 
 void Scene::DestroyEntity(Entity entity) {
 	auto& rel = m_registry.get<EntityRelationships>(entity);
-	if (rel.parent != entt::null && m_registry.valid(rel.parent)) {
-		auto& parentRel = m_registry.get<EntityRelationships>(rel.parent);
-		parentRel.RemoveChild(m_registry, entity);
+
+	// Detach from parent
+	if (rel.parent != entt::null) {
+		auto& prel = m_registry.get<EntityRelationships>(rel.parent);
+		auto it = prel.children.find(entity);
+		if (it != prel.children.end()) {
+			prel.children.remove(it);
+		}
+	}
+
+	// Clear all children
+	for (auto it = rel.children.begin(); it != rel.children.end(); it++) {
+		m_registry.destroy(*it);
 	}
 
 	m_registry.destroy(entity.GetHandle());

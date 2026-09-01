@@ -12,15 +12,15 @@ void andromeda::SceneHierarchyPanel::SetContext(const SharedRef<Scene>& scene) {
 	m_scene = scene;
 }
 
-void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, const andromeda::EntityRelationships& rel) {
+void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, const andromeda::EntityRelationships& rel, int level) {
 	bool destroy = false;
 	auto& name = entity.GetComponent<NameComponent>().name;
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_FramePadding | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-	if (rel.childCount == 0) {
+	if (rel.children.size() == 0) {
 		flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_DrawLinesToNodes;
 	} else {
-		// flags |= ImGuiTreeNodeFlags_CollapsingHeader;
+		flags |= ImGuiTreeNodeFlags_DrawLinesToNodes;
 	}
 
 	if (m_selected == entity) {
@@ -33,7 +33,10 @@ void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, co
 	ImGui::PushID(entity.GetId());
 	auto id = ImGui::GetID(entity.GetId());
 
-	bool open = ImGui::TreeNodeEx(*entity, flags, "\t%s", name.c_str());
+
+	bool open = ImGui::TreeNodeEx(*entity, flags, "%s", name.c_str());
+	auto cursor = ImGui::GetCursorPos();
+
 	if (ImGui::BeginPopupContextItem()) {
 		if (ImGui::MenuItem("Delete")) {
 			destroy = true;
@@ -49,25 +52,23 @@ void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, co
 
 	// ImGui::AlignTextToFramePadding();
 
-	ImGui::SameLine(ImGui::GetCursorStartPos().x + 15);
-		widgets::OffsetY(8);
-	ImGui::Text(ICON_LC_BOX);
+	if (rel.children.size() == 0) {
+		widgets::DrawText(cursor + ImVec2(-13, 8), ICON_LC_BOX, ImVec4(1, 1, 1, 1));
+	}
 
 	float offset = 0.0f;
 
 
 
 	if (entity.HasComponent<LuauScriptComponent>()) {
-		ImGui::AlignTextToFramePadding();
-		ImGui::SameLine(ImGui::GetColumnWidth() - offset);
-		ImGui::Text(ICON_LC_SCROLL);
+		widgets::DrawTextPreviousLine(ICON_LC_SCROLL, ImVec2(8, 8), ImVec4(0.2, 0.2, 0.2, 1));
 		offset += 20.0f;
 	}
 
 	if (entity.HasComponent<CameraComponent>()) {
-		ImGui::AlignTextToFramePadding();
-		ImGui::SameLine(ImGui::GetColumnWidth() - offset);
-		ImGui::Text(ICON_LC_CAMERA);
+		// ImGui::AlignTextToFramePadding();
+		// ImGui::SameLine(ImGui::GetColumnWidth() - offset);
+		// ImGui::Text(ICON_LC_CAMERA);
 	}
 
 	if (destroy) {
@@ -77,20 +78,15 @@ void andromeda::SceneHierarchyPanel::DrawEntityNode(andromeda::Entity entity, co
 	}
 
 	if (open) {
-		// if (rel.childCount > 0) {
-		// 	auto& registry = m_scene->GetRegistry();
+		if (rel.children.size() > 0 && !destroy) {
+			auto& registry = m_scene->GetRegistry();
 
-		// 	auto child = rel.firstChild;
-		// 	for (std::size_t i = 0; i < rel.childCount; ++i) {
-		// 		if (!registry.valid(child)) continue;
-
-		// 		auto& childRel = registry.get<EntityRelationships>(child);
-		// 		Entity childEntity(m_scene.get(), child);
-
-		// 		DrawEntityNode(childEntity, childRel);
-		// 		child = childRel.nextSibling;
-		// 	}
-		// }
+			for (auto child : rel.children) {
+				Entity childEntity(m_scene.get(), child);
+				auto& childRel = registry.get<EntityRelationships>(child);
+				DrawEntityNode(childEntity, childRel, level + 1);
+			}
+		}
 
 		ImGui::TreePop();
 	}
@@ -108,7 +104,9 @@ void andromeda::SceneHierarchyPanel::DrawHierarchyPanel() {
 
 			for (auto [entityId, name, rel] : entities.each()) {
 				Entity entity(m_scene.get(), entityId);
-				DrawEntityNode(entity, rel);
+
+				if (rel.parent == entt::null)
+					DrawEntityNode(entity, rel);
 			}
 
 			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) {

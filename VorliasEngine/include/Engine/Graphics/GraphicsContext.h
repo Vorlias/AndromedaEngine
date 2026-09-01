@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Graphics/RenderCommand.h"
+#include "Engine/Graphics/RenderTarget.h"
 #include "Engine/Data/Color.h"
 #include "Engine/Data/Rect.h"
 #include <vector>
@@ -46,6 +47,9 @@ namespace andromeda::graphics {
 		virtual void SubmitCommand(std::unique_ptr<andromeda::graphics::RenderCommand> command) {}
 
 		virtual void SetClearColor(Color color) {}
+
+		// Set the render target of this graphics renderer
+		virtual void SetRenderTarget(std::shared_ptr<RenderTexture> renderTarget) = 0;
 
 		friend class RenderCommand;
 	};

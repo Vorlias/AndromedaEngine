@@ -170,6 +170,7 @@ void Engine::Render() {
 	graphics->RenderPrepare();
 
 	graphics->RenderDraw();
+	m_app->Render(graphics);
 
 	if (m_app->imgui != nullptr) {
 		m_app->DrawIMGUI();

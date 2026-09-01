@@ -49,7 +49,7 @@ bool VulkanApplication::Initialize() {
 		rt = new VulkanRenderTexture(VulkanRenderTexture::RENDER_TEXTURE_IMGUI);
 		rt->Create(vk, ctx, 1920, 1080);
 
-		ctx->SetTargetRenderTexture(rt);
+		ctx->SetVulkanRenderTexture(rt);
 	}
 #endif
 

@@ -67,7 +67,11 @@ namespace andromeda {
 		}
 
 		void SetParent(const Entity& parent);
-		const std::vector<Entity> GetChildren() const;
+
+		const std::vector<Entity>& GetChildren() const;
+		// const List<Entity>& GetDescendants() const;
+
+		const List<Entity> GetDescendants() const;
 
 		operator bool() const {
 			return m_entity != entt::null;

@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Data/Color.h"
+#include "imgui/imgui.h"
 
 namespace andromeda::graphics {
 	class RenderTarget {
@@ -27,13 +28,21 @@ namespace andromeda::graphics {
 			m_isValid = false;
 		}
 
-		virtual void Bind() {}
-		virtual void Unbind() {}
-
 		virtual void SetClearColor(Color color) = 0;
 	protected:
 		int m_width = 0;
 		int m_height = 0;
 		bool m_isValid = false;
+	};
+
+	enum class RenderTextureType {
+		Texture,
+		IMGUITexture,
+	};
+
+	class RenderTexture : public RenderTarget {
+	public:
+		static std::shared_ptr<RenderTexture> Create(RenderTextureType type = RenderTextureType::Texture);
+		virtual ImTextureID GetImGuiTexture() const = 0;
 	};
 } // namespace andromeda::graphics

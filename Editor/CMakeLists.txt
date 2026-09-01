@@ -40,6 +40,8 @@ target_sources(
     src/ArgParse.h
     src/EditorApplication.h
     src/EditorApplication.cpp
+    src/EditorPanels/SceneView.h
+    src/EditorPanels/SceneView.cpp
 )
 
 if (WIN32)

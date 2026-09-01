@@ -68,66 +68,6 @@ namespace andromeda {
 		}
 	};
 
-#if ANDROMEDA_EXPERIMENTAL
-	enum class WindowChangeEvent {
-		Resized = SDL_EVENT_WINDOW_RESIZED,
-		Moved = SDL_EVENT_WINDOW_MOVED,
-		Minimized = SDL_EVENT_WINDOW_MINIMIZED,
-		Maximized = SDL_EVENT_WINDOW_MAXIMIZED,
-		EnteredFullscreen = SDL_EVENT_WINDOW_ENTER_FULLSCREEN,
-		ExitedFullscreen = SDL_EVENT_WINDOW_LEAVE_FULLSCREEN,
-	};
-
-	struct WindowEvent {
-		struct Unknown {};
-
-		struct Closed {};
-
-		struct Resized {
-			int width, height;
-		};
-
-		struct FocusStateChange {
-			bool focused;
-		};
-
-		struct WindowStateChange {
-			WindowChangeEvent event;
-			bool maximized;
-			bool minimized;
-			bool fullscreen;
-
-			int width, height;
-			int x, y;
-		};
-
-		struct MouseFocusStateChange {
-			bool focused;
-		};
-
-		template<typename T>
-		[[nodiscard]] inline bool is() const {
-			return std::holds_alternative<T>(m_event);
-		}
-
-		template<typename T>
-		[[nodiscard]] inline T* getIf() const {
-			return std::get_if<T>(&m_event);
-		}
-
-		template<typename T>
-		[[nodiscard]] inline T get() const {
-			return std::get<T>(m_event);
-		}
-
-	private:
-		friend class Window;
-		std::variant<Unknown, Closed, Resized, FocusStateChange, WindowStateChange, MouseFocusStateChange> m_event;
-	};
-#endif
-
-	struct WindowData {};
-
 	class Window {
 		friend class graphics::Shader;
 

@@ -28,13 +28,29 @@ namespace andromeda::widgets {
 	}
 
 	bool Vector3F(Vector3& values, float resetValue = 0.0f, float columnWidth = 100.0f, NumberFormat format = NumberFormat::FORMAT_DECIMAL);
-
 	bool Vector3F(const std::string& label, Vector3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
+
 	bool EulerAngles(const std::string& label, Vector3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
 
 	internal::ObjectContainerAction ObjectContainer(const char* id, bool hasObject, std::string_view objName, std::string_view clsName);
 
 	void OffsetY(float yOffset);
+
+	enum DrawTextPreviousLineFlags {
+		TextPreviousLine_None = 0,
+		TextPreviousLine_VerticalOnly = 1,
+	};
+
+	void DrawTextPreviousLine(
+		const char* icon,
+		ImVec2 offset,
+		ImVec4 col = ImVec4(1, 1, 1, 1),
+		DrawTextPreviousLineFlags flags = TextPreviousLine_None
+	);
+	ImVec2 GetPadding();
+	int GetTreeDepth();
+
+	void DrawText(ImVec2 pos, const char* txt, ImVec4 col);
 
 	template<typename T>
 	Ref<T> Object(const std::string& label, Ref<T> value) {
@@ -51,7 +67,8 @@ namespace andromeda::widgets {
 
 			AssetType assetType = value != nullptr ? value->GetAssetType() : AssetType::Unknown;
 
-			int result = ObjectContainer(label.c_str(), value != nullptr, value != nullptr ? value->GetFilePath() : "", GetAssetTypeName(assetType).c_str());
+			int result =
+				ObjectContainer(label.c_str(), value != nullptr, value != nullptr ? value->GetFilePath() : "", GetAssetTypeName(assetType).c_str());
 			if (result) {
 				print("Picker selection is {}", result);
 			}

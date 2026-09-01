@@ -8,6 +8,8 @@
 
 #include "Engine/Events/Event.h"
 #include "Engine/Graphics/RenderTarget.h"
+#include "Engine/Graphics/GraphicsContext.h"
+#include "Engine/Graphics/RenderCommand.h"
 // NOTE TO SELF: Don't use PREPROC defines for virtual methods
 
 namespace andromeda {
@@ -30,6 +32,8 @@ namespace andromeda {
 
 		// Called when the application is shutting down
 		virtual void Shutdown() {}
+
+		virtual void Render(graphics::GraphicsContext* context) {}
 
 		// virtual void WindowResized(int width, int height) {}
 		// virtual void WindowMaximized() {}

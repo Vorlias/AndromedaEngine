@@ -12,7 +12,7 @@ namespace andromeda {
 
         SelectionCallback onSelect;
 	private:
-		void DrawEntityNode(Entity entity, const andromeda::EntityRelationships& relationships);
+		void DrawEntityNode(Entity entity, const andromeda::EntityRelationships& relationships, int level = 0);
 
 	private:
 		SharedRef<Scene> m_scene;

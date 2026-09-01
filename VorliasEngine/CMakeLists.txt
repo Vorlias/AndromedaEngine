@@ -104,6 +104,7 @@ target_sources(
     src/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.cpp
     src/Engine/Graphics/Vulkan/VulkanRenderTexture.cpp
     src/Engine/Graphics/RenderCommand.cpp
+    src/Engine/Graphics/RenderTarget.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -170,6 +171,7 @@ target_sources(
     include/Engine/Events/Event.h
     include/Engine/Graphics/Vulkan/VulkanRenderTexture.h
     include/Engine/Graphics/RenderTarget.h
+    include/Engine/LinkedList.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

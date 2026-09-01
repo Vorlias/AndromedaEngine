@@ -12,8 +12,12 @@
 
 andromeda::graphics::PipelineId andromeda::graphics::VulkanWindowContext::s_pipelineIdx = 0;
 
-void andromeda::graphics::VulkanWindowContext::SetTargetRenderTexture(andromeda::graphics::VulkanRenderTexture* rt) {
+void andromeda::graphics::VulkanWindowContext::SetVulkanRenderTexture(andromeda::graphics::VulkanRenderTexture* rt) {
 	m_renderTexture = rt;
+}
+
+void andromeda::graphics::VulkanWindowContext::SetRenderTarget(std::shared_ptr<RenderTexture> renderTarget) {
+	SetVulkanRenderTexture(static_cast<VulkanRenderTexture*>(renderTarget.get()));
 }
 
 void andromeda::graphics::VulkanWindowContext::RenderToTarget(VulkanRenderTexture* renderTexture) {
