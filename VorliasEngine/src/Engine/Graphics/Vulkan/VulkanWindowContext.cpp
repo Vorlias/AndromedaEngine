@@ -57,8 +57,8 @@ namespace andromeda::graphics {
 	void VulkanWindowContext::DrawDemoTriangle() {
 		FrameResources& res = m_frameResources[frameResIdx];
 
-		vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
-		vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
+		// vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
+		// vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
 	}
 
 	void VulkanWindowContext::Initialize() {
@@ -332,6 +332,8 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::BeforeRender() {
+		m_state = VULKAN_STATE_BEFORE_RENDER;
+
 		for (auto& command : m_renderCommands) {
 			command->BeforeRender(this);
 		}
@@ -366,7 +368,9 @@ namespace andromeda::graphics {
 			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 		};
+
 		vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
+		m_cmdBuffer = true;
 	}
 
 	bool VulkanWindowContext::HasRenderTarget() const {
@@ -378,6 +382,7 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::RenderPrepare() {
+		m_state = VULKAN_STATE_RENDER_PREPARE;
 		FrameResources& res = m_frameResources[frameResIdx];
 
 		// get the resources for this frame
@@ -477,6 +482,8 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::RenderDraw() {
+		m_state = VULKAN_STATE_RENDER;
+
 		FrameResources& res = m_frameResources[frameResIdx];
 
 		// set the viewport and scissor state
@@ -499,6 +506,8 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::RenderPresent() {
+		m_state = VULKAN_STATE_RENDER_PRESENT;
+
 		FrameResources& res = m_frameResources[frameResIdx];
 		vkCmdEndRendering(res.commandBuffer);
 
@@ -526,6 +535,7 @@ namespace andromeda::graphics {
 		vkCmdPipelineBarrier2(res.commandBuffer, &presentDepInfo);
 
 		vkEndCommandBuffer(res.commandBuffer);
+		m_cmdBuffer = false;
 
 		// ensure swapchain image is actually vailable to start color output
 		VkSemaphoreSubmitInfo imageAcquireWaitInfo{
@@ -576,6 +586,7 @@ namespace andromeda::graphics {
 		vkQueuePresentKHR(vulkan->GetGraphicsQueue(), &presentInfo);
 
 		m_renderCommands.clear();
+		m_state = VULKAN_STATE_POST_RENDER;
 	}
 
 	void VulkanWindowContext::Shutdown() {

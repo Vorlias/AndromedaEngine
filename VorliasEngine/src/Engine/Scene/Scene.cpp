@@ -45,7 +45,6 @@ Entity Scene::CreateEntity(const std::string& name, Entity parent) {
 	m_registry.sort<EntitySort>([](const EntitySort& left, const EntitySort& right) {
 		return left.order < right.order;
 	});
-	std::cout << "create sort of " << m_sortIdx << std::endl;
 #endif
 
 	return entity;
@@ -138,6 +137,12 @@ void Scene::Start() {
 
 	m_active = true;
 }
+
+#if ANDROMEDA_EDITOR
+void Scene::EditorUpdate(float dt) {
+	
+}
+#endif
 
 void Scene::Update(float dt) {
 	if (!m_active) {

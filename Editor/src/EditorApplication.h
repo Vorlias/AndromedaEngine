@@ -76,9 +76,13 @@ namespace andromeda {
 		bool Initialize() override;
 
 		void Update(float dt) override {
-			if (m_activeScene != nullptr)
-				m_activeScene->Update(dt);
-			m_luau->Update(dt);
+			m_activeScene->EditorUpdate(dt);
+
+			if (m_running) {
+				if (m_activeScene != nullptr)
+					m_activeScene->Update(dt);
+				m_luau->Update(dt);
+			}
 		}
 
 		void Render(graphics::GraphicsContext* context) override {
@@ -111,6 +115,7 @@ namespace andromeda {
 		}
 
 		void Shutdown() override {
+			m_sceneView.Shutdown();
 			SaveSettings();
 			assets.Shutdown();
 			s_editorWindowIcon.Destroy();
@@ -119,8 +124,11 @@ namespace andromeda {
 	private:
 		bool m_demoWindow = false;
 		bool m_aboutWindow = false;
+		bool m_running = false;
 
+		SharedRef<Scene> m_scene;
 		SharedRef<Scene> m_activeScene;
+
 		SharedRef<LuauRuntime> m_luau;
 
 		Entity m_selected;

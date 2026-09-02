@@ -76,4 +76,47 @@ namespace andromeda::widgets {
 
 		return value;
 	}
+
+	inline bool InspectorHeader(Entity entity) {
+		if (!entity)
+			return false;
+
+		bool modified = false;
+		char buffer[256];
+		memset(buffer, 0, sizeof(buffer));
+		strcpy(buffer, entity.GetName().data());
+
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0);
+		ImGui::Columns(1, NULL, false);
+		{
+			// ImGui::SetColumnWidth(0, 55);
+			// {
+			// 	ImGui::ImageButton("##icn", ImTextureRef(), ImVec2(30, 30));
+			// 	ImGui::NextColumn();
+			// }
+			// ImGui::SetColumnWidth(1, 45);
+			// {
+			// 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+			// 	if (ImGui::Checkbox("##enabled", &value)) {
+
+			// 	}
+			// 	ImGui::PopStyleVar();
+			// 	ImGui::NextColumn();
+			// }
+
+			// ImGui::SetColumnWidth(0, ImGui::GetWindowWidth());
+			// {
+			float width = ImGui::GetColumnWidth();
+			if (ImGui::InputTextEx("##text", 0, buffer, sizeof(buffer), ImVec2(width, 30), 0)) {
+				entity.SetName(std::string(buffer));
+				modified = true;
+			}
+			//}
+		}
+		ImGui::Columns(1);
+
+		ImGui::PopStyleVar();
+
+		return modified;
+	}
 } // namespace andromeda::widgets

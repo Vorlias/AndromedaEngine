@@ -15,8 +15,14 @@ namespace andromeda {
 		void SetScene(SharedRef<Scene> scene) {
 			m_scene = scene;
 		}
+
+		void Shutdown();
 	private:
 		SharedRef<graphics::RenderTexture> m_sceneViewportTexture;
 		SharedRef<Scene> m_scene;
+
+		int m_pendingWidth;
+		int m_pendingHeight;
+		bool m_needsResize;
 	};
 } // namespace andromeda

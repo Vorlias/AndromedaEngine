@@ -240,6 +240,11 @@ int callMethodOnThread(lua_State* L, const char* methodName) {
 }
 
 void LuauScriptComponent::SetEnabled(bool enabled) {
+	if (m_thread == nullptr) {
+		m_enabled = enabled;
+		return;
+	}
+
 	lua_State* L = *m_thread;
 	int res = callMethodOnThread(L, enabled ? kEnabled : kDisabled);
 

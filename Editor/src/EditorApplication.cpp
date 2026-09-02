@@ -42,7 +42,7 @@ bool EditorApplication::Initialize() {
 	SetupIMGUI();
 	SetupLuau();
 
-	// m_sceneView.Initialize();
+	m_sceneView.Initialize();
 
 	auto scene = NewScene();
 	{
@@ -159,7 +159,7 @@ void EditorApplication::DrawIMGUI() {
 	m_sceneHierarchyPanel.DrawHierarchyPanel();
 	m_inspector.DrawInspector();
 
-	// m_sceneView.DrawSceneView();
+	m_sceneView.DrawSceneView();
 
 	// ImGui::PushFont(textEditorFont, 20.f);
 	// {

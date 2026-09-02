@@ -29,10 +29,15 @@ namespace andromeda {
 
 	void InspectorPanel::DrawInspector() {
 		ImGui::SetNextWindowSizeConstraints(ImVec2(370.0f, 200.0f), ImVec2(1000, 1000));
+
+
 		ImGui::Begin(ICON_LC_INFO " Inspector###inspector");
 		{
+			widgets::InspectorHeader(selected);
+
 			if (selected) {
 				DrawComponents(selected);
+
 
 				auto avail = ImGui::GetWindowWidth();
 
@@ -58,6 +63,32 @@ namespace andromeda {
 		ImGui::End();
 	}
 
+	// Define a template class 'check' to test for the existence
+	// of 'func'
+	template<typename T>
+	class has_enabled {
+		// Define two types of character arrays, 'yes' and 'no',
+		// for SFINAE test
+		typedef char yes[1];
+		typedef char no[2];
+
+		// Test if class T has a member function named 'func'
+		// If T has 'func', this version of test() is chosen
+		template<typename C>
+		static yes& test(decltype(&C::SetEnabled));
+
+		// Fallback test() function used if T does not have
+		// 'func'
+		template<typename>
+		static no& test(...);
+
+	public:
+		// Static constant 'value' becomes true if T has 'func',
+		// false otherwise The comparison is based on the size
+		// of the return type from test()
+		static const bool value = sizeof(test<T>(0)) == sizeof(yes);
+	};
+
 	template<typename T>
 	void DrawComponent(Entity& entity, ComponentRender<T> drawFn, const std::string& heading) {
 		ANDROMEDA_ASSERTM(entity.HasComponent<T>(), "Invalid");
@@ -74,9 +105,23 @@ namespace andromeda {
 			return;
 		ImGui::PushID(heading.c_str());
 
+		T& component = entity.GetComponent<T>();
+
 		bool removeComponent = false;
 
-		bool open = ImGui::CollapsingHeader(heading.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowOverlap);
+		bool open;
+
+		if constexpr (has_enabled<T>::value) {
+			bool enabled = component.GetEnabled();
+			if (ImGui::Checkbox("", &enabled)) {
+				component.SetEnabled(enabled);
+			}
+			ImGui::SameLine();
+			open = ImGui::CollapsingHeader(("\t" + heading).c_str(), ImGuiTreeNodeFlags_AllowOverlap);
+		} else {
+			open = ImGui::CollapsingHeader(heading.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowOverlap);
+		}
+
 		ImGui::SameLine(ImGui::GetColumnWidth() - 10.0f);
 
 		if (ImGui::Button(ICON_LC_MENU, ImVec2(30, 30))) {
@@ -93,6 +138,14 @@ namespace andromeda {
 
 		if (open) {
 			auto& component = entity.GetComponent<T>();
+
+			// if constexpr (has_enabled<T>::value) {
+			// 	bool enabled = component.GetEnabled();
+			// 	if (ImGui::Checkbox("Enabled", &enabled)) {
+			// 		component.SetEnabled(enabled);
+			// 	}
+			// }
+
 			drawFn(component);
 		}
 

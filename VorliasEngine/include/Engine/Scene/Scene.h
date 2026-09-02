@@ -34,7 +34,11 @@ namespace andromeda {
 
 		// Update the scene
 		void Update(float dt);
-		
+
+#if ANDROMEDA_EDITOR
+		void EditorUpdate(float dt);
+#endif
+
 		void Sort(entt::entity entity);
 
 		// Shutdown the scene

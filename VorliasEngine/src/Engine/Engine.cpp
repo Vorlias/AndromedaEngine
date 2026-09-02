@@ -168,25 +168,26 @@ void Engine::Render() {
 
 	graphics->BeforeRender();
 	graphics->RenderPrepare();
+	{
+		graphics->RenderDraw();
+		m_app->Render(graphics);
 
-	graphics->RenderDraw();
-	m_app->Render(graphics);
-
-	if (m_app->imgui != nullptr) {
-		m_app->DrawIMGUI();
-		m_app->imgui->Render();
+		if (m_app->imgui != nullptr) {
+			m_app->DrawIMGUI();
+			m_app->imgui->Render();
+		}
 	}
-
 	graphics->RenderPresent();
 }
 
 void Engine::Shutdown() {
+	m_app->Shutdown();
+
 	if (m_app->imgui != nullptr) {
 		m_app->imgui->Shutdown();
 		m_app->imgui.release();
 	}
 
-	m_app->Shutdown();
 	m_app->CloseAllWindows();
 
 	if (m_renderer != nullptr)

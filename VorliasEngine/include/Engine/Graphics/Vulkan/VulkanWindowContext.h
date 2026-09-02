@@ -18,6 +18,15 @@ namespace andromeda::graphics {
 		VkSemaphore imageAcquiredSemaphore = nullptr;
 	};
 
+	enum RenderStateEnum {
+		VULKAN_STATE_INIT,
+		VULKAN_STATE_BEFORE_RENDER,
+		VULKAN_STATE_RENDER_PREPARE,
+		VULKAN_STATE_RENDER,
+		VULKAN_STATE_RENDER_PRESENT,
+		VULKAN_STATE_POST_RENDER,
+	};
+
 	class VulkanRenderTexture;
 
 	class VulkanWindowContext : public GraphicsContext {
@@ -27,6 +36,8 @@ namespace andromeda::graphics {
 		constexpr static VkFormat depthFormat{VK_FORMAT_D32_SFLOAT}; // represents a depth buffer of 32 bit floats
 		static PipelineId s_pipelineIdx;
 
+		RenderStateEnum m_state = VULKAN_STATE_INIT;
+		bool m_cmdBuffer = false;
 	public:
 		VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window);
 
