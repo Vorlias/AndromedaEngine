@@ -4,6 +4,8 @@
 #include "Engine/Objects/Component.h"
 #include "Engine/Luau/LuauScript.h"
 #include "Engine/Luau/Lib.h"
+#include "Engine/Engine.h"
+
 using namespace andromeda;
 
 
@@ -56,6 +58,14 @@ Entity Scene::CreateEntity() {
 
 Entity Scene::CreateEntity(Entity parent) {
 	return CreateEntity("Entity", parent);
+}
+
+void Scene::SubmitSceneForRendering() {
+	auto& engine = andromeda::Engine::GetInstance();
+	auto window = engine.GetMainWindow();
+	auto renderer = window->GetGraphicsContext();
+	
+	renderer->Submit<andromeda::graphics::DrawVkTriangleDemoCommand>();
 }
 
 void Scene::DestroyEntity(Entity entity) {

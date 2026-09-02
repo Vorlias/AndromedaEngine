@@ -2,6 +2,8 @@
 #include "imgui/imgui.h"
 
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
+#include "Engine/Graphics/GraphicsContext.h"
+#include "Engine/Graphics/RenderCommand.h"
 
 andromeda::SceneView::SceneView()
 	: m_pendingWidth(0), m_pendingHeight(0), m_needsResize(false) {}
@@ -43,12 +45,14 @@ void andromeda::SceneView::DrawSceneView() {
 	ImGui::End();
 }
 
-void andromeda::SceneView::Render() {
+void andromeda::SceneView::SubmitSceneForRendering() {
 	if (m_sceneViewportTexture == nullptr) return;
 	if (m_needsResize) {
 		m_sceneViewportTexture->Resize(m_pendingWidth, m_pendingHeight);
 		m_needsResize = false;
 	}
+
+	m_scene->SubmitSceneForRendering();
 }
 
 void andromeda::SceneView::Shutdown() {

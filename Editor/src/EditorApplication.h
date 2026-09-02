@@ -68,25 +68,33 @@ namespace andromeda {
 	public:
 		enum EditorFlags {
 			EDITOR_DEFAULT = 0,
+			NO_EDITOR = 1,
 		};
 
 		EditorApplication(const std::filesystem::path& projectPath, EditorFlags flags)
-			: m_projectRootPath(projectPath), m_activeScene(nullptr), m_sceneHierarchyPanel(m_activeScene), m_inspector(m_activeScene) {}
+			: m_editorInitFlags(flags)
+			, m_projectRootPath(projectPath)
+			, m_activeScene(nullptr)
+			, m_sceneHierarchyPanel(m_activeScene)
+			, m_inspector(m_activeScene) {}
 
 		bool Initialize() override;
 
 		void Update(float dt) override {
-			m_activeScene->EditorUpdate(dt);
+			if (m_showEditor) {
+				// Apply any pending rendering changes (like viewport resizing, render commands) before rendering
+				m_sceneView.SubmitSceneForRendering();
+
+				m_activeScene->EditorUpdate(dt);
+			} else {
+				m_activeScene->SubmitSceneForRendering();
+			}
 
 			if (m_running) {
 				if (m_activeScene != nullptr)
 					m_activeScene->Update(dt);
 				m_luau->Update(dt);
 			}
-		}
-
-		void Render(graphics::GraphicsContext* context) override {
-			context->Submit<graphics::DrawVkTriangleDemoCommand>();
 		}
 
 		void Event(andromeda::Event& e) override {
@@ -126,6 +134,8 @@ namespace andromeda {
 		bool m_aboutWindow = false;
 		bool m_running = false;
 
+		const EditorFlags m_editorInitFlags;
+
 		SharedRef<Scene> m_scene;
 		SharedRef<Scene> m_activeScene;
 
@@ -149,5 +159,7 @@ namespace andromeda {
 		AssetLibrary assets;
 
 		UserSettings settings;
+
+		bool m_showEditor = true;
 	};
 } // namespace andromeda

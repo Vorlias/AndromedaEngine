@@ -21,6 +21,10 @@ Application* ApplicationMain(const ApplicationInit& ap) {
 			return nullptr;
 	}
 
+	if (args.RunMode) {
+		flags |= EditorApplication::NO_EDITOR;
+	}
+
 	if (args.ProjectPath == ".") {
 		projectPath = std::filesystem::current_path();
 	} else {

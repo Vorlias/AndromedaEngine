@@ -155,7 +155,7 @@ namespace andromeda::graphics {
 		[[nodiscard]] bool CreateSwapchain(int width, int height);
 		void DestroySwapchain();
 
-		VulkanRenderTexture* m_renderTexture;
+		VulkanRenderTexture* m_renderTexture{};
 
 		SDL_Window* window;
 		VulkanContext* vulkan;

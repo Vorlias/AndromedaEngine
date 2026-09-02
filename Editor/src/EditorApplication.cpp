@@ -19,6 +19,11 @@ void EditorApplication::SetupAssets() {
 }
 
 bool EditorApplication::Initialize() {
+	if (m_editorInitFlags & NO_EDITOR) {
+		m_showEditor = false;
+		m_console.consoleFlags = Console::ConsoleFlags_DisplayAsOverlay;
+	}
+
 	SetupAssets();
 	InitSettings();
 
@@ -42,7 +47,8 @@ bool EditorApplication::Initialize() {
 	SetupIMGUI();
 	SetupLuau();
 
-	m_sceneView.Initialize();
+	if (m_showEditor)
+		m_sceneView.Initialize();
 
 	auto scene = NewScene();
 	{
@@ -94,8 +100,12 @@ void EditorApplication::SetupIMGUI() {
 }
 
 void EditorApplication::DrawIMGUI() {
-	auto vp = ImGui::GetMainViewport();
-	ImGui::DockSpaceOverViewport(vp->ID, vp);
+	// if (!m_showEditor) return;
+
+	if (m_showEditor) {
+		auto vp = ImGui::GetMainViewport();
+		ImGui::DockSpaceOverViewport(vp->ID, vp);
+	}
 
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
@@ -156,19 +166,21 @@ void EditorApplication::DrawIMGUI() {
 	}
 
 
-	m_sceneHierarchyPanel.DrawHierarchyPanel();
-	m_inspector.DrawInspector();
+	if (m_showEditor) {
+		m_sceneHierarchyPanel.DrawHierarchyPanel();
+		m_inspector.DrawInspector();
 
-	m_sceneView.DrawSceneView();
+		m_sceneView.DrawSceneView();
 
-	// ImGui::PushFont(textEditorFont, 20.f);
-	// {
-	// 	editor.SetLanguage(TextEditor::Language::Luau());
-	// 	editor.SetShowMiniMapEnabled(true);
-	// 	editor.SetPalette(editor.GetDarkPalette());
-	// 	editor.Render("Text Editor");
-	// }
-	// ImGui::PopFont();
+		// ImGui::PushFont(textEditorFont, 20.f);
+		// {
+		// 	editor.SetLanguage(TextEditor::Language::Luau());
+		// 	editor.SetShowMiniMapEnabled(true);
+		// 	editor.SetPalette(editor.GetDarkPalette());
+		// 	editor.Render("Text Editor");
+		// }
+		// ImGui::PopFont();
+	}
 
 	m_console.Draw();
 }

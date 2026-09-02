@@ -32,6 +32,8 @@ namespace andromeda {
 		// Initialize the scene
 		void Initialize();
 
+		void SubmitSceneForRendering();
+
 		// Update the scene
 		void Update(float dt);
 

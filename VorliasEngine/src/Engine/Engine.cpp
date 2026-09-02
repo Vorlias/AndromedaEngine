@@ -149,6 +149,10 @@ void Engine::Quit() {
 
 void Engine::Update() {
 	m_app->UpdateWindows();
+
+	// since quit requests can happen in the window update phase above
+	if (m_app->m_quitRequested)
+		return;
 	m_app->Update(m_app->m_deltaTime);
 }
 
@@ -170,8 +174,6 @@ void Engine::Render() {
 	graphics->RenderPrepare();
 	{
 		graphics->RenderDraw();
-		m_app->Render(graphics);
-
 		if (m_app->imgui != nullptr) {
 			m_app->DrawIMGUI();
 			m_app->imgui->Render();

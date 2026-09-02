@@ -15,10 +15,15 @@ namespace andromeda {
 						pfd::message("Invalid project path", "project argument requires a path to be supplied", pfd::choice::ok, pfd::icon::error);
 					}
 				}
+
+				if (*it == "--run") {
+					RunMode = true;
+				}
 			}
 		}
 
 		std::filesystem::path ProjectPath{};
+		bool RunMode = false;
 
 	private:
 		std::vector<std::string> m_args;

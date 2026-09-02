@@ -12,7 +12,8 @@
             "program": "${workspaceFolder}/bin/VorliasEditor",
             "args": [
                 "--project",
-                "."
+                ".",
+                // "--run",
             ],
             "preLaunchTask": "Build Editor Project using CMake",
             "linux": {
@@ -53,7 +54,7 @@
             "program": "${workspaceFolder}/bin/VorliasGame",
             "args": [
                 "--project",
-                "."
+                ".",
             ],
             "preLaunchTask": "Build Game Project using CMake",
             "linux": {

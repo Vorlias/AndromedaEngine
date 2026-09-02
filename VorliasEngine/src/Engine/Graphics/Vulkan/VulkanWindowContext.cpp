@@ -57,8 +57,8 @@ namespace andromeda::graphics {
 	void VulkanWindowContext::DrawDemoTriangle() {
 		FrameResources& res = m_frameResources[frameResIdx];
 
-		// vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
-		// vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
+		vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
+		vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
 	}
 
 	void VulkanWindowContext::Initialize() {
@@ -378,6 +378,7 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::SubmitCommand(std::unique_ptr<RenderCommand> command) {
+		ANDROMEDA_ASSERT(command != nullptr);
 		m_renderCommands.push_back(std::move(command));
 	}
 

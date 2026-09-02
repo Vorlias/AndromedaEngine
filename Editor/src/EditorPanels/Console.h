@@ -29,6 +29,11 @@ namespace andromeda {
 	using my_sink_st = ConsoleSink<spdlog::details::null_mutex>;
 
 	struct Console {
+		enum Flags {
+			ConsoleFlags_None = 0,
+			ConsoleFlags_DisplayAsOverlay = 1,
+		};
+
 		struct Item {
 			spdlog::level::level_enum level;
 			std::string message;
@@ -39,6 +44,8 @@ namespace andromeda {
 		bool scrollToBottom = false;
 		bool autoScroll = true;
 		ImFont* font{};
+
+		Flags consoleFlags = ConsoleFlags_None;
 
 		Console() {
 

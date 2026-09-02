@@ -33,13 +33,6 @@ namespace andromeda {
 		// Called when the application is shutting down
 		virtual void Shutdown() {}
 
-		virtual void Render(graphics::GraphicsContext* context) {}
-
-		// virtual void WindowResized(int width, int height) {}
-		// virtual void WindowMaximized() {}
-		// virtual void WindowMinimized() {}
-		// virtual void WindowRestored() {}
-
 		virtual void Event(Event& e) {}
 
 	protected:
