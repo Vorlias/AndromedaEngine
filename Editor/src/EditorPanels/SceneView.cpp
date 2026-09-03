@@ -14,9 +14,11 @@ void andromeda::SceneView::Initialize() {
     auto& engine = Engine::GetInstance();
     auto ctx = static_cast<graphics::VulkanWindowContext*>(engine.GetMainWindow()->GetGraphicsContext());
     ctx->SetRenderTarget(m_sceneViewportTexture);
+	m_sceneViewportTexture->SetClearColor(Color(.3f, .5f, .8f));
 }
 
 void andromeda::SceneView::DrawSceneView() {
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2());
 	ImGui::Begin("Scene", 0, ImGuiWindowFlags_MenuBar);
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::Button("Play")) {
@@ -43,6 +45,7 @@ void andromeda::SceneView::DrawSceneView() {
         }
 	}
 	ImGui::End();
+	ImGui::PopStyleVar();
 }
 
 void andromeda::SceneView::SubmitSceneForRendering() {

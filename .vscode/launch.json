@@ -12,7 +12,7 @@
             "program": "${workspaceFolder}/bin/VorliasEditor",
             "args": [
                 "--project",
-                ".",
+                "./ExampleProject",
                 // "--run",
             ],
             "preLaunchTask": "Build Editor Project using CMake",

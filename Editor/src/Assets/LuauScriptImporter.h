@@ -10,7 +10,7 @@ namespace andromeda {
 	public:
 		LuauScriptImporter() : AssetImporter("luau", 1) {}
 		void OnImportAsset(const AssetImportContext& context) const {
-			auto source = ReadFile(context.assetPath);
+			auto source = ReadFile(context.absoluteAssetPath);
 
 			auto asset = context.assetLibrary->GetAsset(context.assetPath);
 			if (asset) {

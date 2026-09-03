@@ -64,7 +64,7 @@ void Scene::SubmitSceneForRendering() {
 	auto& engine = andromeda::Engine::GetInstance();
 	auto window = engine.GetMainWindow();
 	auto renderer = window->GetGraphicsContext();
-	
+
 	renderer->Submit<andromeda::graphics::DrawVkTriangleDemoCommand>();
 }
 

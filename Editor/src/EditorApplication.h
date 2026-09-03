@@ -19,6 +19,7 @@
 #include "Assets/LuauScriptImporter.h"
 
 #include "Settings/UserSettings.h"
+#include "Settings/ProjectConfig.h"
 
 namespace andromeda {
 	static andromeda::WindowIcon s_editorWindowIcon;
@@ -50,7 +51,7 @@ namespace andromeda {
 
 		void UpdateWindowTitle() {
 			std::string title;
-			title += "Andromeda Project - ";
+			title += projectConfig.ProjectName + " - ";
 			title += ANDROMEDA_VERSION_STRING;
 			title += " <" + Engine::GetInstance().GetRenderer()->GetAPIString() + ">";
 
@@ -58,11 +59,13 @@ namespace andromeda {
 		}
 
 		void InitSettings() {
-			settings.Load(m_projectRootPath / "settings.toml");
+			settings.Load(m_settingsPath);
+			projectConfig.Load(m_projectConfigPath);
 		}
 
 		void SaveSettings() {
-			settings.Save(m_projectRootPath / "settings.toml");
+			settings.Save(m_settingsPath);
+			projectConfig.Save(m_projectConfigPath);
 		}
 
 	public:
@@ -76,7 +79,15 @@ namespace andromeda {
 			, m_projectRootPath(projectPath)
 			, m_activeScene(nullptr)
 			, m_sceneHierarchyPanel(m_activeScene)
-			, m_inspector(m_activeScene) {}
+			, m_inspector(m_activeScene) {
+			m_projectConfigPath = m_projectRootPath / "AndromedaProject.aproj";
+			
+
+			InitSettings();
+			SetPersistentDataPath(GetPersistentDataPath() / projectConfig.CompanyName / projectConfig.ProjectName);
+
+			m_settingsPath = GetPersistentDataPath() / "settings.toml";
+		}
 
 		bool Initialize() override;
 
@@ -132,7 +143,7 @@ namespace andromeda {
 	private:
 		bool m_demoWindow = false;
 		bool m_aboutWindow = false;
-		bool m_running = false;
+		bool m_running = true;
 
 		const EditorFlags m_editorInitFlags;
 
@@ -149,8 +160,7 @@ namespace andromeda {
 
 		SceneView m_sceneView;
 
-		std::filesystem::path m_projectRootPath;
-
+		std::filesystem::path m_projectRootPath, m_settingsPath, m_projectConfigPath;
 
 		ImFont* textEditorFont;
 		ImFont* boldDefaultFont;
@@ -159,6 +169,7 @@ namespace andromeda {
 		AssetLibrary assets;
 
 		UserSettings settings;
+		ProjectConfig projectConfig;
 
 		bool m_showEditor = true;
 	};

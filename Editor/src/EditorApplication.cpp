@@ -16,16 +16,21 @@ void EditorApplication::SetupAssets() {
 	assets.RegisterImporter<SPIRVShaderImporter>("spv");
 
 	assets.Initialize(m_projectRootPath, GetDataPath(true));
+
 }
 
 bool EditorApplication::Initialize() {
+	if (!std::filesystem::exists(m_projectConfigPath)) {
+		pfd::message("Invalid project", "Invalid project path specified", pfd::choice::ok, pfd::icon::error);
+		return false;
+	}
+
 	if (m_editorInitFlags & NO_EDITOR) {
 		m_showEditor = false;
 		m_console.consoleFlags = Console::ConsoleFlags_DisplayAsOverlay;
 	}
 
 	SetupAssets();
-	InitSettings();
 
 	WindowOptions windowOptions("Andromeda Engine", Vector2u(1024, 768), WindowFlags::Resizable);
 	windowOptions.windowIcon = s_editorWindowIcon;
@@ -65,7 +70,9 @@ bool EditorApplication::Initialize() {
 		auto childEntity3 = scene->CreateEntity();
 		childEntity3.SetParent(childEntity2);
 	}
+	m_activeScene = scene;
 
+	scene->Initialize();
 	return true;
 }
 

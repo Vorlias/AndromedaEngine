@@ -1,0 +1,7 @@
+project_name: Andromeda Example
+company_name: Vorlias
+active_scene: ""
+build_config:
+  platforms: [Linux]
+  scene: ""
+  scenes: []

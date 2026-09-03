@@ -5,6 +5,7 @@ namespace andromeda {
 	class AssetLibrary;
 
 	struct AssetImportContext {
+		std::filesystem::path absoluteAssetPath;
 		std::filesystem::path assetPath;
 		AssetLibrary* assetLibrary;
 	};

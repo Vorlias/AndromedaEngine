@@ -177,6 +177,7 @@ namespace andromeda {
 
 		bool Initialize(const std::filesystem::path& projectPath, const std::filesystem::path& path) {
 			RegisterImporter<DefaultFileImporter>();
+			m_projectPath = projectPath;
 
 			m_watcher = FileWatcher{path, 2s};
 			return m_watcher.Watch([this, projectPath](std::filesystem::path path, FileStatus status) {
@@ -206,8 +207,10 @@ namespace andromeda {
 			if (std::filesystem::is_directory(path)) {
 				trace("Directory '{}' {}", path.string(), (int)status);
 			} else {
+				if (!path.has_extension()) return;
+
 				auto ext = path.extension().string().substr(1);
-				AssetImportContext importContext{path, this};
+				AssetImportContext importContext{m_projectPath / path, path, this};
 
 				for (auto& [importerExtension, importer] : m_importers) {
 					if (importerExtension == ext) {
@@ -228,5 +231,6 @@ namespace andromeda {
 		std::unordered_map<UUID, AssetHandle> m_uassets;
 		// std::unordered_map<std::string, AssetHandle> m_assets;
 		std::unordered_map<std::string, UUID> m_pathToUUID;
+		std::filesystem::path m_projectPath;
 	};
 }; // namespace andromeda

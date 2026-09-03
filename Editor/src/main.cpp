@@ -7,6 +7,11 @@
 using namespace andromeda;
 
 
+struct ArgTest {
+	std::filesystem::path ProjectPath{};
+	bool RunMode = false;
+};
+
 Application* ApplicationMain(const ApplicationInit& ap) {
 	int flags = EditorApplication::EDITOR_DEFAULT;
 

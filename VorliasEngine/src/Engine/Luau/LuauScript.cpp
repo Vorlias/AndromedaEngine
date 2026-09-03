@@ -369,6 +369,8 @@ void LuauScriptComponent::Awake() {
 	if (m_script == nullptr)
 		return;
 
+	assert(!m_script->HasErrored());
+
 	std::unique_ptr<andromeda::LuauScriptThread, andromeda::LuauScriptThread::Cleanup> thread(
 		new LuauScriptThread(m_script), andromeda::LuauScriptThread::Cleanup()
 	);
@@ -400,6 +402,11 @@ void LuauScriptComponent::Awake() {
 		int top = lua_gettop(L);
 
 		try {
+			if (top < 1) {
+				luaL_errorL(L, "Module '%s' has no return value", m_script->GetFilePath().c_str());
+				return;
+			}
+
 			if (lua_istable(L, -1)) {
 				lua_pushvalue(L, -1);
 				lua_rawsetfield(L, LUA_REGISTRYINDEX, kComponent);
