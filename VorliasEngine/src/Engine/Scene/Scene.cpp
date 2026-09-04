@@ -96,11 +96,20 @@ void Scene::DestroyEntity(Entity entity) {
 
 
 void Scene::Initialize() {
+	auto scriptView = m_registry.view<LuauScriptComponent>();
+	for (auto [entity, component] : scriptView.each()) {
+		// Awake a script if possible
+		if (component.HasError() || component.m_script == nullptr)
+			continue;
+
+		component.Reset();
+	}
+
 	Awake();
 	// TODO: Iterate scripts, inject any referent properties
 	Start();
 
-	// entt::sigh_helper{m_registry}.
+	m_active = true;
 }
 
 void Scene::Sort(entt::entity entity) {}
@@ -144,14 +153,10 @@ void Scene::Start() {
 			component.Start();
 		}
 	}
-
-	m_active = true;
 }
 
 #if ANDROMEDA_EDITOR
-void Scene::EditorUpdate(float dt) {
-	
-}
+void Scene::EditorUpdate(float dt) {}
 #endif
 
 void Scene::Update(float dt) {

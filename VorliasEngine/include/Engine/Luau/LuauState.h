@@ -47,6 +47,9 @@ namespace ENGINE_NS {
 			m_requireHandler = requireHandler;
 		}
 
+		void Reset();
+	private:
+		void InitState();
 	private:
 		lua_State* L;
 		LuauStateContext m_context;

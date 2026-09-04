@@ -13,6 +13,7 @@ namespace andromeda {
 	enum class AssetType {
 		Unknown,
 		LuauScript,
+		ShaderFile,
 	};
 
 	inline const std::string GetAssetTypeName(AssetType assetType) {

@@ -327,7 +327,6 @@ void LuauScriptComponent::Close() {
 		return;
 
 	if (m_enabled) {
-		m_enabled = false;
 		int result = callMethodOnThread(L, kDisabled);
 		if (result == LUA_YIELD) {
 			andromeda::warn("{} yielded while script component was being closed", kDisabled);
@@ -361,6 +360,9 @@ void LuauScriptComponent::Close() {
 	m_thread->Close();
 	m_thread.reset();
 	m_state = STATE_CLOSED;
+
+	m_awake = false;
+	m_start = false;
 }
 
 void LuauScriptComponent::Awake() {

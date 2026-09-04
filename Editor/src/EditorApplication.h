@@ -134,21 +134,44 @@ namespace andromeda {
 		}
 
 		void Shutdown() override {
+			if (m_activeScene != nullptr && m_activeScene->IsActive()) {
+				m_activeScene->Shutdown();
+			}
+
 			m_sceneView.Shutdown();
 			SaveSettings();
 			assets.Shutdown();
 			s_editorWindowIcon.Destroy();
 		}
 
+		void Run() {
+			andromeda::print("Starting simulation...");
+			if (m_activeScene != nullptr) {
+				m_activeScene->Initialize();
+				m_running = true;
+			}
+		}
+		
+		void Pause() {}
+
+		void Stop() {
+			andromeda::print("Stopping simulation...");
+			if (m_activeScene != nullptr && m_activeScene->IsActive()) {
+				m_activeScene->Shutdown();
+				m_running = false;
+			}
+
+			m_luau->Reset();
+		}
 	private:
 		bool m_demoWindow = false;
 		bool m_aboutWindow = false;
-		bool m_running = true;
+		bool m_running = false;
 
 		const EditorFlags m_editorInitFlags;
 
-		SharedRef<Scene> m_scene;
 		SharedRef<Scene> m_activeScene;
+		SharedRef<Scene> m_gameScene;
 
 		SharedRef<LuauRuntime> m_luau;
 

@@ -4,6 +4,8 @@
 #include "Engine/LinkedList.h"
 #include <source_location>
 
+#include "Engine/Assets/ShaderAsset.h"
+
 using namespace andromeda;
 
 

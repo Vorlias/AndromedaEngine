@@ -275,7 +275,10 @@ namespace andromeda {
 			return m_enabled;
 		}
 
-
+		// Check the component is closed - this will happen if the component is closed or destroyed
+		constexpr bool IsClosed() {
+			return m_state != STATE_CLOSED;
+		}
 	private:
 		void Close();
 

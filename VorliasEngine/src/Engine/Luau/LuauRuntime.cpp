@@ -28,6 +28,10 @@ void andromeda::LuauRuntime::Update(float dt) {
 	andromeda_luau::runThreadScheduler(m_mainState->GetLuaState(), m_time);
 }
 
+void andromeda::LuauRuntime::Reset() {
+	m_mainState->Reset();
+}
+
 const std::string LuauRuntime::ResolveModulePath(lua_State* L, std::string_view module) {
 	
 }

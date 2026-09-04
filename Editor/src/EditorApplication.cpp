@@ -72,7 +72,6 @@ bool EditorApplication::Initialize() {
 	}
 	m_activeScene = scene;
 
-	scene->Initialize();
 	return true;
 }
 
@@ -172,6 +171,20 @@ void EditorApplication::DrawIMGUI() {
 		ImGui::End();
 	}
 
+
+	if (ImGui::Begin("Simulation")) {
+		if (m_running) {
+			if (ImGui::Button("Stop")) {
+				Stop();
+			}
+		} else {
+			if (ImGui::Button("Play")) {
+				Run();
+			}
+		}
+
+		ImGui::End();
+	}
 
 	if (m_showEditor) {
 		m_sceneHierarchyPanel.DrawHierarchyPanel();

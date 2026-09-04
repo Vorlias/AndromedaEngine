@@ -23,6 +23,8 @@ namespace andromeda {
 
 		const std::string ResolveModulePath(lua_State* L, std::string_view module);
 		void PushModule(lua_State* L, std::string_view module);
+
+		void Reset();
 	private:
 		static SharedRef<LuauRuntime> s_gameRuntime;
 		static std::unordered_map<LuauStateContext, SharedRef<LuauRuntime>> s_runtimes;

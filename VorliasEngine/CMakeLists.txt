@@ -55,7 +55,8 @@ endif()
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
 set(VERSION_REVIS 5)
-add_library(AndromedaEngine STATIC)
+add_library(AndromedaEngine STATIC
+    include/Engine/Utility/SourceParser.h)
 # add_dependencies(AndromedaEngine shaders)
 
 target_sources(
@@ -105,6 +106,8 @@ target_sources(
     src/Engine/Graphics/Vulkan/VulkanRenderTexture.cpp
     src/Engine/Graphics/RenderCommand.cpp
     src/Engine/Graphics/RenderTarget.cpp
+    src/Engine/Assets/ShaderAsset.cpp
+    src/Engine/Utility/SourceParser.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -172,6 +175,7 @@ target_sources(
     include/Engine/Graphics/Vulkan/VulkanRenderTexture.h
     include/Engine/Graphics/RenderTarget.h
     include/Engine/LinkedList.h
+    include/Engine/Assets/ShaderAsset.h
 
 )
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)

@@ -65,7 +65,7 @@ int luau_warn(lua_State* L) {
 }
 
 // andromeda::LuauRequireHandler andromeda::LuauState::requireHandler = nullptr;
-int luau_require(lua_State* L){
+int luau_require(lua_State* L) {
 	auto context = LuauState::GetContextFromState(L);
 	auto mainState = LuauState::GetMainThread(context);
 	auto require = mainState->GetRequireHandler();
@@ -154,12 +154,12 @@ static int16_t handleAtom(lua_State* L, const char* c_str, size_t len) {
 	return -1;
 }
 
-LuauState::LuauState(LuauStateContext context) : m_context(context) {
+void LuauState::InitState() {
 	using namespace andromeda_luau;
 
 	L = luaL_newstate();
 	// Attach context to state
-	lua_pushinteger(L, static_cast<int>(context));
+	lua_pushinteger(L, static_cast<int>(m_context));
 	lua_setfield(L, LUA_REGISTRYINDEX, kContextId);
 
 	// Open libraries
@@ -200,7 +200,10 @@ LuauState::LuauState(LuauStateContext context) : m_context(context) {
 	cb->useratom = handleAtom;
 
 	m_timeoutHandler = new LuauTimeoutHandler(L);
-	// m_timeoutHandler->Start(); // TODO: Fix this
+}
+
+LuauState::LuauState(LuauStateContext context) : m_context(context) {
+	InitState();
 }
 
 LuauState* LuauState::GetLuauState(lua_State* L) {
@@ -236,6 +239,11 @@ LuauState* LuauState::GetMainThread(LuauStateContext context) {
 
 lua_State* LuauState::GetLuaState() {
 	return L;
+}
+
+void LuauState::Reset() {
+	lua_resetthread(L);
+	InitState();
 }
 
 LuauState::~LuauState() {
