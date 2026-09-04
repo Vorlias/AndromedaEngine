@@ -252,13 +252,13 @@ namespace andromeda::graphics {
 
 		if (swapchain) {
 			vkDestroySwapchainKHR(device, swapchain, nullptr);
-			swapchain = nullptr;
+			swapchain = VK_NULL_HANDLE;
 		}
 
 		if (depthImageView) {
 			vkDestroyImageView(device, depthImageView, nullptr);
 			vmaDestroyImage(vulkan->GetAllocator(), depthImage, depthImageAllocation);
-			depthImageView = nullptr;
+			depthImageView = VK_NULL_HANDLE;
 		}
 	}
 
@@ -302,6 +302,16 @@ namespace andromeda::graphics {
 	}
 
 	bool VulkanWindowContext::CreateCommandBuffers() {
+		VkCommandPoolCreateInfo poolInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+			.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
+			.queueFamilyIndex = static_cast<uint32_t>(vulkan->GetGraphicsFamilyIndex()),
+		};
+		if (vkCreateCommandPool(vulkan->GetDevice(), &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
+			andromeda::error("Failed to create command buffer pool");
+			return false;
+		}
+
 		for (FrameResources& res : m_frameResources) {
 			// Give ecah frame it's own pool, faster cmd buffer resets this way
 			VkCommandPoolCreateInfo poolInfo{
@@ -597,17 +607,21 @@ namespace andromeda::graphics {
 		m_shader->Unload();
 		m_shader.Reset();
 
+		if (m_commandPool != VK_NULL_HANDLE) {
+			vkDestroyCommandPool(vulkan->GetDevice(), m_commandPool, nullptr);
+		}
+
 		// Frame/time cleanup
 		{
 			for (FrameResources& res : m_frameResources) {
-				if (res.imageAcquiredSemaphore != nullptr)
+				if (res.imageAcquiredSemaphore != VK_NULL_HANDLE)
 					vkDestroySemaphore(vulkan->GetDevice(), res.imageAcquiredSemaphore, nullptr);
 
-				if (res.commandPool != nullptr)
+				if (res.commandPool != VK_NULL_HANDLE)
 					vkDestroyCommandPool(vulkan->GetDevice(), res.commandPool, nullptr); // destroys buffers implicitly
 			}
 
-			if (m_timelineSemaphore != nullptr) {
+			if (m_timelineSemaphore != VK_NULL_HANDLE) {
 				vkDestroySemaphore(vulkan->GetDevice(), m_timelineSemaphore, nullptr);
 			}
 		}
@@ -622,7 +636,199 @@ namespace andromeda::graphics {
 		if (surface != VK_NULL_HANDLE) {
 			andromeda::trace("Cleaned up surface");
 			SDL_Vulkan_DestroySurface(vulkan->GetInstance(), surface, nullptr);
-			surface = nullptr;
+			surface = VK_NULL_HANDLE;
 		}
+	}
+
+	VkCommandBuffer VulkanWindowContext::StartTransientCommandBuffer() {
+		VkCommandBufferAllocateInfo cmdAllocateInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.commandPool = m_commandPool,
+			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			.commandBufferCount = 1,
+		};
+
+		VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+		if (vkAllocateCommandBuffers(vulkan->GetDevice(), &cmdAllocateInfo, &commandBuffer) != VK_SUCCESS) {
+			andromeda::error("Unable to allocate command buffer");
+			return VK_NULL_HANDLE;
+		}
+
+		VkCommandBufferBeginInfo beginInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+		};
+
+		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+			andromeda::error("unable to begin command buffer");
+			vkFreeCommandBuffers(vulkan->GetDevice(), m_commandPool, 1, &commandBuffer);
+			return VK_NULL_HANDLE;
+		}
+
+		return commandBuffer;
+	}
+
+	std::pair<uint32_t, GPUBuffer> VulkanWindowContext::CreateImage(
+		VkCommandBuffer commandBuffer,
+		unsigned char* imageData,
+		uint32_t width,
+		uint32_t height,
+		int channels
+	) {
+		VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
+		VkImageCreateInfo imageInfo{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+			.imageType = VK_IMAGE_TYPE_2D,
+			.format = imageFormat,
+			.extent{.width = width, .height = height, .depth = 1},
+			.mipLevels = 1,
+			.arrayLayers = 1,
+			.samples = VK_SAMPLE_COUNT_1_BIT,
+			.tiling = VK_IMAGE_TILING_OPTIMAL,
+			.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		};
+
+		VmaAllocationCreateInfo allocInfo{
+			.usage = VMA_MEMORY_USAGE_AUTO,
+		};
+
+		GPUImage gpuImage;
+		if (vmaCreateImage(vulkan->GetAllocator(), &imageInfo, &allocInfo, &gpuImage.image, &gpuImage.allocation, nullptr) != VK_SUCCESS) {
+			andromeda::error("Error creating image");
+			return {0, GPUBuffer{}};
+		}
+
+		VkImageViewCreateInfo imgViewInfo{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+			.image = gpuImage.image,
+			.viewType = VK_IMAGE_VIEW_TYPE_2D,
+			.format = imageFormat,
+			.subresourceRange{
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, // accessing the color of the image
+				.levelCount = 1, // 1 mip level and array level
+				.layerCount = 1,
+			},
+		};
+
+		// create a view into the image memory
+		if (vkCreateImageView(vulkan->GetDevice(), &imgViewInfo, nullptr, &gpuImage.imageView) != VK_SUCCESS) {
+			andromeda::error("Error creating image view");
+			return {0, GPUBuffer{}};
+		}
+
+		// prepare to upload image data
+		VkImageMemoryBarrier2 transferBarrier{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_NONE,
+			.srcAccessMask = VK_ACCESS_2_NONE,
+			.dstStageMask = VK_PIPELINE_STAGE_2_COPY_BIT,
+			.dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // prepares hardware for writing image, ensures caches flushed and visible in VRAM
+			.image = gpuImage.image,
+			.subresourceRange{
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			},
+		};
+
+		VkDependencyInfo transferDepInfo{
+			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+			.imageMemoryBarrierCount = 1,
+			.pImageMemoryBarriers = &transferBarrier,
+		};
+		vkCmdPipelineBarrier2(commandBuffer, &transferDepInfo);
+
+		// create a staging buffer for copying data
+		const size_t byteSize = width * height * channels;
+		GPUBuffer stageBuffer = CreateBuffer(VK_IMAGE_USAGE_TRANSFER_SRC_BIT, byteSize, true, /* Use CPU */ VMA_MEMORY_USAGE_AUTO_PREFER_HOST);
+		MapCopyBufferData(stageBuffer, 0, imageData, byteSize);
+
+		VkBufferImageCopy bufferImageCopy{
+			.imageSubresource{
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.mipLevel = 0,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			},
+			.imageExtent{.width = width, .height = height, .depth = 1},
+		};
+		vkCmdCopyBufferToImage(commandBuffer, stageBuffer.vkBuffer, gpuImage.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferImageCopy);
+
+		// transition image for shader read/sampling
+		VkImageMemoryBarrier2 shaderReadBarrier{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_COPY_BIT,
+			.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
+			.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
+			.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT,
+			.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, // now can be sampled by shaders
+			.image = gpuImage.image,
+			.subresourceRange{
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			},
+		};
+		VkDependencyInfo shaderReadDepInfo{
+			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+			.imageMemoryBarrierCount = 1,
+			.pImageMemoryBarriers = &shaderReadBarrier,
+		};
+		vkCmdPipelineBarrier2(commandBuffer, &shaderReadDepInfo);
+
+		m_images.push_back(gpuImage);
+		const uint32_t imageId = m_images.size(); // zero will be null
+		return {imageId, stageBuffer};
+	}
+
+	void VulkanWindowContext::MapCopyBufferData(const GPUBuffer& buffer, size_t bufferOffset, void* data, size_t byteSize) {
+		// map and write buffer data
+		void* bufferPtr = nullptr;
+		if (vmaMapMemory(vulkan->GetAllocator(), buffer.allocation, &bufferPtr) != VK_SUCCESS) {
+			andromeda::error("Unable to map buffer memory");
+			return;
+		}
+
+		std::memcpy(static_cast<char*>(bufferPtr) + bufferOffset, data, byteSize);
+		vmaUnmapMemory(vulkan->GetAllocator(), buffer.allocation);
+	}
+
+	GPUBuffer VulkanWindowContext::CreateBuffer(VkBufferUsageFlags usage, size_t byteSize, bool mappable, VmaMemoryUsage memoryUsage) {
+		// Create buffer and VMA allocation
+		VkBufferCreateInfo buffInfo{
+			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			.size = byteSize,
+			.usage = usage,
+			.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		};
+
+		VmaAllocationCreateInfo allocInfo{
+			.flags = mappable ? VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT : 0u,
+			.usage = memoryUsage,
+		};
+
+		GPUBuffer gpuBuffer;
+		if (vmaCreateBuffer(vulkan->GetAllocator(), &buffInfo, &allocInfo, &gpuBuffer.vkBuffer, &gpuBuffer.allocation, nullptr) != VK_SUCCESS) {
+			return GPUBuffer{};
+		}
+
+		if (usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) {
+			VkBufferDeviceAddressInfo vertBdaInfo{
+				.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+				.buffer = gpuBuffer.vkBuffer,
+			};
+
+			gpuBuffer.deviceAddress = vkGetBufferDeviceAddress(vulkan->GetDevice(), &vertBdaInfo);
+		}
+
+		return gpuBuffer;
 	}
 } // namespace andromeda::graphics

@@ -2,15 +2,32 @@
 
 namespace andromeda {
 	// 16 bytes
-	struct Color {
+	struct Color4 {
 		float r{1}, g{1}, b{1}, a{1};
 
-		Color() = default;
-		Color(float r, float g, float b) : r(r), g(g), b(b), a(1) {}
-		Color(float r, float g, float b, float a) : r(r), g(g), b(b), a(a) {}
+		Color4() = default;
+		Color4(float r, float g, float b) : r(r), g(g), b(b), a(1) {}
+		Color4(float r, float g, float b, float a) : r(r), g(g), b(b), a(a) {}
 
-		static Color FromRGB(byte r, byte g, byte b) {
-			return Color(r / 255.f, g / 255.f, b / 255.f);
+		static Color4 FromRGB(byte r, byte g, byte b) {
+			return Color4(r / 255.f, g / 255.f, b / 255.f);
+		}
+
+		operator float*() const {
+			return (float*)&r;
+		}
+	};
+
+	using Color = Color4;
+
+	struct Color3 {
+		float r{1}, g{1}, b{1};
+
+		Color3() = default;
+		Color3(float r, float g, float b) : r(r), g(g), b(b) {}
+
+		static Color3 FromRGB(byte r, byte g, byte b) {
+			return Color3(r / 255.f, g / 255.f, b / 255.f);
 		}
 
 		operator float*() const {

@@ -108,6 +108,10 @@ target_sources(
     src/Engine/Graphics/RenderTarget.cpp
     src/Engine/Assets/ShaderAsset.cpp
     src/Engine/Utility/SourceParser.cpp
+    include/stb_image/stb_image.cpp
+    include/Engine/Data/Vertex.h
+    src/Engine/Data.cpp
+    src/Engine/Data/Image.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -176,8 +180,17 @@ target_sources(
     include/Engine/Graphics/RenderTarget.h
     include/Engine/LinkedList.h
     include/Engine/Assets/ShaderAsset.h
-
+    include/tinygltf/tinygltf.cpp
+    include/stb_image/stb_image.h
+    include/Engine/Data.h
+    include/Engine/Data/Image.h
+    # include/tinygltf/tiny_gltf_v3.c
+    # include/tinygltf/tiny_gltf_v3.h
+    # include/tinygltf/tinygltf_json_c.h
 )
+
+target_include_directories(AndromedaEngine PRIVATE "include/tinygltf/")
+
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 

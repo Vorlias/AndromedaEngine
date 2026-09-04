@@ -1,21 +1,21 @@
 #pragma once
+#include "Engine/Graphics/Vulkan/VulkanBase.h"
 #include "Engine/Graphics/GraphicsContext.h"
 #include "Engine/Graphics/Vulkan/VulkanShader.h"
 #include "Engine/Graphics/Vulkan/VulkanInstance.h"
 #include "imgui/imgui_impl_vulkan.h"
 #include <SDL3/SDL.h>
-#include <vulkan/vulkan.h>
-#include "Engine/Graphics/Vulkan/VulkanBase.h"
 
+#include "Engine/Data/Image.h"
 #include "VulkanGraphicsPipeline.h"
 
 namespace andromeda::graphics {
 	using PipelineId = uint16_t;
 
 	struct FrameResources {
-		VkCommandPool commandPool = nullptr;
-		VkCommandBuffer commandBuffer = nullptr;
-		VkSemaphore imageAcquiredSemaphore = nullptr;
+		VkCommandPool commandPool = VK_NULL_HANDLE;
+		VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+		VkSemaphore imageAcquiredSemaphore = VK_NULL_HANDLE;
 	};
 
 	enum RenderStateEnum {
@@ -29,6 +29,18 @@ namespace andromeda::graphics {
 
 	class VulkanRenderTexture;
 
+	struct GPUBuffer {
+		VkBuffer vkBuffer = VK_NULL_HANDLE;
+		uint32_t deviceAddress = 0;
+		VmaAllocation allocation = VK_NULL_HANDLE;
+	};
+
+	struct GPUImage {
+		VmaAllocation allocation = VK_NULL_HANDLE;
+		VkImage image = VK_NULL_HANDLE;
+		VkImageView imageView = VK_NULL_HANDLE;
+	};
+
 	class VulkanWindowContext : public GraphicsContext {
 	public:
 		constexpr static uint32_t MaxFramesInFlight{2};
@@ -38,6 +50,7 @@ namespace andromeda::graphics {
 
 		RenderStateEnum m_state = VULKAN_STATE_INIT;
 		bool m_cmdBuffer = false;
+
 	public:
 		VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window);
 
@@ -53,6 +66,8 @@ namespace andromeda::graphics {
 		void DrawDemoTriangle();
 
 		void SubmitCommand(std::unique_ptr<RenderCommand> command) override;
+
+		VkCommandBuffer StartTransientCommandBuffer();
 
 		void BeforeRender() override;
 		void RenderPrepare() override;
@@ -146,6 +161,10 @@ namespace andromeda::graphics {
 			return pp;
 		}
 
+		std::pair<uint32_t, GPUBuffer> CreateImage(VkCommandBuffer buffer, unsigned char* imageData, uint32_t width, uint32_t height, int channels);
+		GPUBuffer CreateBuffer(VkBufferUsageFlags usage, size_t byteSize, bool mappable, VmaMemoryUsage memoryUsage);
+		void MapCopyBufferData(const GPUBuffer& buffer, size_t bufferOffset, void* data, size_t byteSize);
+
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();
@@ -192,8 +211,14 @@ namespace andromeda::graphics {
 		uint32_t m_minImageCount = 0, m_imageCount = 0;
 
 		// frame and synchronization resources
-		VkSemaphore m_timelineSemaphore = nullptr;
+		VkSemaphore m_timelineSemaphore = VK_NULL_HANDLE;
 		std::array<FrameResources, MaxFramesInFlight> m_frameResources;
+
+		std::vector<GPUImage> m_images{};
+		std::vector<GPUBuffer> m_buffers{};
+
+		// single use command buffers
+		VkCommandPool m_commandPool = VK_NULL_HANDLE;
 
 		VkClearColorValue m_clearColor{0.01f, 0.01f, 0.01f, 1};
 		std::vector<std::unique_ptr<RenderCommand>> m_renderCommands;

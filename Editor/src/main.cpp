@@ -2,6 +2,7 @@
 #include "ArgParse.h"
 #include "Engine/Main.h"
 #include "Engine/LinkedList.h"
+#include "Engine/Data/Image.h"
 #include <source_location>
 
 #include "Engine/Assets/ShaderAsset.h"
