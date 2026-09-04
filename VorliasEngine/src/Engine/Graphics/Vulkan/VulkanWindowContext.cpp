@@ -94,6 +94,44 @@ namespace andromeda::graphics {
 			andromeda::error("Could not create command buffers");
 			return;
 		}
+
+		// Create our default fallback image texture
+		{
+			auto whitePixelImage = Image::WHITE_PIXEL;
+			VkCommandBuffer whiteImageCmdBuff = StartTransientCommandBuffer();
+
+			auto [whiteImageId, whiteStagingBuffer] =
+				CreateImage(whiteImageCmdBuff, whitePixelImage.data, whitePixelImage.size.x, whitePixelImage.size.y, whitePixelImage.channels);
+			m_whiteImagePixelId = whiteImageId;
+
+			SubmitTransientCommandBuffer(whiteImageCmdBuff);
+			vmaDestroyBuffer(vulkan->GetAllocator(), whiteStagingBuffer.vkBuffer, whiteStagingBuffer.allocation);
+
+			VkSamplerCreateInfo samplerInfo{
+				.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
+				.magFilter = VK_FILTER_NEAREST,
+				.minFilter = VK_FILTER_NEAREST,
+				.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+				.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+				.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
+				.compareEnable = VK_FALSE,
+			};
+			VkSampler sampler = VK_NULL_HANDLE;
+			if (vkCreateSampler(vulkan->GetDevice(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
+				andromeda::error("Unable to create texture sampler");
+				return;
+			}
+
+			m_samplers.push_back(sampler);
+			uint32_t whiteSamplerId = m_samplers.size();
+
+			m_textures.push_back(
+				GPUTexture{
+					.imageId = whiteImageId,
+					.samplerId = whiteSamplerId,
+				}
+			);
+		}
 	}
 
 	void VulkanWindowContext::Resized(int width, int height) {
@@ -600,46 +638,6 @@ namespace andromeda::graphics {
 		m_state = VULKAN_STATE_POST_RENDER;
 	}
 
-	void VulkanWindowContext::Shutdown() {
-		// wait in case resources are in use
-		vkDeviceWaitIdle(vulkan->GetDevice());
-
-		m_shader->Unload();
-		m_shader.Reset();
-
-		if (m_commandPool != VK_NULL_HANDLE) {
-			vkDestroyCommandPool(vulkan->GetDevice(), m_commandPool, nullptr);
-		}
-
-		// Frame/time cleanup
-		{
-			for (FrameResources& res : m_frameResources) {
-				if (res.imageAcquiredSemaphore != VK_NULL_HANDLE)
-					vkDestroySemaphore(vulkan->GetDevice(), res.imageAcquiredSemaphore, nullptr);
-
-				if (res.commandPool != VK_NULL_HANDLE)
-					vkDestroyCommandPool(vulkan->GetDevice(), res.commandPool, nullptr); // destroys buffers implicitly
-			}
-
-			if (m_timelineSemaphore != VK_NULL_HANDLE) {
-				vkDestroySemaphore(vulkan->GetDevice(), m_timelineSemaphore, nullptr);
-			}
-		}
-
-		// Cleanup the graphics pipeline
-		if (m_graphicsPipeline != nullptr) {
-			delete m_graphicsPipeline;
-		}
-
-		DestroySwapchain();
-
-		if (surface != VK_NULL_HANDLE) {
-			andromeda::trace("Cleaned up surface");
-			SDL_Vulkan_DestroySurface(vulkan->GetInstance(), surface, nullptr);
-			surface = VK_NULL_HANDLE;
-		}
-	}
-
 	VkCommandBuffer VulkanWindowContext::StartTransientCommandBuffer() {
 		VkCommandBufferAllocateInfo cmdAllocateInfo{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
@@ -666,6 +664,19 @@ namespace andromeda::graphics {
 		}
 
 		return commandBuffer;
+	}
+
+	void VulkanWindowContext::SubmitTransientCommandBuffer(VkCommandBuffer commandBuffer) {
+		vkEndCommandBuffer(commandBuffer);
+		VkSubmitInfo submitInfo{
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			.commandBufferCount = 1,
+			.pCommandBuffers = &commandBuffer,
+		};
+
+		vkQueueSubmit(vulkan->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+		vkQueueWaitIdle(vulkan->GetGraphicsQueue());
+		vkFreeCommandBuffers(vulkan->GetDevice(), m_commandPool, 1, &commandBuffer);
 	}
 
 	std::pair<uint32_t, GPUBuffer> VulkanWindowContext::CreateImage(
@@ -830,5 +841,54 @@ namespace andromeda::graphics {
 		}
 
 		return gpuBuffer;
+	}
+
+	void VulkanWindowContext::Shutdown() {
+		// wait in case resources are in use
+		vkDeviceWaitIdle(vulkan->GetDevice());
+
+		for (auto& sampler : m_samplers) {
+			vkDestroySampler(vulkan->GetDevice(), sampler, nullptr);
+		}
+
+		for (auto& image : m_images) {
+			vmaDestroyImage(vulkan->GetAllocator(), image.image, image.allocation);
+			vkDestroyImageView(vulkan->GetDevice(), image.imageView, nullptr);
+		}
+
+		m_shader->Unload();
+		m_shader.Reset();
+
+		if (m_commandPool != VK_NULL_HANDLE) {
+			vkDestroyCommandPool(vulkan->GetDevice(), m_commandPool, nullptr);
+		}
+
+		// Frame/time cleanup
+		{
+			for (FrameResources& res : m_frameResources) {
+				if (res.imageAcquiredSemaphore != VK_NULL_HANDLE)
+					vkDestroySemaphore(vulkan->GetDevice(), res.imageAcquiredSemaphore, nullptr);
+
+				if (res.commandPool != VK_NULL_HANDLE)
+					vkDestroyCommandPool(vulkan->GetDevice(), res.commandPool, nullptr); // destroys buffers implicitly
+			}
+
+			if (m_timelineSemaphore != VK_NULL_HANDLE) {
+				vkDestroySemaphore(vulkan->GetDevice(), m_timelineSemaphore, nullptr);
+			}
+		}
+
+		// Cleanup the graphics pipeline
+		if (m_graphicsPipeline != nullptr) {
+			delete m_graphicsPipeline;
+		}
+
+		DestroySwapchain();
+
+		if (surface != VK_NULL_HANDLE) {
+			andromeda::trace("Cleaned up surface");
+			SDL_Vulkan_DestroySurface(vulkan->GetInstance(), surface, nullptr);
+			surface = VK_NULL_HANDLE;
+		}
 	}
 } // namespace andromeda::graphics

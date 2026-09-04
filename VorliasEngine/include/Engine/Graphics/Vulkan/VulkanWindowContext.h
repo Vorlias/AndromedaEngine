@@ -29,6 +29,11 @@ namespace andromeda::graphics {
 
 	class VulkanRenderTexture;
 
+	struct GPUTexture {
+		uint32_t imageId = 0;
+		uint32_t samplerId = 0;
+	};
+
 	struct GPUBuffer {
 		VkBuffer vkBuffer = VK_NULL_HANDLE;
 		uint32_t deviceAddress = 0;
@@ -66,8 +71,6 @@ namespace andromeda::graphics {
 		void DrawDemoTriangle();
 
 		void SubmitCommand(std::unique_ptr<RenderCommand> command) override;
-
-		VkCommandBuffer StartTransientCommandBuffer();
 
 		void BeforeRender() override;
 		void RenderPrepare() override;
@@ -161,6 +164,9 @@ namespace andromeda::graphics {
 			return pp;
 		}
 
+		VkCommandBuffer StartTransientCommandBuffer();
+		void SubmitTransientCommandBuffer(VkCommandBuffer commandBuffer);
+
 		std::pair<uint32_t, GPUBuffer> CreateImage(VkCommandBuffer buffer, unsigned char* imageData, uint32_t width, uint32_t height, int channels);
 		GPUBuffer CreateBuffer(VkBufferUsageFlags usage, size_t byteSize, bool mappable, VmaMemoryUsage memoryUsage);
 		void MapCopyBufferData(const GPUBuffer& buffer, size_t bufferOffset, void* data, size_t byteSize);
@@ -214,8 +220,12 @@ namespace andromeda::graphics {
 		VkSemaphore m_timelineSemaphore = VK_NULL_HANDLE;
 		std::array<FrameResources, MaxFramesInFlight> m_frameResources;
 
+		// images and buffers
 		std::vector<GPUImage> m_images{};
 		std::vector<GPUBuffer> m_buffers{};
+		std::vector<GPUTexture> m_textures{};
+		std::vector<VkSampler> m_samplers{};
+		uint32_t m_whiteImagePixelId;
 
 		// single use command buffers
 		VkCommandPool m_commandPool = VK_NULL_HANDLE;
