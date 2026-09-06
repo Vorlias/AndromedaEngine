@@ -9,11 +9,15 @@
 
 #include "Log.h"
 
+#include "Data/Image.h"
+
 namespace andromeda {
 	enum class AssetType {
 		Unknown,
 		LuauScript,
 		ShaderFile,
+		Texture,
+		Sprite,
 	};
 
 	inline const std::string GetAssetTypeName(AssetType assetType) {

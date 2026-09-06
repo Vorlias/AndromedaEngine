@@ -38,7 +38,6 @@ void VulkanIMGUI::Initialize() {
 		.DescriptorPoolSize = 8,
 		.MinImageCount = m_vkWindow->GetMinImageCount(),
 		.ImageCount = m_vkWindow->GetImageCount(),
-		.UseDynamicRendering = true,
 		.PipelineInfoMain = {
 			.MSAASamples = VK_SAMPLE_COUNT_1_BIT,
 			.PipelineRenderingCreateInfo = {
@@ -51,6 +50,7 @@ void VulkanIMGUI::Initialize() {
 				.stencilAttachmentFormat = VK_FORMAT_UNDEFINED,
 			},
 		},
+		.UseDynamicRendering = true,
 	};
 
 	ANDROMEDA_ASSERT(ImGui_ImplVulkan_Init(&initInfo));

@@ -100,11 +100,11 @@ namespace andromeda {
 		float m_deltaTime;
 
 		Time m_fixedFrameTime = milliseconds(33);
-		float m_fixedDeltaTime;
+		float m_fixedDeltaTime = 0;
 
-		float m_elapsedTime;
+		float m_elapsedTime = 0;
 
-		bool m_quitRequested;
+		bool m_quitRequested = false;
 
 		friend class Engine;
 	};

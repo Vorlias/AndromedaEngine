@@ -184,6 +184,7 @@ target_sources(
     include/stb_image/stb_image.h
     include/Engine/Data.h
     include/Engine/Data/Image.h
+    include/Engine/Assets/TextureAsset.h
     # include/tinygltf/tiny_gltf_v3.c
     # include/tinygltf/tiny_gltf_v3.h
     # include/tinygltf/tinygltf_json_c.h

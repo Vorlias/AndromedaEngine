@@ -4,6 +4,7 @@
 #include "Engine/LinkedList.h"
 #include "Engine/Data/Image.h"
 #include <source_location>
+#include <Andromeda.h>
 
 #include "Engine/Assets/ShaderAsset.h"
 

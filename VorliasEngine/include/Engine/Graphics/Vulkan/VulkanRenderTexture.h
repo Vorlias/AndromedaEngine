@@ -36,6 +36,10 @@ namespace andromeda::graphics {
 		void Destroy() override;
 		void Resize(int width, int height) override;
 
+		void SubmitCommand(std::unique_ptr<RenderCommand> command) override {
+			m_renderCommands.push_back(std::move(command));
+		}
+
 		void BeginRender(const FrameResources& res);
 		void EndRender(const FrameResources& res);
 
@@ -108,5 +112,7 @@ namespace andromeda::graphics {
 		VkImageMemoryBarrier m_imageMemoryBarrier;
 
 		RenderTextureFlags m_textureType = RENDER_TEXTURE_NONE;
+
+		std::vector<std::unique_ptr<RenderCommand>> m_renderCommands;
 	};
 } // namespace andromeda::graphics

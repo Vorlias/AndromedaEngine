@@ -145,19 +145,18 @@ void VulkanRenderTexture::BeginRender(const FrameResources& res) {
 	// 4. Transition image layout (in command buffer)
 	m_imageMemoryBarrier = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
-		.image = m_image,
-		.subresourceRange =
-			{
-				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-				.baseMipLevel = 0,
-				.levelCount = 1,
-				.baseArrayLayer = 0,
-				.layerCount = 1,
-			},
-		.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 		.srcAccessMask = 0,
 		.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+		.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+		.newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		.image = m_image,
+		.subresourceRange = {
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.baseMipLevel = 0,
+			.levelCount = 1,
+			.baseArrayLayer = 0,
+			.layerCount = 1,
+		},
 	};
 
 	vkCmdPipelineBarrier(
@@ -192,11 +191,16 @@ void VulkanRenderTexture::BeginRender(const FrameResources& res) {
 	};
 
 	vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
+
+	for (auto& command : m_renderCommands) {
+		
+	}
 }
 
 void VulkanRenderTexture::EndRender(const FrameResources& res) {
 	// 7. End rendering
 	vkCmdEndRendering(res.commandBuffer);
+	m_renderCommands.clear();
 
 	// 8. Transition back to readable layout if needed
 	m_imageMemoryBarrier.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;

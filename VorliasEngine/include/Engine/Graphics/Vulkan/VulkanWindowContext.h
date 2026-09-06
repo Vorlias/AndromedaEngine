@@ -29,21 +29,13 @@ namespace andromeda::graphics {
 
 	class VulkanRenderTexture;
 
-	struct GPUTexture {
-		uint32_t imageId = 0;
-		uint32_t samplerId = 0;
-	};
-
-	struct GPUBuffer {
-		VkBuffer vkBuffer = VK_NULL_HANDLE;
-		uint32_t deviceAddress = 0;
-		VmaAllocation allocation = VK_NULL_HANDLE;
-	};
-
-	struct GPUImage {
-		VmaAllocation allocation = VK_NULL_HANDLE;
-		VkImage image = VK_NULL_HANDLE;
-		VkImageView imageView = VK_NULL_HANDLE;
+	class VulkanRenderSurface : public RenderSurface {
+	public:
+		VulkanRenderSurface(VulkanContext* context, SDL_Window* window): m_window(window), m_context(context) {}
+	private:
+		SDL_Window* m_window;
+		VulkanContext* m_context;
+		uint32_t m_width, m_height;
 	};
 
 	class VulkanWindowContext : public GraphicsContext {
@@ -61,7 +53,7 @@ namespace andromeda::graphics {
 
 		void Initialize() override;
 		void Shutdown() override;
-		void Resized(int width, int height) override;
+		void Resize(int width, int height) override;
 		API GetAPI() override;
 
 		void SetClearColor(Color color) override {

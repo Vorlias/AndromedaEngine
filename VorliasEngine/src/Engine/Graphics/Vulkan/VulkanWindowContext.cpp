@@ -134,7 +134,7 @@ namespace andromeda::graphics {
 		}
 	}
 
-	void VulkanWindowContext::Resized(int width, int height) {
+	void VulkanWindowContext::Resize(int width, int height) {
 		this->width = width;
 		this->height = height;
 		m_swapchainRequiresRecreate = true;

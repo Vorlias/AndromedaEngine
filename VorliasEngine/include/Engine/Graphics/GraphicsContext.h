@@ -28,7 +28,7 @@ namespace andromeda::graphics {
 		virtual void Initialize() = 0;
 		virtual void Shutdown() = 0;
 
-		virtual void Resized(int width, int height) = 0;
+		virtual void Resize(int width, int height) = 0;
 
 		virtual void BeforeRender() {}
 		virtual void RenderPrepare() {}

@@ -38,44 +38,44 @@ namespace andromeda::graphics {
 		virtual void Draw(GraphicsContext* ctx) = 0;
 	};
 
-	struct Vertex {
-		Vector2 position;
-		Color color{1, 1, 1};
+	// struct Vertex {
+	// 	Vector2 position;
+	// 	Color color{1, 1, 1};
 
-		Vertex() = default;
-		Vertex(Vector2 position) : position(position) {}
-		Vertex(Vector2 position, Color color) : position(position), color(color) {}
-	};
+	// 	Vertex() = default;
+	// 	Vertex(Vector2 position) : position(position) {}
+	// 	Vertex(Vector2 position, Color color) : position(position), color(color) {}
+	// };
 
-	struct VertexArray {
-		VertexArray(): data(nullptr), size(0) {}
+	// struct VertexArray {
+	// 	VertexArray(): data(nullptr), size(0) {}
 
-		VertexArray(std::vector<Vertex> vertices) {
-			data = vertices.data();
-			size = vertices.size();
-		}
+	// 	VertexArray(std::vector<Vertex> vertices) {
+	// 		data = vertices.data();
+	// 		size = vertices.size();
+	// 	}
 
-		template<std::size_t N>
-		VertexArray(std::array<Vertex, N> vertices) {
-			data = vertices.data();
-			size = N;
-		}
+	// 	template<std::size_t N>
+	// 	VertexArray(std::array<Vertex, N> vertices) {
+	// 		data = vertices.data();
+	// 		size = N;
+	// 	}
 
-		Vertex* data;
-		size_t size;
-	};
+	// 	Vertex* data;
+	// 	size_t size;
+	// };
 
-	class RenderSurface {
-		void Clear(Color color) {}
-		void Draw(Drawable& drawable) {
-			drawable.Draw(context);
-		}
+	// class RenderSurface {
+	// 	void Clear(Color color) {}
+	// 	void Draw(Drawable& drawable) {
+	// 		drawable.Draw(context);
+	// 	}
 
-		void Draw(const VertexArray& vertices) {}
+	// 	void Draw(const VertexArray& vertices) {}
 
-	private:
-		GraphicsContext* context;
-	};
+	// private:
+	// 	GraphicsContext* context;
+	// };
 
 	class Renderer {
 	public:
@@ -98,21 +98,6 @@ namespace andromeda::graphics {
 } // namespace andromeda::graphics
 
 namespace andromeda {
-	inline std::string to_string(const graphics::Vertex& vertex) {
-		return std::format("position: {}, color: {}", to_string(vertex.position), to_string(vertex.color));
-	}
 
-	inline std::string to_string(const graphics::VertexArray& array) {
-		std::stringstream ss;
-
-		for (int i = 0; i < array.size; i++) {
-			ss << to_string(array.data[i]);
-			if (i < array.size - 1) {
-				ss << ", ";
-			}
-		}
-
-		return ss.str();
-	}
 
 } // namespace andromeda

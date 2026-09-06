@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Data/Color.h"
+#include "Engine/Graphics/RenderCommand.h"
 #include "imgui/imgui.h"
 
 namespace andromeda::graphics {
@@ -35,6 +36,10 @@ namespace andromeda::graphics {
 		bool m_isValid = false;
 	};
 
+	class RenderSurface : RenderTarget {
+	public:
+	};
+
 	enum class RenderTextureType {
 		Texture,
 		IMGUITexture,
@@ -44,5 +49,14 @@ namespace andromeda::graphics {
 	public:
 		static std::shared_ptr<RenderTexture> Create(RenderTextureType type = RenderTextureType::Texture);
 		virtual ImTextureID GetImGuiTexture() const = 0;
+
+		template<typename T, typename... Args>
+			requires(std::is_base_of_v<andromeda::graphics::RenderCommand, T> && !std::is_same_v<andromeda::graphics::RenderCommand, T>)
+		void Submit(Args&&... args) {
+			std::unique_ptr<andromeda::graphics::RenderCommand> command = createCommand<T>(std::forward<Args>(args)...);
+			SubmitCommand(std::move(command));
+		}
+
+		virtual void SubmitCommand(std::unique_ptr<andromeda::graphics::RenderCommand> command) {}
 	};
 } // namespace andromeda::graphics

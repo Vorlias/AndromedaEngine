@@ -2,6 +2,8 @@
 
 #include "Engine/Data/Vector.h"
 #include "Engine/Data/Color.h"
+#include "Engine/Data/Rect.h"
+#include "Engine/Data/Vertex.h"
 
 #include "Engine/File.h"
 #include "Engine/FileDialogs.h"

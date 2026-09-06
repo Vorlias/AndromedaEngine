@@ -185,5 +185,5 @@ SDL_WindowID andromeda::Window::GetWindowId() const {
 }
 void andromeda::Window::Resized(int width, int height) {
 	if (m_graphics_context != nullptr)
-		m_graphics_context->Resized(width, height);
+		m_graphics_context->Resize(width, height);
 }
