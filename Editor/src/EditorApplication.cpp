@@ -11,12 +11,12 @@ andromeda::WindowIcon s_editorWindowIcon(AndromedaIcon, AndromedaIcon_len);
 void EditorApplication::SetupAssets() {
 	SetDataPath(m_projectRootPath / "assets");
 
-	assets.RegisterImporter<LuauScriptImporter>("luau");
+	assets.RegisterImporter<LuauScriptImporter>({"luau", "lua"});
 	assets.RegisterImporter<FontImporterTTF>("ttf");
-	assets.RegisterImporter<SPIRVShaderImporter>("spv");
+	assets.RegisterImporter<PNGImageImporter>("png");
+	assets.RegisterImporter<GLTFModelImporter>("gltf");
 
 	assets.Initialize(m_projectRootPath, GetDataPath(true));
-
 }
 
 bool EditorApplication::Initialize() {

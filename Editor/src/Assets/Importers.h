@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include "Engine/Log.h"
 
 namespace andromeda {
 	class AssetLibrary;
@@ -20,6 +21,7 @@ namespace andromeda {
 		const std::string GetExtension() const {
 			return m_ext;
 		}
+
 		constexpr int GetVersion() const {
 			return m_version;
 		}
@@ -37,5 +39,15 @@ namespace andromeda {
 		}
 	};
 
-
+	class PNGImageImporter : public AssetImporter {
+	public:
+		PNGImageImporter();
+		void OnImportAsset(const AssetImportContext& context) const;
+	};
+	
+	class GLTFModelImporter : public AssetImporter {
+	public:
+		GLTFModelImporter();
+		void OnImportAsset(const AssetImportContext& context) const;
+	};
 } // namespace andromeda

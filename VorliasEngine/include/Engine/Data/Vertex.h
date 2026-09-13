@@ -5,10 +5,30 @@
 
 namespace andromeda {
 	struct Vertex {
+		static constexpr uint32_t elements = Vector3::elements * 2 + Vector2::elements + Color3::elements;
+		static constexpr size_t bytes = elements * sizeof(float);
+		using Array = std::array<float, elements>;
+
 		Vector3 position{};
 		Color3 color{};
 		Vector3 normal{};
 		Vector2 uv{};
+
+		Array ToArray() const {
+			return {
+				position.x,
+				position.y,
+				position.z,
+				color.r,
+				color.g,
+				color.b,
+				normal.x,
+				normal.y,
+				normal.z,
+				uv.x,
+				uv.y,
+			};
+		}
 	};
 
 	struct VertexArray {

@@ -5,36 +5,38 @@
 #include "../Data/Rect.h"
 
 namespace andromeda {
-	class TextureAsset : public Asset {
+	class Texture2DAsset : public Asset {
 	public:
-		TextureAsset(UUID uuid, const std::filesystem::path& path);
+		Texture2DAsset(UUID uuid, const std::filesystem::path& path, Image::UniqueRef image);
 
-		const Image GetImage() const {
-			return m_image;
+		const Image& GetImage() const {
+			return *m_image;
 		}
 
+		void ReplaceImage(Image::UniqueRef newImage) {
+			m_image = std::move(newImage);
+		}
 	private:
-		Image m_image;
+		Image::UniqueRef m_image;
 	};
 
 	class SpriteAsset : public Asset {
 	public:
-		SpriteAsset(UUID uuid, const TextureAsset& texture, IntRect spriteRect)
+		SpriteAsset(UUID uuid, const Texture2DAsset& texture, IntRect spriteRect)
 			: m_texture(texture)
 			, m_spriteRect(spriteRect)
-			, Asset(AssetType::Sprite, uuid, texture.GetFilePath())
-			, m_sprite(m_texture.GetImage(), spriteRect) {};
+			, Asset(AssetType::Sprite, uuid, texture.GetFilePath()) {};
 
-		const Image GetImage() const {
+		const Image& GetImage() const {
 			return m_texture.GetImage();
 		}
 
 	private:
-		const TextureAsset& m_texture;
+		const Texture2DAsset& m_texture;
 		const IntRect m_spriteRect;
-		const Sprite m_sprite;
 	};
 } // namespace andromeda
 
 
-andromeda::TextureAsset::TextureAsset(UUID uuid, const std::filesystem::path& path) : Asset(AssetType::Texture, uuid, path), m_image(Image(path)) {}
+inline andromeda::Texture2DAsset::Texture2DAsset(UUID uuid, const std::filesystem::path& path, Image::UniqueRef image)
+	: Asset(AssetType::Texture2D, uuid, path), m_image(std::move(image)) {}

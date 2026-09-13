@@ -108,15 +108,29 @@ namespace andromeda {
 		template<class T>
 			requires(std::is_base_of<AssetImporter, T>::value && !std::is_same<AssetImporter, T>::value)
 		void RegisterImporter() {
-			T* importer = new T();
-			m_importers.insert({importer->GetExtension(), importer});
+			std::unique_ptr<AssetImporter> importer = std::unique_ptr<AssetImporter>(new T());
+			if constexpr (std::is_same_v<T, DefaultFileImporter>) {
+				RegisterImporter<T>("");
+				return;
+			} else {
+				static_assert(false, "Use a specific extension importer");
+			}
 		}
 
 		template<class T>
 			requires(std::is_base_of<AssetImporter, T>::value && !std::is_same<AssetImporter, T>::value)
 		void RegisterImporter(const std::string& extension) {
-			T* importer = new T();
-			m_importers.insert({extension, importer});
+			std::unique_ptr<AssetImporter> importer = std::unique_ptr<AssetImporter>(new T());
+			m_importers.insert({extension, std::move(importer)});
+		}
+
+		template<class T>
+			requires(std::is_base_of<AssetImporter, T>::value && !std::is_same<AssetImporter, T>::value)
+		void RegisterImporter(const std::initializer_list<std::string> extensions) {
+			for (auto& ext : extensions) {
+				std::unique_ptr<AssetImporter> importer = std::unique_ptr<AssetImporter>(new T());
+				m_importers.insert({ext, std::move(importer)});
+			}
 		}
 
 		template<class T>
@@ -173,6 +187,8 @@ namespace andromeda {
 
 			m_uassets.insert({handle.id, handle});
 			m_pathToUUID.insert({path, handle.id});
+
+			andromeda::trace("Add asset '{}' to database from '{}'", name, path);
 		}
 
 		bool Initialize(const std::filesystem::path& projectPath, const std::filesystem::path& path) {
@@ -195,8 +211,12 @@ namespace andromeda {
 		void Shutdown() {
 			m_watcher.Stop();
 
-			for (auto [_, importer] : m_importers) {
-				delete importer;
+			// for (auto [_, importer] : m_importers) {
+			// 	delete importer;
+			// }
+
+			for (auto& [_, handle] : m_uassets) {
+				handle.asset.Reset();
 			}
 
 			m_importers.clear();
@@ -207,7 +227,8 @@ namespace andromeda {
 			if (std::filesystem::is_directory(path)) {
 				trace("Directory '{}' {}", path.string(), (int)status);
 			} else {
-				if (!path.has_extension()) return;
+				if (!path.has_extension())
+					return;
 
 				auto ext = path.extension().string().substr(1);
 				AssetImportContext importContext{m_projectPath / path, path, this};
@@ -226,7 +247,7 @@ namespace andromeda {
 
 	private:
 		FileWatcher m_watcher;
-		std::unordered_map<std::string, AssetImporter*> m_importers;
+		std::unordered_map<std::string, std::unique_ptr<AssetImporter>> m_importers;
 
 		std::unordered_map<UUID, AssetHandle> m_uassets;
 		// std::unordered_map<std::string, AssetHandle> m_assets;

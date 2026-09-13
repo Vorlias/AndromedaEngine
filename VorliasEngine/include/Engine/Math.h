@@ -2,17 +2,48 @@
 #define PI (atan(1) * 4)
 #define _RADIANS(deg) ((deg) * PI / 180)
 #define _DEGREES(rad) ((rad) * 180 / PI)
+#include <cmath>
 
 namespace andromeda {
-	constexpr bool minf(float a, float b) {
+	template<typename T>
+		requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+	constexpr T min(T a, T b) {
 		return (a < b) ? a : b;
 	}
 
-	constexpr bool maxf(float a, float b) {
+	template<typename T>
+		requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+	constexpr T max(T a, T b) {
+		return (a > b) ? a : b;
+	}
+
+	template<typename T>
+		requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+	constexpr T clamp(T value, T minValue, T maxValue) {
+		return min<T>(max<T>(value, minValue), maxValue);
+	}
+} // namespace andromeda
+
+namespace andromeda {
+	constexpr float signf(float value) {
+		if (value >= 0)
+			return 1.0f;
+		return -1.0f;
+	}
+
+	constexpr float roundf(float value) {
+		return std::ceil(value + 0.5f);
+	}
+
+	constexpr float minf(float a, float b) {
+		return (a < b) ? a : b;
+	}
+
+	constexpr float maxf(float a, float b) {
 		return (a < b) ? b : a;
 	}
 
-	constexpr bool clampf(float v, float min, float max) {
+	constexpr float clampf(float v, float min, float max) {
 		return minf(maxf(v, min), max);
 	}
 

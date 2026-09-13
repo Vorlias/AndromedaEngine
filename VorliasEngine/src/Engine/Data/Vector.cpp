@@ -1,13 +1,8 @@
 #include "Engine/Data/Vector.h"
+#include "Engine/Data/Rect.h"
+
 #include <math.h>
 #include "lualib.h"
-
-static float signf(float value) {
-	if (value >= 0)
-		return 1;
-	return -1;
-}
-
 
 namespace andromeda {
 	Vector2 Vector2::zero = Vector2();
@@ -72,5 +67,45 @@ namespace andromeda {
 	Vector2 Vector3::Shrink() {
 		return Vector2(x, y);
 	}
+
+	Vector3 Vector3::Min(const Vector3& a, const Vector3& b) {
+		return Vector3(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z));
+	}
+
+	Vector3 Vector3::Max(const Vector3& a, const Vector3& b) {
+		return Vector3(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z));
+	}
 } // namespace andromeda
 
+
+std::ostream& operator<<(std::ostream& stream, const andromeda::Vector2& vec) {
+	stream << vec.x << ", " << vec.y;
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const andromeda::Vector3& vec) {
+	stream << vec.x << ", " << vec.y << ", " << vec.z;
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const andromeda::Rect& rect) {
+	stream << andromeda::to_string(rect);
+	return stream;
+}
+
+std::ostream& operator<<(std::ostream& stream, const andromeda::IntRect& rect) {
+	stream << andromeda::to_string(rect);
+	return stream;
+}
+
+
+std::ostream& operator<<(std::ostream& stream, const andromeda::Bounds& rect) {
+	stream << andromeda::to_string(rect);
+	return stream;
+}
+
+
+std::ostream& operator<<(std::ostream& stream, const andromeda::IntBounds& rect) {
+	stream << andromeda::to_string(rect);
+	return stream;
+}

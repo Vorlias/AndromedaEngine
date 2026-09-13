@@ -6,6 +6,9 @@ namespace andromeda {
 
 	// RGBA in float format (16 bytes)
 	struct Color4 {
+		static constexpr uint32_t elements = 4;
+		static constexpr size_t bytes = elements * sizeof(float);
+
 		float r{1}, g{1}, b{1}, a{1};
 
 		Color4() = default;
@@ -46,6 +49,9 @@ namespace andromeda {
 
 	// RGB in float format (12 bytes)
 	struct Color3 {
+		static constexpr uint32_t elements = 3;
+		static constexpr size_t bytes = elements * sizeof(float);
+
 		float r{1}, g{1}, b{1};
 
 		Color3() = default;
@@ -93,6 +99,9 @@ namespace andromeda {
 
 	// RGBA represented in bytes (4 bytes)
 	struct Color4i {
+		static constexpr uint32_t elements = 4;
+		static constexpr size_t bytes = elements * sizeof(uint8_t);
+
 		uint8_t r{255}, g{255}, b{255}, a{255};
 
 		Color4i() = default;
@@ -106,6 +115,9 @@ namespace andromeda {
 
 	// RGB represented in bytes (3 bytes)
 	struct Color3i {
+		static constexpr uint32_t elements = 3;
+		static constexpr size_t bytes = elements * sizeof(uint8_t);
+
 		uint8_t r{255}, g{255}, b{255};
 
 		Color3i() = default;

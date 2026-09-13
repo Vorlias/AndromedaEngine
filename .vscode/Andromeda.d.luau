@@ -1,3 +1,4 @@
+local number = require("../Luau/tests/require/without_config/types/number")
 declare extern type Transform with
     --- The position of the object
     position: Vector3
@@ -37,6 +38,22 @@ declare task: {
     -- delay: <A..., R...>(duration: number?, threadOrFunction: thread | (A...) -> R..., A...) -> thread,
     wait: (duration: number?) -> number,
     -- cancel: (thread: thread) -> (),
+}
+
+declare extern type Rect with
+    read size: Vector2
+    read position: Vector2
+    read min: Vector2
+    read max: Vector2
+    read center: Vector2
+
+    read width: number
+    read height: number
+    read x: number
+    read y: number
+end
+declare Rect: {
+    new: ((x: number?, y: number?, w: number?, h: number?) -> Rect) & ((position: Vector2, size: Vector2) -> Rect),
 }
 
 declare extern type Vector2 with

@@ -44,6 +44,7 @@ target_sources(
     src/EditorPanels/SceneView.cpp
     src/Settings/ProjectConfig.h
     src/Settings/ProjectConfig.cpp
+    src/Assets/Importers.cpp
 )
 
 if (WIN32)

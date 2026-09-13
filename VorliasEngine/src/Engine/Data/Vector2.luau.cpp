@@ -87,7 +87,7 @@ static int Vector2_namecall(lua_State* L) {
 
 static int Vector2_tostring(lua_State* L) {
 	auto vec = andromeda_luau::touserdata<andromeda::Vector2>(L, 1);
-	auto str = andromeda::to_string(*vec, andromeda::VectorFormatStyle::Luau);
+	auto str = andromeda::to_string(*vec);
 
 	lua_pushstring(L, str.data());
 	return 1;

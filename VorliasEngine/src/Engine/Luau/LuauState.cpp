@@ -8,6 +8,7 @@
 #include "Engine/Luau/LuauState.h"
 #include "Engine/Luau/PrettyPrint.h"
 #include "Engine/Data/Vector.h"
+#include "Engine/Data/Rect.h"
 #include "Engine/Luau/AtomsDef.h"
 #include "Engine/Objects/Object.h"
 
@@ -168,6 +169,7 @@ void LuauState::InitState() {
 
 	registerVector2Lib(L);
 	registerVector3Lib(L);
+	registerRectLib(L);
 	registerObjectLib(L);
 	RegisterComponents(L);
 

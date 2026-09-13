@@ -2,6 +2,7 @@
 #include "Importers.h"
 #include "Assets.h"
 #include "Andromeda.h"
+#include "Engine/Assets/TextureAsset.h"
 
 #include "Engine/Graphics/Shader.h"
 
@@ -18,7 +19,7 @@ namespace andromeda {
 				script->Compile(source, context.assetPath);
 			} else {
 				auto script = LuauScript::CreateScript(source, context.assetPath);
-				context.assetLibrary->AddAsset(AssetType::LuauScript, context.assetPath.stem(), context.assetPath, script);
+				context.assetLibrary->AddAsset(script->GetAssetType(), context.assetPath.stem(), context.assetPath, script);
 			}
 		}
 	};
@@ -29,9 +30,5 @@ namespace andromeda {
 		void OnImportAsset(const AssetImportContext& context) const {}
 	};
 
-	class SPIRVShaderImporter : public AssetImporter {
-	public:
-		SPIRVShaderImporter() : AssetImporter("spv", 1) {}
-		void OnImportAsset(const AssetImportContext& context) const {}
-	};
+
 } // namespace andromeda

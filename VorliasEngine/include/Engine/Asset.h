@@ -16,7 +16,7 @@ namespace andromeda {
 		Unknown,
 		LuauScript,
 		ShaderFile,
-		Texture,
+		Texture2D,
 		Sprite,
 	};
 
@@ -79,7 +79,15 @@ namespace andromeda {
 			return m_uuid;
 		}
 
+		void AddSubAsset(Ref<Asset> asset) {
+			m_subassets.push_back(asset);
+		}
+
+		const std::vector<Ref<Asset>>& GetSubAssets() const {
+			return m_subassets;
+		}
 	private:
+		std::vector<Ref<Asset>> m_subassets;
 		std::string m_path;
 		AssetType m_assetType;
 		UUID m_uuid;

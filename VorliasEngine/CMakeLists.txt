@@ -112,6 +112,8 @@ target_sources(
     include/Engine/Data/Vertex.h
     src/Engine/Data.cpp
     src/Engine/Data/Image.cpp
+    src/Engine/Data/GLTFModel.cpp
+    src/Engine/Data/Rect.luau.cpp
     PUBLIC # exposed
     include/Engine/Graphics/Vulkan/VulkanWindowContext.h
     include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
@@ -185,6 +187,8 @@ target_sources(
     include/Engine/Data.h
     include/Engine/Data/Image.h
     include/Engine/Assets/TextureAsset.h
+    include/Engine/Data/GLTFModel.h
+    include/Engine/Data/Material.h
     # include/tinygltf/tiny_gltf_v3.c
     # include/tinygltf/tiny_gltf_v3.h
     # include/tinygltf/tinygltf_json_c.h

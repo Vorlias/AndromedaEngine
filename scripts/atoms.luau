@@ -1,6 +1,16 @@
 local fs = require("@std/fs")
 
 local atoms = {
+    "position",
+    "size",
+    "scale",
+    "rotation",
+
+    -- Entity
+    "GetComponent",
+    "AddComponent",
+    "HasComponent",
+
     -- Vector3
     "magnitude",
     "normalized",
@@ -9,6 +19,29 @@ local atoms = {
 
     -- Vector2
     "Extend",
+
+    -- Rect
+    "min",
+    "max",
+    
+    "Contains",
+
+    "x",
+    "y",
+    "z",
+
+    "width",
+    "height",
+    "center",
+
+    "GetNormalizedVector",
+    "GetAbsoluteVector",
+
+    -- Bounds
+    "Encapsulate",
+    "Intersects",
+    "extents",
+    "Expand",
 }
 
 
@@ -35,10 +68,26 @@ local sourceFile = {
 }
 local sourceFilePath = "AtomsDef.cpp"
 
+local function uppercaseNameify(value: string): string
+    local newValue = ""
+    for i = 1, #value do
+        local c = value:sub(i, i)
+        if c:upper() == c and i ~= 1 then
+            newValue ..= "_"
+        end
+        
+        newValue ..= c:upper()
+    end
+    return newValue
+end
 
+local atomSet: {[string]: boolean} = {}
 for i, atom in atoms do
-    table.insert(headerFile, `inline constexpr int16_t ATOM_{atom:upper()} = {i}; // atom for {atom}`)
-    table.insert(sourceFile, `\t\{"{atom}", ATOM_{atom:upper()}},`)
+    if not atomSet[atom:lower()] then
+        atomSet[atom:lower()] = true
+        table.insert(headerFile, `inline constexpr int16_t ATOM_{uppercaseNameify(atom)} = {i}; // atom for {atom}`)
+    end
+    table.insert(sourceFile, `\t\{"{atom}", ATOM_{uppercaseNameify(atom)}},`)
 end
 table.insert(sourceFile, "};")
 

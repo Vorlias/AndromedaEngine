@@ -8,6 +8,9 @@ constexpr int kEntityTag = 126;
 constexpr int kTransformComponent = 125;
 constexpr int kLuauScriptComponent = 124;
 
+constexpr int kRectTag = 123;
+
+
 namespace andromeda_luau {
 	void luaL_registerlibrary(lua_State* L, const char* libName, const luaL_Reg* lib, bool readonly);
 	void luaL_registermetatable(lua_State* L, const char* objectName, const luaL_Reg* mt, uint32_t tag = LUA_UTAG_LIMIT);
