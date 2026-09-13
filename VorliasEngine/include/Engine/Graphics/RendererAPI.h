@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Data/Color.h"
 #include "Engine/Data/Vector.h"
+#include "Engine/Data/Image.h"
 #include "Engine/Graphics/GraphicsContext.h"
 #include <SDL3/SDL.h>
 
@@ -91,6 +92,9 @@ namespace andromeda::graphics {
 
 		virtual API GetAPI() = 0;
 		virtual const std::string GetAPIString() const = 0;
+		
+		// Upload a batch of images to the GPU and return the image ids
+		virtual std::vector<uint32_t> UploadImages(const std::vector<Image>& images) = 0;
 
 		virtual GraphicsContext* CreateWindowGraphicsContext(SDL_Window* window) = 0;
 		virtual ~Renderer() {}

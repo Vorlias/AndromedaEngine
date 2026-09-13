@@ -3,6 +3,7 @@
 #include "Engine/Graphics/RenderTarget.h"
 #include "Engine/Data/Color.h"
 #include "Engine/Data/Rect.h"
+#include "Engine/Data/Image.h"
 #include <vector>
 
 namespace andromeda::graphics {

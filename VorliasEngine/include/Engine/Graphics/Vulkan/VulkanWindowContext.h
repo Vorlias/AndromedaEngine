@@ -156,13 +156,14 @@ namespace andromeda::graphics {
 			return pp;
 		}
 
-		VkCommandBuffer StartTransientCommandBuffer();
-		void SubmitTransientCommandBuffer(VkCommandBuffer commandBuffer);
+		// VkCommandBuffer StartTransientCommandBuffer();
+		// void SubmitTransientCommandBuffer(VkCommandBuffer commandBuffer);
 
-		std::pair<uint32_t, GPUBuffer> CreateImage(VkCommandBuffer buffer, unsigned char* imageData, uint32_t width, uint32_t height, int channels);
-		GPUBuffer CreateBuffer(VkBufferUsageFlags usage, size_t byteSize, bool mappable, VmaMemoryUsage memoryUsage);
-		void MapCopyBufferData(const GPUBuffer& buffer, size_t bufferOffset, void* data, size_t byteSize);
+		// std::pair<uint32_t, GPUBuffer> CreateImage(VkCommandBuffer buffer, unsigned char* imageData, uint32_t width, uint32_t height, int channels);
+		// GPUBuffer CreateBuffer(VkBufferUsageFlags usage, size_t byteSize, bool mappable, VmaMemoryUsage memoryUsage);
+		// void MapCopyBufferData(const GPUBuffer& buffer, size_t bufferOffset, void* data, size_t byteSize);
 
+		// std::vector<uint32_t> UploadImages(const std::vector<Image>& images) override;
 	private:
 		[[nodiscard]] bool CreateSurface();
 		[[nodiscard]] bool CreateShaders();

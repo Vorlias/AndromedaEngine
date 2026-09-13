@@ -30,6 +30,8 @@ namespace andromeda::graphics {
 		VkBuffer vkBuffer = VK_NULL_HANDLE;
 		uint32_t deviceAddress = 0;
 		VmaAllocation allocation = VK_NULL_HANDLE;
+
+		void Destroy(VmaAllocator allocator);
 	};
 
 	struct GPUImage {

@@ -76,11 +76,6 @@ namespace andromeda::graphics {
 		if (!CreateShaders())
 			return;
 
-		// m_graphicsPipeline = new VulkanGraphicsPipeline(vulkan, swapchainFormat, depthFormat, static_cast<VulkanShader*>(m_shader.AsPtr()));
-		// if (!m_graphicsPipeline->Create()) {
-		// 	return;
-		// }
-
 		m_graphicsPipeline = CreatePipeline(static_cast<VulkanShader*>(m_shader.AsPtr()));
 		if (!m_graphicsPipeline) {
 			return;
@@ -94,45 +89,34 @@ namespace andromeda::graphics {
 			andromeda::error("Could not create command buffers");
 			return;
 		}
-
-		// Create our default fallback image texture
-		{
-			auto whitePixelImage = Image::WHITE_PIXEL;
-			VkCommandBuffer whiteImageCmdBuff = StartTransientCommandBuffer();
-
-			auto [whiteImageId, whiteStagingBuffer] =
-				CreateImage(whiteImageCmdBuff, whitePixelImage.data, whitePixelImage.size.x, whitePixelImage.size.y, whitePixelImage.channels);
-			m_whiteImagePixelId = whiteImageId;
-
-			SubmitTransientCommandBuffer(whiteImageCmdBuff);
-			vmaDestroyBuffer(vulkan->GetAllocator(), whiteStagingBuffer.vkBuffer, whiteStagingBuffer.allocation);
-
-			VkSamplerCreateInfo samplerInfo{
-				.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-				.magFilter = VK_FILTER_NEAREST,
-				.minFilter = VK_FILTER_NEAREST,
-				.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-				.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-				.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
-				.compareEnable = VK_FALSE,
-			};
-			VkSampler sampler = VK_NULL_HANDLE;
-			if (vkCreateSampler(vulkan->GetDevice(), &samplerInfo, nullptr, &sampler) != VK_SUCCESS) {
-				andromeda::error("Unable to create texture sampler");
-				return;
-			}
-
-			m_samplers.push_back(sampler);
-			uint32_t whiteSamplerId = m_samplers.size();
-
-			m_textures.push_back(
-				GPUTexture{
-					.imageId = whiteImageId,
-					.samplerId = whiteSamplerId,
-				}
-			);
-		}
 	}
+
+	// std::vector<uint32_t> VulkanWindowContext::UploadImages(const std::vector<Image>& images) {
+	// 	VkCommandBuffer commandBuffer = StartTransientCommandBuffer();
+	// 	std::vector<GPUBuffer> stagingBuffers;
+	// 	stagingBuffers.reserve(images.size());
+
+	// 	std::vector<uint32_t> imageIds(images.size());
+	// 	for (int i = 0; i < images.size(); i++) {
+	// 		const Image& image = images[i];
+	// 		if (image.data) {
+	// 			auto [imageId, stagingTextureBuffer] = CreateImage(commandBuffer, image.data, image.size.x, image.size.y, image.channels);
+	// 			imageIds[i] = imageId;
+	// 			stagingBuffers.push_back(stagingTextureBuffer);
+	// 		} else {
+	// 			imageIds[i] = m_whiteImagePixelId; // default texture fallback
+	// 		}
+	// 	}
+
+	// 	SubmitTransientCommandBuffer(commandBuffer); // submit and wait
+
+	// 	// Clean up the staging buffers
+	// 	for (GPUBuffer& stagingBuffer : stagingBuffers) {
+	// 		vmaDestroyBuffer(vulkan->GetAllocator(), stagingBuffer.vkBuffer, stagingBuffer.allocation);
+	// 	}
+
+	// 	return imageIds;
+	// }
 
 	void VulkanWindowContext::Resize(int width, int height) {
 		this->width = width;
@@ -181,7 +165,7 @@ namespace andromeda::graphics {
 			.preTransform = surfaceCaps.currentTransform, // how to orient the image - we account for any custom user rotations etc.
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, // ensure window is fully opaque, allowing transparency
 			.presentMode = VK_PRESENT_MODE_FIFO_KHR, // how the presentation engine chooses which image to draw - standard guarantee is surface will
-		                                             // have this and good w/ vsync
+			                                         // have this and good w/ vsync
 		};
 
 		if (vkCreateSwapchainKHR(device, &swapchainCreateInfo, nullptr, &swapchain) != VK_SUCCESS) {
@@ -340,16 +324,6 @@ namespace andromeda::graphics {
 	}
 
 	bool VulkanWindowContext::CreateCommandBuffers() {
-		VkCommandPoolCreateInfo poolInfo{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-			.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
-			.queueFamilyIndex = static_cast<uint32_t>(vulkan->GetGraphicsFamilyIndex()),
-		};
-		if (vkCreateCommandPool(vulkan->GetDevice(), &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
-			andromeda::error("Failed to create command buffer pool");
-			return false;
-		}
-
 		for (FrameResources& res : m_frameResources) {
 			// Give ecah frame it's own pool, faster cmd buffer resets this way
 			VkCommandPoolCreateInfo poolInfo{
@@ -453,14 +427,14 @@ namespace andromeda::graphics {
 		std::vector<VkImageMemoryBarrier2KHR> layoutBarriers{
 			// barriers
 			{.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-		     .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-		     .srcAccessMask = 0,
-		     .dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
-		     .dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
-		     .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		     .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-		     .image = swapchainImages[imageIndex],
-		     .subresourceRange{
+			 .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			 .srcAccessMask = 0,
+			 .dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			 .dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			 .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			 .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			 .image = swapchainImages[imageIndex],
+			 .subresourceRange{
 				 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
 				 .baseMipLevel = 0,
 				 .levelCount = 1,
@@ -468,15 +442,15 @@ namespace andromeda::graphics {
 				 .layerCount = 1,
 			 }},
 			{.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-		     .srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
-		     .srcAccessMask = 0,
-		     .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT |
-		                     VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
-		     .dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-		     .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		     .newLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-		     .image = depthImage,
-		     .subresourceRange{
+			 .srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+			 .srcAccessMask = 0,
+			 .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT |
+			                 VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
+			 .dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			 .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			 .newLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+			 .image = depthImage,
+			 .subresourceRange{
 				 .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
 				 .baseMipLevel = 0,
 				 .levelCount = 1,
@@ -595,16 +569,16 @@ namespace andromeda::graphics {
 		// signal that the image can be presented
 		std::vector<VkSemaphoreSubmitInfo> semaphoreSignals{
 			{// render work completion signal
-		     .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-		     .semaphore = renderCompleteSemaphores[imageIndex],
-		     .stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
-		    },
+			 .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			 .semaphore = renderCompleteSemaphores[imageIndex],
+			 .stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
+			},
 			{// entire frame is completed (timeline)
-		     .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
-		     .semaphore = m_timelineSemaphore,
-		     .value = signalValue,
-		     .stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT
-		    }
+			 .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			 .semaphore = m_timelineSemaphore,
+			 .value = signalValue,
+			 .stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT
+			}
 		};
 		VkCommandBufferSubmitInfo cmdSubmitInfo{
 			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
@@ -638,230 +612,12 @@ namespace andromeda::graphics {
 		m_state = VULKAN_STATE_POST_RENDER;
 	}
 
-	VkCommandBuffer VulkanWindowContext::StartTransientCommandBuffer() {
-		VkCommandBufferAllocateInfo cmdAllocateInfo{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-			.commandPool = m_commandPool,
-			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-			.commandBufferCount = 1,
-		};
-
-		VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-		if (vkAllocateCommandBuffers(vulkan->GetDevice(), &cmdAllocateInfo, &commandBuffer) != VK_SUCCESS) {
-			andromeda::error("Unable to allocate command buffer");
-			return VK_NULL_HANDLE;
-		}
-
-		VkCommandBufferBeginInfo beginInfo{
-			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
-			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
-		};
-
-		if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-			andromeda::error("unable to begin command buffer");
-			vkFreeCommandBuffers(vulkan->GetDevice(), m_commandPool, 1, &commandBuffer);
-			return VK_NULL_HANDLE;
-		}
-
-		return commandBuffer;
-	}
-
-	void VulkanWindowContext::SubmitTransientCommandBuffer(VkCommandBuffer commandBuffer) {
-		vkEndCommandBuffer(commandBuffer);
-		VkSubmitInfo submitInfo{
-			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-			.commandBufferCount = 1,
-			.pCommandBuffers = &commandBuffer,
-		};
-
-		vkQueueSubmit(vulkan->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-		vkQueueWaitIdle(vulkan->GetGraphicsQueue());
-		vkFreeCommandBuffers(vulkan->GetDevice(), m_commandPool, 1, &commandBuffer);
-	}
-
-	std::pair<uint32_t, GPUBuffer> VulkanWindowContext::CreateImage(
-		VkCommandBuffer commandBuffer,
-		unsigned char* imageData,
-		uint32_t width,
-		uint32_t height,
-		int channels
-	) {
-		VkFormat imageFormat = VK_FORMAT_R8G8B8A8_SRGB;
-		VkImageCreateInfo imageInfo{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-			.imageType = VK_IMAGE_TYPE_2D,
-			.format = imageFormat,
-			.extent{.width = width, .height = height, .depth = 1},
-			.mipLevels = 1,
-			.arrayLayers = 1,
-			.samples = VK_SAMPLE_COUNT_1_BIT,
-			.tiling = VK_IMAGE_TILING_OPTIMAL,
-			.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-			.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-		};
-
-		VmaAllocationCreateInfo allocInfo{
-			.usage = VMA_MEMORY_USAGE_AUTO,
-		};
-
-		GPUImage gpuImage;
-		if (vmaCreateImage(vulkan->GetAllocator(), &imageInfo, &allocInfo, &gpuImage.image, &gpuImage.allocation, nullptr) != VK_SUCCESS) {
-			andromeda::error("Error creating image");
-			return {0, GPUBuffer{}};
-		}
-
-		VkImageViewCreateInfo imgViewInfo{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-			.image = gpuImage.image,
-			.viewType = VK_IMAGE_VIEW_TYPE_2D,
-			.format = imageFormat,
-			.subresourceRange{
-				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, // accessing the color of the image
-				.levelCount = 1, // 1 mip level and array level
-				.layerCount = 1,
-			},
-		};
-
-		// create a view into the image memory
-		if (vkCreateImageView(vulkan->GetDevice(), &imgViewInfo, nullptr, &gpuImage.imageView) != VK_SUCCESS) {
-			andromeda::error("Error creating image view");
-			return {0, GPUBuffer{}};
-		}
-
-		// prepare to upload image data
-		VkImageMemoryBarrier2 transferBarrier{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-			.srcStageMask = VK_PIPELINE_STAGE_2_NONE,
-			.srcAccessMask = VK_ACCESS_2_NONE,
-			.dstStageMask = VK_PIPELINE_STAGE_2_COPY_BIT,
-			.dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
-			.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-			.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, // prepares hardware for writing image, ensures caches flushed and visible in VRAM
-			.image = gpuImage.image,
-			.subresourceRange{
-				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-				.baseMipLevel = 0,
-				.levelCount = 1,
-				.baseArrayLayer = 0,
-				.layerCount = 1,
-			},
-		};
-
-		VkDependencyInfo transferDepInfo{
-			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-			.imageMemoryBarrierCount = 1,
-			.pImageMemoryBarriers = &transferBarrier,
-		};
-		vkCmdPipelineBarrier2(commandBuffer, &transferDepInfo);
-
-		// create a staging buffer for copying data
-		const size_t byteSize = width * height * channels;
-		GPUBuffer stageBuffer = CreateBuffer(VK_IMAGE_USAGE_TRANSFER_SRC_BIT, byteSize, true, /* Use CPU */ VMA_MEMORY_USAGE_AUTO_PREFER_HOST);
-		MapCopyBufferData(stageBuffer, 0, imageData, byteSize);
-
-		VkBufferImageCopy bufferImageCopy{
-			.imageSubresource{
-				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-				.mipLevel = 0,
-				.baseArrayLayer = 0,
-				.layerCount = 1,
-			},
-			.imageExtent{.width = width, .height = height, .depth = 1},
-		};
-		vkCmdCopyBufferToImage(commandBuffer, stageBuffer.vkBuffer, gpuImage.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferImageCopy);
-
-		// transition image for shader read/sampling
-		VkImageMemoryBarrier2 shaderReadBarrier{
-			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-			.srcStageMask = VK_PIPELINE_STAGE_2_COPY_BIT,
-			.srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT,
-			.dstStageMask = VK_PIPELINE_STAGE_2_FRAGMENT_SHADER_BIT,
-			.dstAccessMask = VK_ACCESS_2_SHADER_READ_BIT,
-			.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-			.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, // now can be sampled by shaders
-			.image = gpuImage.image,
-			.subresourceRange{
-				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-				.baseMipLevel = 0,
-				.levelCount = 1,
-				.baseArrayLayer = 0,
-				.layerCount = 1,
-			},
-		};
-		VkDependencyInfo shaderReadDepInfo{
-			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-			.imageMemoryBarrierCount = 1,
-			.pImageMemoryBarriers = &shaderReadBarrier,
-		};
-		vkCmdPipelineBarrier2(commandBuffer, &shaderReadDepInfo);
-
-		m_images.push_back(gpuImage);
-		const uint32_t imageId = m_images.size(); // zero will be null
-		return {imageId, stageBuffer};
-	}
-
-	void VulkanWindowContext::MapCopyBufferData(const GPUBuffer& buffer, size_t bufferOffset, void* data, size_t byteSize) {
-		// map and write buffer data
-		void* bufferPtr = nullptr;
-		if (vmaMapMemory(vulkan->GetAllocator(), buffer.allocation, &bufferPtr) != VK_SUCCESS) {
-			andromeda::error("Unable to map buffer memory");
-			return;
-		}
-
-		std::memcpy(static_cast<char*>(bufferPtr) + bufferOffset, data, byteSize);
-		vmaUnmapMemory(vulkan->GetAllocator(), buffer.allocation);
-	}
-
-	GPUBuffer VulkanWindowContext::CreateBuffer(VkBufferUsageFlags usage, size_t byteSize, bool mappable, VmaMemoryUsage memoryUsage) {
-		// Create buffer and VMA allocation
-		VkBufferCreateInfo buffInfo{
-			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-			.size = byteSize,
-			.usage = usage,
-			.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
-		};
-
-		VmaAllocationCreateInfo allocInfo{
-			.flags = mappable ? VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT : 0u,
-			.usage = memoryUsage,
-		};
-
-		GPUBuffer gpuBuffer;
-		if (vmaCreateBuffer(vulkan->GetAllocator(), &buffInfo, &allocInfo, &gpuBuffer.vkBuffer, &gpuBuffer.allocation, nullptr) != VK_SUCCESS) {
-			return GPUBuffer{};
-		}
-
-		if (usage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT) {
-			VkBufferDeviceAddressInfo vertBdaInfo{
-				.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
-				.buffer = gpuBuffer.vkBuffer,
-			};
-
-			gpuBuffer.deviceAddress = vkGetBufferDeviceAddress(vulkan->GetDevice(), &vertBdaInfo);
-		}
-
-		return gpuBuffer;
-	}
-
 	void VulkanWindowContext::Shutdown() {
 		// wait in case resources are in use
 		vkDeviceWaitIdle(vulkan->GetDevice());
 
-		for (auto& sampler : m_samplers) {
-			vkDestroySampler(vulkan->GetDevice(), sampler, nullptr);
-		}
-
-		for (auto& image : m_images) {
-			vmaDestroyImage(vulkan->GetAllocator(), image.image, image.allocation);
-			vkDestroyImageView(vulkan->GetDevice(), image.imageView, nullptr);
-		}
-
 		m_shader->Unload();
 		m_shader.Reset();
-
-		if (m_commandPool != VK_NULL_HANDLE) {
-			vkDestroyCommandPool(vulkan->GetDevice(), m_commandPool, nullptr);
-		}
 
 		// Frame/time cleanup
 		{

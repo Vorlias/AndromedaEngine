@@ -297,6 +297,10 @@ namespace andromeda::graphics {
 
 		return VK_NULL_HANDLE;
 	}
+
+	void GPUBuffer::Destroy(VmaAllocator allocator) {
+		vmaDestroyBuffer(allocator, vkBuffer, allocation);
+	}
 } // namespace andromeda::graphics
 
 int32_t andromeda::graphics::VulkanContext::SelectGraphicsQueueFamilyIndex() {
