@@ -13,3 +13,15 @@
 [submodule "External/SDL"]
 	path = External/SDL
 	url = https://github.com/libsdl-org/SDL
+[submodule "External/sdl3webgpu"]
+	path = External/sdl3webgpu
+	url = https://github.com/eliemichel/sdl3webgpu
+[submodule "External/webgpu"]
+	path = External/webgpu
+	url = https://github.com/eliemichel/WebGPU-distribution
+[submodule "External/yaml-cpp"]
+	path = External/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp
+[submodule "External/crossguid"]
+	path = External/crossguid
+	url = https://github.com/graeme-hill/crossguid

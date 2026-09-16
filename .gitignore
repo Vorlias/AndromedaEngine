@@ -6,3 +6,6 @@
 .idea
 /cmake-build-*
 /.andromeda
+/Tools/lute*
+*.log
+/imgui.ini

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 23)
 
 # The Andromeda Engine Project
-project(AndromedaEngine VERSION 0.1.0 LANGUAGES CXX C)
+project(AndromedaEngine VERSION 0.5.1 LANGUAGES CXX C)
 
 # Have to use this so all the code is using the "-fPIC" thing
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -10,18 +10,27 @@ set(BUILD_SHARED_LIBS OFF)
 
 message(STATUS "SYSTEM_NAME" ${CMAKE_SYSTEM_NAME})
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    # add_compile_options(-Werror=return-type)
+
     set(SDL_STATIC ON)
     set(SDL_SHARED OFF)
+
+    message(STATUS "Session: " ${XDG_SESSION_TYPE})
+
 else()
     set(SDL_STATIC OFF)
     set(SDL_SHARED ON)
 endif()
 
 option(OPENGL_RENDERER "Include OpenGL" ON)
+option(WEBGPU_RENDERER "Include WebGPU" ON)
+
 option(BUILTIN_SHADER_COMPILER "Build with shader compilation" ON)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
+add_definitions(-w)
 
 # Add Luau as a dependency here
 add_subdirectory(Luau)
@@ -30,17 +39,27 @@ add_subdirectory(External/spdlog)
 add_subdirectory(External/entt)
 add_subdirectory(External/SDL)
 add_subdirectory(External/glad)
-# add_subdirectory(External/cpptrace)
+add_subdirectory(External/webgpu)
+add_subdirectory(External/sdl3webgpu)
+add_subdirectory(External/yaml-cpp)
+
+add_subdirectory(Tools/Lute)
 
 add_compile_definitions(ANDROMEDA_VERSION_MAJOR=${PROJECT_VERSION_MAJOR})
-add_compile_definitions(LUAU_VERSION=730)
+add_compile_definitions(LUAU_VERSION=732)
 add_compile_definitions(ANDROMEDA_VERSION_MINOR=${PROJECT_VERSION_MINOR})
 add_compile_definitions(ANDROMEDA_VERSION_PATCH=${PROJECT_VERSION_PATCH})
-add_compile_definitions(ANDROMEDA_VERSION_STRING="Andromeda ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
+
+if (ANDROMEDA_EDITOR)
+    add_compile_definitions(ANDROMEDA_VERSION_STRING="Andromeda Editor ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+else()
+    add_compile_definitions(ANDROMEDA_VERSION_STRING="Andromeda ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+endif()
+
+
 if (ANDROMEDA_INTERNAL)
     add_compile_definitions(ANDROMEDA_INTERNAL=1)
 endif()
-
 
 add_compile_definitions(ANDROMEDA_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
 if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")

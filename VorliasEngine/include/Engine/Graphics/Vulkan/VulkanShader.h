@@ -63,16 +63,6 @@ namespace andromeda::graphics {
 			return m_modules;
 		}
 
-		// std::vector<VkPipelineShaderStageCreateInfo> GetShaderStages() {
-		// 	std::vector<VkPipelineShaderStageCreateInfo> stages;
-		// 	stages.reserve(m_modules.size());
-
-		// 	for (ShaderModule& module : m_modules) {
-		// 		stages.push_back(module.GetShaderStage());
-		// 	}
-		// 	return stages;
-		// }
-
 	private:
 #if ANDROMEDA_SHADER_COMPILATION || ANDROMEDA_EDITOR
 		VkShaderModule CompileShaderModuleFromSource(const std::string& source, shaderc_shader_kind kind);

@@ -250,7 +250,7 @@ namespace andromeda::graphics {
 	bool VulkanContext::InitializeVMA() {
 		VmaVulkanFunctions vmaFuncInfo{};
 		VmaAllocatorCreateInfo vmaAllocInfo{
-			.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+			.flags = 0,
 			.physicalDevice = m_physicalDevice,
 			.device = m_device,
 			.pVulkanFunctions = &vmaFuncInfo,
@@ -296,6 +296,10 @@ namespace andromeda::graphics {
 		}
 
 		return VK_NULL_HANDLE;
+	}
+
+	void GPUBuffer::Destroy(VmaAllocator allocator) {
+		vmaDestroyBuffer(allocator, vkBuffer, allocation);
 	}
 } // namespace andromeda::graphics
 

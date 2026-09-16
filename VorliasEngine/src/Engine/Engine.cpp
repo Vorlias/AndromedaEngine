@@ -4,6 +4,7 @@
 #include "Engine/Log.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/OpenGL/OpenGLRenderer.h"
+#include "Engine/Graphics/WebGPU/WebGPURenderer.h"
 
 USING_ENGINE;
 
@@ -34,18 +35,15 @@ void Engine::Run(Application* app) {
 	if (Initialize()) {
 		uint64_t lastFixedUpdate = SDL_GetTicks();
 
+		m_app->m_dispatchFn = [app](Event& event) {
+			app->Event(event);
+		};
+
 		while (m_isRunning) {
 			uint64_t currentTicks = SDL_GetTicks();
 			app->m_elapsedTime = currentTicks / 1000.0f;
 
 			Update();
-
-			// uint64_t nextFixedUpdate = SDL_GetTicks() - lastFixedUpdate;
-			// if (nextFixedUpdate >= app->m_fixedFrameTime.toMilliseconds()) {
-			// 	FixedUpdate();
-			// 	app->m_fixedDeltaTime = (nextFixedUpdate / 1000.0f);
-			// 	lastFixedUpdate = SDL_GetTicks();
-			// }
 
 			if (m_renderer != nullptr)
 				Render();
@@ -103,6 +101,11 @@ bool Engine::Initialize() {
 					m_renderer = CreateScopeRef<graphics::OpenGLRenderer>();
 					break;
 #endif
+#if ANDROMEDA_WGPU
+				case graphics::API::WGPU:
+					m_renderer = CreateScopeRef<graphics::WGPURenderer>();
+					break;
+#endif
 			}
 
 			if (!m_app->Initialize())
@@ -117,7 +120,7 @@ bool Engine::Initialize() {
 			}
 
 			if (m_renderer != nullptr) {
-				print("Renderer: {}", m_renderer->GetAPIString());
+				trace("Renderer: {}", m_renderer->GetAPIString());
 			}
 
 			m_isInitialized = true;
@@ -146,6 +149,10 @@ void Engine::Quit() {
 
 void Engine::Update() {
 	m_app->UpdateWindows();
+
+	// since quit requests can happen in the window update phase above
+	if (m_app->m_quitRequested)
+		return;
 	m_app->Update(m_app->m_deltaTime);
 }
 
@@ -154,14 +161,35 @@ void Engine::FixedUpdate() {
 }
 
 void Engine::Render() {
-#if ANDROMEDA_INTERNAL
-	m_app->RawRender(*m_renderer);
-#endif
-	// m_app->Render();
+	auto mainWindow = m_app->GetMainWindow();
+	if (mainWindow == nullptr)
+		return;
+
+	auto graphics = mainWindow->GetGraphicsContext();
+
+	if (m_app->imgui != nullptr)
+		m_app->imgui->NewFrame();
+
+	graphics->BeforeRender();
+	graphics->RenderPrepare();
+	{
+		graphics->RenderDraw();
+		if (m_app->imgui != nullptr) {
+			m_app->DrawIMGUI();
+			m_app->imgui->Render();
+		}
+	}
+	graphics->RenderPresent();
 }
 
 void Engine::Shutdown() {
 	m_app->Shutdown();
+
+	if (m_app->imgui != nullptr) {
+		m_app->imgui->Shutdown();
+		m_app->imgui.release();
+	}
+
 	m_app->CloseAllWindows();
 
 	if (m_renderer != nullptr)

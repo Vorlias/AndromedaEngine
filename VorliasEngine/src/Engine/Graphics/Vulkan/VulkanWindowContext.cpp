@@ -1,6 +1,7 @@
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 #include "Engine/Graphics/Vulkan/VulkanUtils.h"
 #include "Engine/Log.h"
+#include "Engine/Graphics/Vulkan/VulkanRenderTexture.h"
 
 
 #include "Engine/Graphics/Vulkan/VulkanBase.h"
@@ -9,9 +10,55 @@
 #include <spdlog/spdlog.h>
 #include "Engine/Graphics/Vulkan/VulkanShader.h"
 
+andromeda::graphics::PipelineId andromeda::graphics::VulkanWindowContext::s_pipelineIdx = 0;
+
+void andromeda::graphics::VulkanWindowContext::SetVulkanRenderTexture(andromeda::graphics::VulkanRenderTexture* rt) {
+	m_renderTexture = rt;
+}
+
+void andromeda::graphics::VulkanWindowContext::SetRenderTarget(std::shared_ptr<RenderTexture> renderTarget) {
+	SetVulkanRenderTexture(static_cast<VulkanRenderTexture*>(renderTarget.get()));
+}
+
+void andromeda::graphics::VulkanWindowContext::RenderToTarget(VulkanRenderTexture* renderTexture) {
+	auto* target = renderTexture != nullptr ? renderTexture : m_renderTexture;
+	if (target == nullptr || !target->IsValid()) {
+		return;
+	}
+
+	FrameResources& res = m_frameResources[frameResIdx];
+	target->BeginRender(res);
+	{
+		VkViewport viewport{.x = 0, .y = 0, .width = static_cast<float>(target->GetWidth()), .height = static_cast<float>(target->GetHeight())};
+		vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
+
+		VkRect2D scissor{
+			.offset{.x = 0, .y = 0}, .extent{.width = static_cast<uint32_t>(target->GetWidth()), .height = static_cast<uint32_t>(target->GetHeight())}
+		};
+		vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
+
+		for (auto& command : m_renderCommands) {
+			command->Bind(this);
+			command->Draw(this);
+		}
+	}
+	target->EndRender(res);
+}
+
 namespace andromeda::graphics {
 	VulkanWindowContext::VulkanWindowContext(VulkanContext* vulkan, SDL_Window* window) : vulkan(vulkan), window(window) {
 		andromeda::trace("Create window context");
+	}
+
+	API VulkanWindowContext::GetAPI() {
+		return API::Vulkan;
+	}
+
+	void VulkanWindowContext::DrawDemoTriangle() {
+		FrameResources& res = m_frameResources[frameResIdx];
+
+		vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
+		vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
 	}
 
 	void VulkanWindowContext::Initialize() {
@@ -29,30 +76,52 @@ namespace andromeda::graphics {
 		if (!CreateShaders())
 			return;
 
-		if (!CreateGraphicsPipeline())
+		m_graphicsPipeline = CreatePipeline(static_cast<VulkanShader*>(m_shader.AsPtr()));
+		if (!m_graphicsPipeline) {
 			return;
-	}
-
-	void VulkanWindowContext::Resized(int width, int height) {
-		DestroySwapchain();
-		CreateSwapchain(width, height);
-	}
-
-	void VulkanWindowContext::Shutdown() {
-		m_shader->Unload();
-		m_shader.Reset();
-
-		if (pipelineLayout != VK_NULL_HANDLE) {
-			vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
 		}
 
-		DestroySwapchain();
-
-		if (surface != VK_NULL_HANDLE) {
-			andromeda::trace("Cleaned up surface");
-			SDL_Vulkan_DestroySurface(vulkan->GetInstance(), surface, nullptr);
-			surface = nullptr;
+		if (!CreateSyncResources()) {
+			return;
 		}
+
+		if (!CreateCommandBuffers()) {
+			andromeda::error("Could not create command buffers");
+			return;
+		}
+	}
+
+	// std::vector<uint32_t> VulkanWindowContext::UploadImages(const std::vector<Image>& images) {
+	// 	VkCommandBuffer commandBuffer = StartTransientCommandBuffer();
+	// 	std::vector<GPUBuffer> stagingBuffers;
+	// 	stagingBuffers.reserve(images.size());
+
+	// 	std::vector<uint32_t> imageIds(images.size());
+	// 	for (int i = 0; i < images.size(); i++) {
+	// 		const Image& image = images[i];
+	// 		if (image.data) {
+	// 			auto [imageId, stagingTextureBuffer] = CreateImage(commandBuffer, image.data, image.size.x, image.size.y, image.channels);
+	// 			imageIds[i] = imageId;
+	// 			stagingBuffers.push_back(stagingTextureBuffer);
+	// 		} else {
+	// 			imageIds[i] = m_whiteImagePixelId; // default texture fallback
+	// 		}
+	// 	}
+
+	// 	SubmitTransientCommandBuffer(commandBuffer); // submit and wait
+
+	// 	// Clean up the staging buffers
+	// 	for (GPUBuffer& stagingBuffer : stagingBuffers) {
+	// 		vmaDestroyBuffer(vulkan->GetAllocator(), stagingBuffer.vkBuffer, stagingBuffer.allocation);
+	// 	}
+
+	// 	return imageIds;
+	// }
+
+	void VulkanWindowContext::Resize(int width, int height) {
+		this->width = width;
+		this->height = height;
+		m_swapchainRequiresRecreate = true;
 	}
 
 	bool VulkanWindowContext::CreateSurface() {
@@ -82,6 +151,8 @@ namespace andromeda::graphics {
 			requestedImageCount = std::min(requestedImageCount, surfaceCaps.maxImageCount);
 		}
 
+		m_minImageCount = surfaceCaps.minImageCount;
+
 		VkSwapchainCreateInfoKHR swapchainCreateInfo{
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = surface,
@@ -94,7 +165,7 @@ namespace andromeda::graphics {
 			.preTransform = surfaceCaps.currentTransform, // how to orient the image - we account for any custom user rotations etc.
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR, // ensure window is fully opaque, allowing transparency
 			.presentMode = VK_PRESENT_MODE_FIFO_KHR, // how the presentation engine chooses which image to draw - standard guarantee is surface will
-		                                             // have this and good w/ vsync
+			                                         // have this and good w/ vsync
 		};
 
 		if (vkCreateSwapchainKHR(device, &swapchainCreateInfo, nullptr, &swapchain) != VK_SUCCESS) {
@@ -109,6 +180,7 @@ namespace andromeda::graphics {
 		swapchainImageViews.resize(imageCount);
 
 		andromeda::trace("Created swapchain images count=" + std::to_string(imageCount));
+		m_imageCount = imageCount;
 
 		for (size_t i = 0; i < swapchainImages.size(); i++) {
 			VkImageViewCreateInfo imgViewInfo{
@@ -188,6 +260,8 @@ namespace andromeda::graphics {
 	}
 
 	void VulkanWindowContext::DestroySwapchain() {
+		vkDeviceWaitIdle(device);
+
 		for (VkImageView swapchainImageView : swapchainImageViews) {
 			vkDestroyImageView(device, swapchainImageView, nullptr);
 		}
@@ -200,13 +274,13 @@ namespace andromeda::graphics {
 
 		if (swapchain) {
 			vkDestroySwapchainKHR(device, swapchain, nullptr);
-			swapchain = nullptr;
+			swapchain = VK_NULL_HANDLE;
 		}
 
 		if (depthImageView) {
 			vkDestroyImageView(device, depthImageView, nullptr);
 			vmaDestroyImage(vulkan->GetAllocator(), depthImage, depthImageAllocation);
-			depthImageView = nullptr;
+			depthImageView = VK_NULL_HANDLE;
 		}
 	}
 
@@ -218,62 +292,359 @@ namespace andromeda::graphics {
 		return true;
 	}
 
-	bool VulkanWindowContext::CreateGraphicsPipeline() {
-		VkPipelineLayoutCreateInfo pipelineLayoutInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			.setLayoutCount = 0,
-			.pushConstantRangeCount = 0,
+	bool VulkanWindowContext::CreateSyncResources() {
+		// synchronize frames in flight
+		VkSemaphoreTypeCreateInfo semaphoreTypeInfo{
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
+			.semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
+			.initialValue = MaxFramesInFlight,
+		};
+		VkSemaphoreCreateInfo semaphoreInfo{
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+			.pNext = &semaphoreTypeInfo,
 		};
 
-		VK_CHECK_ELSE_RETURN(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, &pipelineLayout), false);
-
-		auto shader = static_cast<VulkanShader*>(m_shader.AsPtr());
-		auto mods = shader->GetShaderModules();
-
-		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
-		shaderStages.resize(mods.size());
-		for (int i = 0; i < mods.size(); i++) {
-			auto& mod = mods[i];
-			shaderStages[i] = mod.GetShaderStage();
+		if (vkCreateSemaphore(vulkan->GetDevice(), &semaphoreInfo, nullptr, &m_timelineSemaphore) != VK_SUCCESS) {
+			andromeda::error("Failed to create timeline semaphore");
+			return false;
 		}
 
-		// vertex pulling, don't define vertex input details
-		VkPipelineVertexInputStateCreateInfo vertInputInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-		};
 
-		// input assembly, we'll be drawing triangle lists
-		VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		};
-
-		// depth/stencil configuration
-		VkPipelineDepthStencilStateCreateInfo depthStencilInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-			.depthTestEnable = VK_TRUE,
-			.depthWriteEnable = VK_TRUE,
-			.depthCompareOp = VK_COMPARE_OP_LESS,
-			.stencilTestEnable = VK_FALSE,
-		};
-
-		// dynamic rendering allows to set this up.. dynamically
-		// wel still need this struct though
-		VkPipelineViewportStateCreateInfo viewportInfo{
-			.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-			.viewportCount = 1,
-			.pViewports = nullptr,
-			.scissorCount = 1,
-			.pScissors = nullptr,
-		};
+		// per frame image acquire semaphores
+		for (FrameResources& res : m_frameResources) {
+			// create the binary semaphores
+			VkSemaphoreCreateInfo semaphoreInfo{.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+			if (vkCreateSemaphore(vulkan->GetDevice(), &semaphoreInfo, nullptr, &res.imageAcquiredSemaphore) != VK_SUCCESS) {
+				andromeda::error("Error creating the per-frame image-acquire semaphore");
+				return false;
+			}
+		}
 
 		return true;
 	}
 
-	void VulkanWindowContext::SetupIMGUI(ImGui_ImplVulkanH_Window* wd) {
-		// wd->Surface = surface;
-		// wd->Swapchain = swapchain;
-		// wd->Width = swapchainWidth;
-		// wd->Height = swapchainHeight;
+	bool VulkanWindowContext::CreateCommandBuffers() {
+		for (FrameResources& res : m_frameResources) {
+			// Give ecah frame it's own pool, faster cmd buffer resets this way
+			VkCommandPoolCreateInfo poolInfo{
+				.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+				.queueFamilyIndex = static_cast<uint32_t>(vulkan->GetGraphicsFamilyIndex()),
+			};
+
+			if (vkCreateCommandPool(vulkan->GetDevice(), &poolInfo, nullptr, &res.commandPool) != VK_SUCCESS) {
+				andromeda::error("Failed to create command buffer pool");
+				return false;
+			}
+
+			// Create the command buffer for this frame
+			VkCommandBufferAllocateInfo cmdAllocInfo{
+				.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+				.commandPool = res.commandPool,
+				.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+				.commandBufferCount = 1,
+			};
+
+			if (vkAllocateCommandBuffers(vulkan->GetDevice(), &cmdAllocInfo, &res.commandBuffer) != VK_SUCCESS) {
+				andromeda::error("Failed to allocate command buffer");
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	void VulkanWindowContext::BeforeRender() {
+		m_state = VULKAN_STATE_BEFORE_RENDER;
+
+		for (auto& command : m_renderCommands) {
+			command->BeforeRender(this);
+		}
+
+		// First check if swapchain is valid, if not we'll recreate it
+		if (m_swapchainRequiresRecreate) {
+			vkDeviceWaitIdle(vulkan->GetDevice());
+			DestroySwapchain();
+			CreateSwapchain(width, height);
+			m_swapchainRequiresRecreate = false;
+		}
+
+		frameResIdx = frameIndex++ % MaxFramesInFlight; // get current frame resource idx
+		signalValue = nextSignalValue++; // value that current frame will set timeline semaphore to when completed, this will be the
+		                                 // value it will wait on for resource
+		const uint64_t waitValue = signalValue - MaxFramesInFlight; // value that the current frame will wait on, before begins using the resources
+
+		VkSemaphoreWaitInfo waitInfo{
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO,
+			.semaphoreCount = 1,
+			.pSemaphores = &m_timelineSemaphore,
+			.pValues = &waitValue,
+		};
+		vkWaitSemaphores(vulkan->GetDevice(), &waitInfo, UINT64_MAX);
+
+		// now safe to start recording commands
+		FrameResources& res = m_frameResources[frameResIdx];
+		vkResetCommandPool(vulkan->GetDevice(), res.commandPool, 0);
+
+		// Begin recording commands
+		VkCommandBufferBeginInfo cmdBeginInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+		};
+
+		vkBeginCommandBuffer(res.commandBuffer, &cmdBeginInfo);
+		m_cmdBuffer = true;
+	}
+
+	bool VulkanWindowContext::HasRenderTarget() const {
+		return m_renderTexture != nullptr && m_renderTexture->IsValid();
+	}
+
+	void VulkanWindowContext::SubmitCommand(std::unique_ptr<RenderCommand> command) {
+		ANDROMEDA_ASSERT(command != nullptr);
+		m_renderCommands.push_back(std::move(command));
+	}
+
+	void VulkanWindowContext::RenderPrepare() {
+		m_state = VULKAN_STATE_RENDER_PREPARE;
+		FrameResources& res = m_frameResources[frameResIdx];
+
+		// get the resources for this frame
+		VkSemaphore imageAcquireSemaphore = m_frameResources[frameResIdx].imageAcquiredSemaphore;
+
+		imageIndex = 0;
+		VkResult acquireResult =
+			vkAcquireNextImageKHR(vulkan->GetDevice(), swapchain, UINT64_MAX, imageAcquireSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+		// Handle resize and out of date images
+		if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR) { // can no longer be used, requires recreate IMMEDIATELY.
+			m_swapchainRequiresRecreate = true;
+			return;
+		} else if (acquireResult == VK_SUBOPTIMAL_KHR) {
+			m_swapchainRequiresRecreate = true; // we can recreate the next frame
+		}
+
+		// transition the colour and depth images
+		std::vector<VkImageMemoryBarrier2KHR> layoutBarriers{
+			// barriers
+			{.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			 .srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			 .srcAccessMask = 0,
+			 .dstStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			 .dstAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			 .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			 .newLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			 .image = swapchainImages[imageIndex],
+			 .subresourceRange{
+				 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				 .baseMipLevel = 0,
+				 .levelCount = 1,
+				 .baseArrayLayer = 0,
+				 .layerCount = 1,
+			 }},
+			{.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			 .srcStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT,
+			 .srcAccessMask = 0,
+			 .dstStageMask = VK_PIPELINE_STAGE_2_EARLY_FRAGMENT_TESTS_BIT |
+			                 VK_PIPELINE_STAGE_2_LATE_FRAGMENT_TESTS_BIT, // both specified to control memory access at both stages (write)
+			 .dstAccessMask = VK_ACCESS_2_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+			 .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+			 .newLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+			 .image = depthImage,
+			 .subresourceRange{
+				 .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+				 .baseMipLevel = 0,
+				 .levelCount = 1,
+				 .baseArrayLayer = 0,
+				 .layerCount = 1,
+			 }}
+		};
+
+		VkDependencyInfo depInfo{
+			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+			.imageMemoryBarrierCount = static_cast<uint32_t>(layoutBarriers.size()),
+			.pImageMemoryBarriers = layoutBarriers.data()
+		};
+		vkCmdPipelineBarrier2(res.commandBuffer, &depInfo);
+
+		// Optional offscreen render target, but the normal window render pass still must continue for ImGui/UI.
+		if (m_renderTexture != nullptr && m_renderTexture->IsValid()) {
+			RenderToTarget(m_renderTexture);
+		}
+
+		// setup the attachments (color and depth) and begin rendering (dynamic)
+		VkRenderingAttachmentInfo colorAttachInfo{
+			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+			.imageView = swapchainImageViews[imageIndex],
+			.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+			.clearValue{m_clearColor}
+		};
+
+		VkRenderingAttachmentInfo depthAttachInfo{
+			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+			.imageView = depthImageView,
+			.imageLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			.clearValue{.depthStencil{1.0f, 0}}
+		};
+
+		VkRenderingInfo renderingInfo{
+			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+			.renderArea = {.offset = {.x = 0, .y = 0}, .extent = {.width = swapchainWidth, .height = swapchainHeight}},
+			.layerCount = 1,
+			.colorAttachmentCount = 1,
+			.pColorAttachments = &colorAttachInfo,
+			.pDepthAttachment = &depthAttachInfo
+		};
+
+
+
+		vkCmdBeginRendering(res.commandBuffer, &renderingInfo);
+	}
+
+	void VulkanWindowContext::RenderDraw() {
+		m_state = VULKAN_STATE_RENDER;
+
+		FrameResources& res = m_frameResources[frameResIdx];
+
+		// set the viewport and scissor state
+		VkViewport viewport{.x = 0, .y = 0, .width = static_cast<float>(swapchainWidth), .height = static_cast<float>(swapchainHeight)};
+		vkCmdSetViewport(res.commandBuffer, 0, 1, &viewport);
+
+		VkRect2D scissor{.offset{.x = 0, .y = 0}, .extent{.width = swapchainWidth, .height = swapchainHeight}};
+		vkCmdSetScissor(res.commandBuffer, 0, 1, &scissor);
+
+		// // draw our triangle
+		// vkCmdBindPipeline(res.commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline->GetPipeline());
+		// vkCmdDraw(res.commandBuffer, 3, 1, 0, 0);
+
+		if (m_renderTexture == nullptr) {
+			for (auto& command : m_renderCommands) {
+				command->Bind(this);
+				command->Draw(this);
+			}
+		}
+	}
+
+	void VulkanWindowContext::RenderPresent() {
+		m_state = VULKAN_STATE_RENDER_PRESENT;
+
+		FrameResources& res = m_frameResources[frameResIdx];
+		vkCmdEndRendering(res.commandBuffer);
+
+		// transition the image from color attachment to presentation so we can show it
+		VkImageMemoryBarrier2 presentLayoutBarrier{
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT,
+			.srcAccessMask = VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT,
+			.dstStageMask = VK_PIPELINE_STAGE_2_NONE, // nothing is waiting, but the cache is flushed and layout is transition
+			.dstAccessMask = 0,
+			.oldLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			.image = swapchainImages[imageIndex],
+			.subresourceRange{
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.baseMipLevel = 0,
+				.levelCount = 1,
+				.baseArrayLayer = 0,
+				.layerCount = 1,
+			}
+		};
+		VkDependencyInfo presentDepInfo{
+			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO, .imageMemoryBarrierCount = 1, .pImageMemoryBarriers = &presentLayoutBarrier
+		};
+		vkCmdPipelineBarrier2(res.commandBuffer, &presentDepInfo);
+
+		vkEndCommandBuffer(res.commandBuffer);
+		m_cmdBuffer = false;
+
+		// ensure swapchain image is actually vailable to start color output
+		VkSemaphoreSubmitInfo imageAcquireWaitInfo{
+			.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			.semaphore = res.imageAcquiredSemaphore,
+			.stageMask = VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT // wait before drawing to image
+		};
+		// signal that the image can be presented
+		std::vector<VkSemaphoreSubmitInfo> semaphoreSignals{
+			{// render work completion signal
+			 .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			 .semaphore = renderCompleteSemaphores[imageIndex],
+			 .stageMask = VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT
+			},
+			{// entire frame is completed (timeline)
+			 .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+			 .semaphore = m_timelineSemaphore,
+			 .value = signalValue,
+			 .stageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT
+			}
+		};
+		VkCommandBufferSubmitInfo cmdSubmitInfo{
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+			.commandBuffer = res.commandBuffer,
+		};
+		VkSubmitInfo2 submitInfo{
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
+			.waitSemaphoreInfoCount = 1,
+			.pWaitSemaphoreInfos = &imageAcquireWaitInfo, // ensure the image is ready
+			.commandBufferInfoCount = 1,
+			.pCommandBufferInfos = &cmdSubmitInfo,
+			.signalSemaphoreInfoCount = static_cast<uint32_t>(semaphoreSignals.size()),
+			.pSignalSemaphoreInfos = semaphoreSignals.data()
+		};
+		vkQueueSubmit2(vulkan->GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+
+		// present the image
+		VkPresentInfoKHR presentInfo{
+			.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			.waitSemaphoreCount = 1,
+			.pWaitSemaphores = &renderCompleteSemaphores[imageIndex], // render work completed semaphore
+			.swapchainCount = 1,
+			.pSwapchains = &swapchain,
+			.pImageIndices = &imageIndex,
+			.pResults = nullptr
+		};
+
+		vkQueuePresentKHR(vulkan->GetGraphicsQueue(), &presentInfo);
+
+		m_renderCommands.clear();
+		m_state = VULKAN_STATE_POST_RENDER;
+	}
+
+	void VulkanWindowContext::Shutdown() {
+		// wait in case resources are in use
+		vkDeviceWaitIdle(vulkan->GetDevice());
+
+		m_shader->Unload();
+		m_shader.Reset();
+
+		// Frame/time cleanup
+		{
+			for (FrameResources& res : m_frameResources) {
+				if (res.imageAcquiredSemaphore != VK_NULL_HANDLE)
+					vkDestroySemaphore(vulkan->GetDevice(), res.imageAcquiredSemaphore, nullptr);
+
+				if (res.commandPool != VK_NULL_HANDLE)
+					vkDestroyCommandPool(vulkan->GetDevice(), res.commandPool, nullptr); // destroys buffers implicitly
+			}
+
+			if (m_timelineSemaphore != VK_NULL_HANDLE) {
+				vkDestroySemaphore(vulkan->GetDevice(), m_timelineSemaphore, nullptr);
+			}
+		}
+
+		// Cleanup the graphics pipeline
+		if (m_graphicsPipeline != nullptr) {
+			delete m_graphicsPipeline;
+		}
+
+		DestroySwapchain();
+
+		if (surface != VK_NULL_HANDLE) {
+			andromeda::trace("Cleaned up surface");
+			SDL_Vulkan_DestroySurface(vulkan->GetInstance(), surface, nullptr);
+			surface = VK_NULL_HANDLE;
+		}
 	}
 } // namespace andromeda::graphics

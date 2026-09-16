@@ -19,6 +19,10 @@ if(OPENGL_RENDERER)
     add_compile_definitions(ANDROMEDA_OPENGL=1)
 endif()
 
+if (WEBGPU_RENDERER)
+    add_compile_definitions(ANDROMEDA_WGPU=1)
+endif()
+
 
 
 # include vk-bootstrap
@@ -31,7 +35,12 @@ FetchContent_MakeAvailable(fetch_vk_bootstrap)
 
 add_compile_definitions(ANDROMEDA_INTERNAL=1)
 add_compile_definitions(ANDROMEDA_EXPERIMENTAL=0)
-add_compile_definitions(ANDROMEDA_EDITOR=0)
+
+if (ANDROMEDA_EDITOR)
+    add_compile_definitions(ANDROMEDA_EDITOR=1)
+else()
+    add_compile_definitions(ANDROMEDA_EDITOR=0)
+endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_program(LSB_RELEASE_EXEC lsb_release)
@@ -46,7 +55,8 @@ endif()
 set(VERSION_MAJOR 0)
 set(VERSION_MINOR 0)
 set(VERSION_REVIS 5)
-add_library(AndromedaEngine STATIC)
+add_library(AndromedaEngine STATIC
+    include/Engine/Utility/SourceParser.h)
 # add_dependencies(AndromedaEngine shaders)
 
 target_sources(
@@ -55,7 +65,6 @@ target_sources(
     src/PCH.h
     src/Engine/Luau/LuauScript.cpp
     src/Engine/Luau/LuauState.cpp
-    src/Engine/Luau/LuauState.h
     src/Engine/Engine.cpp
     src/Engine/Log.cpp
     src/Engine/Platform.cpp
@@ -66,10 +75,6 @@ target_sources(
     src/Engine/Graphics/Vulkan/VulkanShader.cpp
     src/Engine/Graphics/Shader.cpp
     src/Engine/File.cpp
-    include/Engine/Graphics/Vulkan/VulkanWindowContext.h
-    include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
-    include/Engine/Graphics/Vulkan/VulkanInstance.h
-    include/Engine/Graphics/Vulkan/VulkanShader.h
     src/Engine/Data/Vector.cpp
     src/Engine/Time.cpp
     src/Engine/Application.cpp
@@ -79,13 +84,48 @@ target_sources(
     src/Engine/Graphics/OpenGL/OpenGLShader.cpp
     src/Engine/Graphics/OpenGL/OpenGLRenderer.cpp
     src/Engine/Graphics/OpenGL/OpenGLWindowContext.cpp
+    src/Engine/Luau/Task.cpp
+    src/Engine/Luau/Lib.cpp
+    src/Engine/Luau/ThreadData.cpp
+    src/Engine/Graphics/Vulkan/VulkanBase.cpp
+    src/Engine/Luau/PrettyPrint.cpp
+    src/Engine/ObjectPool.cpp
+    src/Engine/Luau/LuauRuntime.cpp
+    src/Engine/Objects/Object.cpp
+    src/Engine/Scene/Scene.cpp
+    src/Engine/Luau/LuauTimeoutHandler.cpp
+    src/Engine/Data/Vector3.luau.cpp
+    src/Engine/Luau/AtomsDef.cpp
+    src/Engine/Data/Vector2.luau.cpp
+    src/Engine/Objects/Object.luau.cpp
+    src/Engine/Graphics/WebGPU/WebGPURenderer.cpp
+    src/Engine/Graphics/WebGPU/WebGPUWindowContext.cpp
+    src/Engine/Asset.cpp
+    src/Engine/Luau/Userdata.cpp
+    src/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.cpp
+    src/Engine/Graphics/Vulkan/VulkanRenderTexture.cpp
+    src/Engine/Graphics/RenderCommand.cpp
+    src/Engine/Graphics/RenderTarget.cpp
+    src/Engine/Assets/ShaderAsset.cpp
+    src/Engine/Utility/SourceParser.cpp
+    include/stb_image/stb_image.cpp
+    include/Engine/Data/Vertex.h
+    src/Engine/Data.cpp
+    src/Engine/Data/Image.cpp
+    src/Engine/Data/GLTFModel.cpp
+    src/Engine/Data/Rect.luau.cpp
     PUBLIC # exposed
+    include/Engine/Graphics/Vulkan/VulkanWindowContext.h
+    include/Engine/Graphics/Vulkan/VulkanRendererAPI.h
+    include/Engine/Graphics/Vulkan/VulkanInstance.h
+    include/Engine/Graphics/Vulkan/VulkanShader.h
     include/Engine/Engine.h
     include/Engine/Platform.h
     include/Engine/Window.h
     include/Engine/FileDialogs.h
     include/Engine/Application.h
     include/Engine/Luau/LuauScript.h
+    include/Engine/Luau/LuauState.h
     include/Engine/Log.h
     include/Engine/Graphics/GraphicsContext.h
     include/Engine/Common.h
@@ -103,8 +143,59 @@ target_sources(
     include/Engine/Graphics/OpenGL/OpenGLWindowContext.h
     include/Engine/Graphics/OpenGL/OpenGLHelpers.h
     include/Engine/Graphics/Vulkan/VulkanBase.h
-    src/Engine/Graphics/Vulkan/VulkanBase.cpp
+    include/Engine/Luau/Task.h
+    include/Engine/Luau/Lib.h
+    include/Engine/Luau/ThreadData.h
+    include/Engine/Luau/PrettyPrint.h
+    include/Engine/ObjectPool.h
+    include/Engine/Luau/LuauRuntime.h
+    include/Engine/Luau/LuauTimeoutHandler.h
+    include/Engine/Data/Rect.h
+    include/Engine/Objects/Object.h
+    include/Engine/Scene/Scene.h
+    include/Engine/Math.h
+    include/Engine/Luau/AtomsDef.h
+    include/Engine/Objects/Component.h
+    include/Engine/Graphics/WebGPU/WebGPURenderer.h
+    include/Engine/Graphics/WebGPU/WebGPUWindowContext.h
+    include/Engine/Graphics/RenderCommand.h
+    include/Engine/Asset.h
+    include/Engine/STL.h
+    include/Engine/Graphics/Vulkan/VulkanIMGUI.h
+    src/Engine/Graphics/Vulkan/VulkanIMGUI.cpp
+    include/Engine/Luau/Reg.h
+    include/Engine/Luau/Userdata.h
+    include/Engine/Perf.h
+    include/Engine/Luau/Stack.h
+    include/Engine/Luau/ComponentUserdata.h
+    src/Engine/Objects/Component.cpp
+    include/Andromeda.h
+    include/Andromeda/System.h
+    include/Andromeda/Luau.h
+    include/Andromeda/Scene.h
+    include/Engine/Graphics/Vulkan/VulkanGraphicsPipeline.h
+    include/Engine/IMGUIStyle.h
+    include/Engine/Serialization/SerializationTypes.h
+    include/Engine/Serialization/Scene.h
+    include/Engine/Events/Event.h
+    include/Engine/Graphics/Vulkan/VulkanRenderTexture.h
+    include/Engine/Graphics/RenderTarget.h
+    include/Engine/LinkedList.h
+    include/Engine/Assets/ShaderAsset.h
+    include/tinygltf/tinygltf.cpp
+    include/stb_image/stb_image.h
+    include/Engine/Data.h
+    include/Engine/Data/Image.h
+    include/Engine/Assets/TextureAsset.h
+    include/Engine/Data/GLTFModel.h
+    include/Engine/Data/Material.h
+    # include/tinygltf/tiny_gltf_v3.c
+    # include/tinygltf/tiny_gltf_v3.h
+    # include/tinygltf/tinygltf_json_c.h
 )
+
+target_include_directories(AndromedaEngine PRIVATE "include/tinygltf/")
+
 target_precompile_headers(AndromedaEngine PUBLIC src/PCH.h)
 target_include_directories(AndromedaEngine PUBLIC src $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
@@ -118,11 +209,18 @@ target_link_libraries(AndromedaEngine PUBLIC
     IMGUI
 )
 
+target_link_libraries(AndromedaEngine PUBLIC yaml-cpp::yaml-cpp)
+
 if(OPENGL_RENDERER)
     target_link_libraries(AndromedaEngine PRIVATE 
         OpenGL::OpenGL # Open GL Libs
         glad
     )
+endif()
+
+if (WEBGPU_RENDERER)
+    target_link_libraries(AndromedaEngine PRIVATE webgpu sdl3webgpu)
+    target_copy_webgpu_binaries(AndromedaEngine)
 endif()
 
 # Include the SPIRV tools
@@ -138,7 +236,7 @@ if (BUILTIN_SHADER_COMPILER AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
 endif()
 
 # Precompile shaders
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
+#if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(SHADER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/Shaders)
     file(GLOB SHADERS ${SHADER_DIR}/*.vert ${SHADER_DIR}/*.frag)
     foreach(SHADER IN LISTS SHADERS)
@@ -152,4 +250,4 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 
     add_custom_target(shaders ALL DEPENDS ${SPV_SHADERS})
     #message(STATUS "SPV SHADERS: " ${SPV_SHADERS})
-endif()
+#endif()

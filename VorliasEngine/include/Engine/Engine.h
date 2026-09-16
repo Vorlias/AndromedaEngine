@@ -26,6 +26,42 @@ namespace ENGINE_NS {
 		class Renderer;
 	}
 
+    enum class Platform {
+		Unknown,
+        Windows,
+		MacOS,
+		Linux,
+		Android,
+		iOS,
+    };
+
+	inline std::string PlatformToString(Platform platform) {
+		switch (platform) {
+			using enum Platform;
+			case Windows:
+				return "Windows";
+			case MacOS:
+				return "MacOS";
+			case Linux:
+				return "Linux";
+			case Android:
+				return "Android";
+			case iOS:
+				return "iOS";
+			default:
+				assert(false);
+		}
+	}
+
+	inline Platform StringToPlatform(std::string_view value) {
+		if (value == "Windows") return Platform::Windows;
+		if (value == "MacOS") return Platform::MacOS;
+		if (value == "Linux") return Platform::Linux;
+		if (value == "Android") return Platform::Android;
+		if (value == "iOS") return Platform::iOS;
+		assert(false);
+	}
+
 	class Application;
 	class Engine {
 	public:

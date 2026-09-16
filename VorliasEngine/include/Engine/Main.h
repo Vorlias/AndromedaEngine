@@ -34,10 +34,10 @@ int main(int argc, char* argv[]) {
 	using namespace andromeda;
 
 	std::vector<std::string> args;
-	args.reserve(argc);
+	args.resize(argc);
 
 	for (int i = 1; i < argc; i++) {
-		args.push_back(argv[i]);
+		args[i] = argv[i];
 	}
 
 	ApplicationInit ep{

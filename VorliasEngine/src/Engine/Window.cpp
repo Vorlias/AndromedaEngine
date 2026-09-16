@@ -1,17 +1,42 @@
 #include "Engine/Window.h"
 #include "SDL3/SDL.h"
+#include "SDL3/SDL_video.h"
 #include <optional>
 #include "Engine/Log.h"
 #include "Engine/Graphics/Vulkan/VulkanRendererAPI.h"
 #include "Engine/Graphics/Vulkan/VulkanWindowContext.h"
 
-andromeda::WindowOptions::WindowOptions() {}
+andromeda::WindowIcon::WindowIcon(void* data, size_t size) {
+	SDL_IOStream* iostr = SDL_IOFromConstMem(data, size);
+	m_data = SDL_LoadPNG_IO(iostr, true);
+}
+
+andromeda::WindowIcon::WindowIcon(const char* filePath) {
+	std::cout << "File path " << filePath << std::endl;
+
+	m_data = SDL_LoadPNG(filePath);
+
+	if (m_data == NULL) {
+		andromeda::error("Failed to load icon: {}", SDL_GetError());
+	}
+}
+
+void andromeda::WindowIcon::Destroy() {
+	SDL_DestroySurface(m_data);
+	m_data = 0;
+}
+
+andromeda::WindowIcon::~WindowIcon() {}
 
 andromeda::Window::Window(const WindowOptions& options) : m_window_options(options) {}
 andromeda::Window::~Window() {}
 
 // SDL_WindowID andromeda::Window::s_primary_window_id{};
 // std::map<SDL_WindowID, andromeda::Window&> andromeda::Window::s_windows{};
+
+void andromeda::Window::SetTitle(const char* title) {
+	SDL_SetWindowTitle(m_window, title);
+}
 
 bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	using namespace graphics;
@@ -40,11 +65,25 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 			break;
 	}
 
+	ANDROMEDA_ASSERT(m_window_options.title);
+
 	m_window = SDL_CreateWindow(m_window_options.title, m_window_options.size.x, m_window_options.size.y, window_flags);
 
 	if (!m_window) {
-		andromeda::error("Failed to initialize window!");
+		andromeda::error(
+			"SDL could not create window: title={}, size={}, flags={} - {}",
+			m_window_options.title,
+			to_string(m_window_options.size),
+			(int)window_flags,
+			SDL_GetError()
+		);
 		return false;
+	}
+
+	auto& icon = m_window_options.windowIcon;
+	if (icon) {
+		SDL_SetWindowIcon(m_window, icon.m_data);
+		SDL_DestroySurface(icon.m_data);
 	}
 
 	SDL_SetWindowPosition(m_window, m_window_options.position.x, m_window_options.position.y);
@@ -54,7 +93,9 @@ bool andromeda::Window::Initialize(graphics::Renderer* renderer) {
 	if (renderer != nullptr) {
 		renderer->Initialize();
 		m_graphics_context = renderer->CreateWindowGraphicsContext(m_window);
-		m_graphics_context->Initialize();
+
+		if (m_graphics_context != nullptr)
+			m_graphics_context->Initialize();
 	}
 
 	andromeda::trace("Created window " + std::to_string(m_window_id));
@@ -128,7 +169,7 @@ void andromeda::Window::Close() {
 }
 
 void andromeda::Window::Shutdown() {
-	if (m_window != nullptr) {
+	if (m_window != nullptr && m_graphics_context != nullptr) {
 		m_graphics_context->Shutdown();
 		andromeda::trace("Cleaned up window " + std::to_string(m_window_id));
 		SDL_DestroyWindow(m_window);
@@ -144,5 +185,5 @@ SDL_WindowID andromeda::Window::GetWindowId() const {
 }
 void andromeda::Window::Resized(int width, int height) {
 	if (m_graphics_context != nullptr)
-		m_graphics_context->Resized(width, height);
+		m_graphics_context->Resize(width, height);
 }

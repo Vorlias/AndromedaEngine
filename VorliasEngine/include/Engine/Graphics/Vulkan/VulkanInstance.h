@@ -21,6 +21,25 @@ namespace andromeda::graphics {
 		VkVec(std::pair<T*, uint32_t> pair) : data(pair.first), count(pair.second) {}
 	};
 
+	struct GPUTexture {
+		uint32_t imageId = 0;
+		uint32_t samplerId = 0;
+	};
+
+	struct GPUBuffer {
+		VkBuffer vkBuffer = VK_NULL_HANDLE;
+		uint32_t deviceAddress = 0;
+		VmaAllocation allocation = VK_NULL_HANDLE;
+
+		void Destroy(VmaAllocator allocator);
+	};
+
+	struct GPUImage {
+		VmaAllocation allocation = VK_NULL_HANDLE;
+		VkImage image = VK_NULL_HANDLE;
+		VkImageView imageView = VK_NULL_HANDLE;
+	};
+
 	struct VulkanQueueFamily {
 		int32_t queueIndex{-1};
 		VkQueueFlags queueFlags{0};
@@ -66,6 +85,9 @@ namespace andromeda::graphics {
 			return m_allocator;
 		}
 
+		[[nodiscard]] constexpr VkQueue GetGraphicsQueue() const {
+			return m_graphicsQueue;
+		}
 	protected:
 		friend class VulkanWindowContext;
 	private:

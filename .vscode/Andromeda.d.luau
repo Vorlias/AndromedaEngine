@@ -1,0 +1,110 @@
+local number = require("../Luau/tests/require/without_config/types/number")
+declare extern type Transform with
+    --- The position of the object
+    position: Vector3
+    --- The scale of the object
+    scale: Vector3
+    --- The euler-angle rotation of the object
+    rotation: Vector3
+end
+
+declare extern type LuauScriptComponent with
+    enabled: boolean
+    read filePath: string
+end
+
+declare extern type Entity with
+    --- The parent of the entity
+    read parent: Entity?
+    --- The entity's id
+    read id: number
+    --- The name of the entity
+    name: string
+    --- The transform of the entity
+    read transform: Transform
+    --- This script
+    read script: LuauScriptComponent
+    
+    function GetComponent(self, name: "Transform"): Transform
+    function GetComponent(self, name: "LuauScript"): LuauScriptComponent
+end
+
+--- The entity that this script is attached to
+declare entity: Entity
+
+declare task: {
+    -- defer: <A..., R...>(threadOrFunction: thread | (A...) -> R..., A...) -> thread,
+    spawn: <A..., R...>(threadOrFunction: thread | (A...) -> R..., A...) -> thread,
+    -- delay: <A..., R...>(duration: number?, threadOrFunction: thread | (A...) -> R..., A...) -> thread,
+    wait: (duration: number?) -> number,
+    -- cancel: (thread: thread) -> (),
+}
+
+declare extern type Rect with
+    read size: Vector2
+    read position: Vector2
+    read min: Vector2
+    read max: Vector2
+    read center: Vector2
+
+    read width: number
+    read height: number
+    read x: number
+    read y: number
+end
+declare Rect: {
+    new: ((x: number?, y: number?, w: number?, h: number?) -> Rect) & ((position: Vector2, size: Vector2) -> Rect),
+}
+
+declare extern type Vector2 with
+    x: number
+    y: number
+    read magnitude: number
+    read normalized: Vector2
+end
+declare Vector2: {
+    new: (x: number?, y: number?) -> Vector2
+}
+
+declare extern type Vector3 with
+    x: number
+    y: number
+    z: number
+    --- the magnitude of this vector
+    read magnitude: number
+    --- this vector as a normalized vector
+    read normalized: Vector3
+
+	function __add(self, other: Vector3): Vector3
+	function __div(self, other: Vector3 | number): Vector3
+	function __idiv(self, other: Vector3 | number): Vector3
+	function __mul(self, other: Vector3 | number): Vector3
+	function __sub(self, other: Vector3): Vector3
+	function __unm(self): Vector3
+end
+declare Vector3: {
+    new: (x: number?, y: number?, z: number?) -> Vector3
+}
+
+type EntityCtor = {
+    new: (name: string?) -> Entity
+}
+
+declare Entity: EntityCtor
+
+export type function LuauScriptObject(T: type?)
+    local tbl = types.newtable({
+        [types.singleton("name")] = types.string,
+        [types.singleton("enabled")] = types.boolean
+    })
+
+    if T then
+        return types.intersectionof(T, tbl)
+    end
+
+    return tbl
+end
+-- export type LuauScriptObject = {
+--     -- name: string,
+--     -- enabled: string,
+-- }

@@ -1,7 +1,11 @@
 #!/bin/bash
-OPENGL_RENDERER=ON
-BUILTIN_SHADER_COMPILER=ON
+OPENGL_RENDERER=OFF
+ANDROMEDA_EDITOR=0
+BUILTIN_SHADER_COMPILER=OFF
 BUILD_TYPE="Debug"
+
+WEBGPU_RENDERER=OFF
+WEBGPU_BACKEND=WGPU #WGPU_STATIC
 
 COMPILE_SHADERS=0
 BUILD=1
@@ -74,8 +78,10 @@ generate_project() {
     cmake -S . -B build \
         -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
         -DOPENGL_RENDERER=$OPENGL_RENDERER \
+        -DWEBGPU_RENDERER=$WEBGPU_RENDERER \
         -DBUILTIN_SHADER_COMPILER=$BUILTIN_SHADER_COMPILER \
-        -DLUAU_BUILD_CLI=OFF -DLUAU_BUILD_TESTS=OFF -DANDROMEDA_INTERNAL=$ANDROMEDA_INTERNAL
+        -DLUAU_BUILD_CLI=OFF -DLUAU_BUILD_TESTS=OFF -DANDROMEDA_INTERNAL=$ANDROMEDA_INTERNAL -DANDROMEDA_EDITOR=$ANDROMEDA_EDITOR \
+        -DWEBGPU_BACKEND=$WEBGPU_BACKEND
 }
 
 # At some point will inline the shaders, but we can compile this via the application itself in debug
@@ -85,6 +91,10 @@ fi
 
 if [[ $DEFAULT ]]; then
     BUILD_GAME=1
+fi
+
+if [[ -f "Tools/lute" ]]; then
+    ./Tools/lute ./scripts/atoms.luau
 fi
 
 if [[ $BUILD_GAME == 1 ]]; then
@@ -98,6 +108,8 @@ if [[ $BUILD_GAME == 1 ]]; then
 fi
 
 if [[ $BUILD_EDITOR == 1 ]]; then
+    ANDROMEDA_EDITOR=1
+
     generate_project --shaderc=ON
     cmake --build build --target VorliasEditor --config $BUILD_TYPE
 fi

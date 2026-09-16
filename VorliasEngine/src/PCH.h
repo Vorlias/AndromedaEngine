@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <memory>
 #include <algorithm>
+#include <stdint.h>
 
 #include <string>
 #include <sstream>
@@ -18,6 +19,9 @@
 #include <vector>
 #include <queue>
 #include <stack>
+
+// features
+#define ANDROMEDA_OBJECT_HIERARCHY 1
 
 using byte = unsigned char;
 
@@ -100,12 +104,14 @@ using byte = unsigned char;
 #	define COLOR_GREEN "\033[32m"
 #	define COLOR_CYAN "\033[36m"
 #	define COLOR_RESET "\033[0m"
+#	define COLOR_GRAY "\033[90m"
 #else
 #	define COLOR_RED ""
 #	define COLOR_YELLOW ""
 #	define COLOR_GREEN ""
 #	define COLOR_CYAN ""
 #	define COLOR_RESET ""
+#	define COLOR_GRAY ""
 #endif
 
 #define _STR(T) #T
@@ -131,7 +137,12 @@ using byte = unsigned char;
 #	define ANDROMEDA_ASSERTM(expr, MSG) \
 		if (!(expr)) { \
 			fprintf( \
-				stderr, COLOR_RED "[%s] ASSERTION FAILED: %s\n" COLOR_YELLOW "\tFile: %s:%d\n\n" COLOR_RESET, __TIME__, #expr ": " MSG, __FILE__, __LINE__ \
+				stderr, \
+				COLOR_RED "[%s] ASSERTION FAILED: %s\n" COLOR_YELLOW "\tFile: %s:%d\n\n" COLOR_RESET, \
+				__TIME__, \
+				#expr ": " MSG, \
+				__FILE__, \
+				__LINE__ \
 			); \
 			abort(); \
 		}
@@ -139,5 +150,14 @@ using byte = unsigned char;
 #	define ANDROMEDA_ASSERT(expr) ((void)0)
 #	define ANDROMEDA_ASSERTM(...) ((void)0)
 #endif
+
+// Constant inline getter
+#define ANDROMEDA_GETCONST [[nodiscard]] constexpr
+#define ANDROMEDA_SETCONST constexpr
+
+#define ANDROMEDA_GETTER(_Ty, _Prop, _Value) ANDROMEDA_GETCONST _Ty Get##_Prop() const { return _Value; }
+#define ANDROMEDA_SETTER(_Ty, _Prop, _Value) ANDROMEDA_SETCONST void Set##_Prop(_Ty value) { _Value = value; }
+
+#define CONSTSTR constexpr const char*
 
 #endif // PCH_H

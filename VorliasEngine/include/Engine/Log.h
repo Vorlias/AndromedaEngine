@@ -8,6 +8,8 @@
 #endif
 
 namespace andromeda {
+	std::shared_ptr<spdlog::logger> getLogger();
+
 	void initializeLogger(const std::string& logPath);
 
 	void trace(const std::string& message);
@@ -54,4 +56,6 @@ namespace andromeda {
 			return false; \
 		} \
 	}
+
+#define ANDROMEDA_VK_ASSERT(cond, ...) ANDROMEDA_ASSERTM(cond == VK_SUCCESS, __VA_ARGS__)
 #endif

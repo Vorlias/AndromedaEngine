@@ -3,42 +3,44 @@
 #include "Time.h"
 #include <filesystem>
 #include "File.h"
+#include "IMGUI.h"
+#include "Log.h"
+
+#include "Engine/Events/Event.h"
+#include "Engine/Graphics/RenderTarget.h"
+#include "Engine/Graphics/GraphicsContext.h"
+#include "Engine/Graphics/RenderCommand.h"
+// NOTE TO SELF: Don't use PREPROC defines for virtual methods
 
 namespace andromeda {
-	class RenderTarget {};
+	using EventDispatchFunction = std::function<void(Event&)>;
 
 	class Application {
 	public:
-		virtual const WindowOptions GetWindowOptions() const {
-			return WindowOptions("AndromedaEngine", Vector2u(1024, 768), WindowFlags::Default);
-		}
+		// virtual const WindowOptions& GetWindowOptions() const {
+		// 	return WindowOptions("AndromedaEngine", Vector2u(1024, 768), WindowFlags::Default);
+		// }
 
 		// Set up the application - returns a boolean indicating if initialization was successful
-		virtual bool Initialize() {
-			return CreateWindow(GetWindowOptions()) != nullptr;
-		}
+		virtual bool Initialize() = 0;
 
-#if ANDROMEDA_INTERNAL
-		virtual void WindowEvent(SDL_Event& e) {}
-		virtual void RawRender(graphics::Renderer& renderer) {}
-#endif
+		// IMGUI step
+		virtual void DrawIMGUI() {}
 
 		// Called when the application hits an update frame
 		virtual void Update(float deltaTime) {}
 
-		DEPRECATED // TBD if using
-			virtual void FixedUpdate(float fixedDeltaTime) {}
-
-		// // Called when the application hits an update frame
-		// virtual void Render(Window& window) {}
-
 		// Called when the application is shutting down
 		virtual void Shutdown() {}
 
+		virtual void Event(Event& e) {}
+
 	protected:
-		std::shared_ptr<Window> CreateWindow(const WindowOptions& windowOptions);
+		std::shared_ptr<Window> CreateWindow(const WindowOptions windowOptions);
 		std::shared_ptr<Window> GetMainWindow() const;
 		std::shared_ptr<Window> GetWindowById(WindowID id) const;
+
+		void InitIMGUI();
 
 		graphics::ShaderLibrary shaders;
 
@@ -49,6 +51,8 @@ namespace andromeda {
 		void SetPersistentDataPath(const std::filesystem::path& path) {
 			m_persistentDataPath = path;
 		}
+
+		std::unique_ptr<andromeda::IMGUI> imgui;
 
 	public:
 		// Gets the amount of time the application has been open
@@ -62,6 +66,8 @@ namespace andromeda {
 
 		// Gets the path to a data directory for persistent data for this application
 		[[nodiscard]] constexpr std::filesystem::path GetPersistentDataPath() const;
+
+		[[nodiscard]] constexpr std::filesystem::path GetFullPath(const std::filesystem::path& path) const;
 
 		// Set the framerate of this application to the given limit
 		void SetFramerateLimit(uint32_t limit);
@@ -82,6 +88,8 @@ namespace andromeda {
 
 		friend class Engine;
 
+		EventDispatchFunction m_dispatchFn;
+
 		std::shared_ptr<Window> m_main_window;
 		std::vector<std::shared_ptr<Window>> m_windows{};
 
@@ -92,11 +100,11 @@ namespace andromeda {
 		float m_deltaTime;
 
 		Time m_fixedFrameTime = milliseconds(33);
-		float m_fixedDeltaTime;
+		float m_fixedDeltaTime = 0;
 
-		float m_elapsedTime;
+		float m_elapsedTime = 0;
 
-		bool m_quitRequested;
+		bool m_quitRequested = false;
 
 		friend class Engine;
 	};
@@ -115,6 +123,18 @@ namespace andromeda {
 		} else {
 			return std::filesystem::relative(m_dataPath, std::filesystem::current_path());
 		}
+	}
+
+	constexpr std::filesystem::path Application::GetFullPath(const std::filesystem::path& filePath) const {
+		auto dataPathFull = GetDataPath(true);
+		auto filePathFull = std::filesystem::absolute(filePath);
+
+		const auto mismatch_pair = std::mismatch(filePathFull.begin(), filePathFull.end(), dataPathFull.begin(), dataPathFull.end());
+		if (mismatch_pair.second == dataPathFull.end()) {
+			return std::filesystem::relative(filePathFull, std::filesystem::current_path());
+		}
+
+		return filePath;
 	}
 
 	constexpr std::filesystem::path Application::GetPersistentDataPath() const {
